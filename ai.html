@@ -3,19 +3,333 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Chat with our new AI</title>
+    <title>Chat with our AI • Demo.website</title>
 
     <link rel="icon" type="image/png" href="Screenshot 2026-02-24 215015.png" />
     <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="chat-widget.css" />
+
+    <style>
+      body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: radial-gradient(circle at top, #161827 0, #050510 55%);
+        color: #f7f7ff;
+      }
+
+      .ai-page-shell {
+        width: 100%;
+        max-width: 900px;
+        padding: 24px 16px 40px;
+      }
+
+      .ai-page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 18px;
+      }
+
+      .ai-page-title-block h1 {
+        margin: 0;
+        font-size: 1.9rem;
+      }
+
+      .ai-page-title-block p {
+        margin: 4px 0 0;
+        font-size: 0.95rem;
+        color: #a3a7d4;
+      }
+
+      .ai-page-back-link {
+        font-size: 0.86rem;
+        color: #a3a7d4;
+        text-decoration: none;
+        border-radius: 999px;
+        padding: 6px 14px;
+        border: 1px solid rgba(163, 167, 212, 0.35);
+        transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+      }
+
+      .ai-page-back-link:hover {
+        background: rgba(255, 255, 255, 0.06);
+        color: #ffffff;
+        border-color: rgba(255, 255, 255, 0.4);
+      }
+
+      .ai-chat-frame {
+        border-radius: 18px;
+        background: radial-gradient(circle at top left,#17192a,#050510 60%);
+        box-shadow: 0 22px 60px rgba(0, 0, 0, 0.65);
+        padding: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.07);
+      }
+
+      /* Container where our custom chat will render */
+      #polyglot-widget {
+        border-radius: 14px;
+        background: rgba(5, 6, 20, 0.9);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        height: 540px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Basic internal chat layout */
+      .chat-header {
+        padding: 10px 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .chat-header-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: linear-gradient(135deg,#4b7cff,#9b6bff);
+        box-shadow: 0 0 12px rgba(155, 107, 255, 0.85);
+      }
+
+      .chat-header-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+      }
+
+      .chat-header-sub {
+        font-size: 0.78rem;
+        color: #9ba0d2;
+      }
+
+      .chat-messages {
+        flex: 1;
+        padding: 14px;
+        overflow-y: auto;
+        font-size: 0.9rem;
+      }
+
+      .msg-row {
+        margin-bottom: 10px;
+        display: flex;
+      }
+
+      .msg-row.user {
+        justify-content: flex-end;
+      }
+
+      .bubble {
+        max-width: 80%;
+        padding: 8px 11px;
+        border-radius: 12px;
+        line-height: 1.35;
+        white-space: pre-wrap;
+      }
+
+      .bubble.ai {
+        background: rgba(43, 46, 82, 0.95);
+        border: 1px solid rgba(155, 107, 255, 0.35);
+      }
+
+      .bubble.user {
+        background: rgba(34, 180, 118, 0.12);
+        border: 1px solid rgba(62, 202, 141, 0.55);
+      }
+
+      .chat-input-row {
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        padding: 8px;
+        display: flex;
+        gap: 6px;
+      }
+
+      .chat-input-row textarea {
+        flex: 1;
+        resize: none;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        background: rgba(8, 9, 28, 0.95);
+        color: #f7f7ff;
+        padding: 7px 9px;
+        font-size: 0.86rem;
+        min-height: 46px;
+        max-height: 90px;
+        outline: none;
+      }
+
+      .chat-input-row button {
+        border-radius: 999px;
+        border: none;
+        padding: 0 16px;
+        font-size: 0.86rem;
+        font-weight: 600;
+        background: linear-gradient(135deg,#4b7cff,#9b6bff);
+        color: #ffffff;
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.65);
+      }
+
+      .chat-input-row button:hover {
+        transform: translateY(-1px);
+        background: linear-gradient(135deg,#6088ff,#b275ff);
+        box-shadow: 0 13px 30px rgba(0, 0, 0, 0.75);
+      }
+
+      .typing-indicator {
+        font-size: 0.78rem;
+        color: #9ba0d2;
+        margin-bottom: 6px;
+      }
+    </style>
   </head>
   <body>
-    <div class="top-nav">
-      <a href="index.html" class="nav-link">Main page</a>
-      <a href="ai.html" class="nav-link nav-link-primary">Chat with our new AI</a>
+    <div class="ai-page-shell">
+      <div class="ai-page-header">
+        <div class="ai-page-title-block">
+          <h1>Chat with our AI</h1>
+          <p>A small brain for Demo.website – ask it anything about your projects, ideas, or random stuff.</p>
+        </div>
+        <a href="index.html" class="ai-page-back-link">← Back to main page</a>
+      </div>
+
+      <div class="ai-chat-frame">
+        <!-- Widget root -->
+        <div id="polyglot-widget"></div>
+      </div>
     </div>
 
-    <!-- AI-only page -->
-    <div id="polyglot-widget"></div>
+    <!-- Polyglot / backend client -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="chat-widget.js"></script>
+
+    <script>
+// Simple custom chat UI with smooth streaming text and a unique intro message
+const root = document.getElementById('polyglot-widget');
+
+const chatHeader = document.createElement('div');
+chatHeader.className = 'chat-header';
+chatHeader.innerHTML = `
+  <div class="chat-header-dot"></div>
+  <div>
+    <div class="chat-header-title">Demo AI</div>
+    <div class="chat-header-sub">Not human. Still trying its best.</div>
+  </div>
+`;
+
+const chatMessages = document.createElement('div');
+chatMessages.className = 'chat-messages';
+
+const inputRow = document.createElement('div');
+inputRow.className = 'chat-input-row';
+inputRow.innerHTML = `
+  <textarea id="ai-input" placeholder="Type something..."></textarea>
+  <button id="ai-send">Send</button>
+`;
+
+root.appendChild(chatHeader);
+root.appendChild(chatMessages);
+root.appendChild(inputRow);
+
+function appendMessage(role, text) {
+  const row = document.createElement('div');
+  row.className = 'msg-row ' + role;
+
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble ' + (role === 'user' ? 'user' : 'ai');
+  bubble.textContent = text;
+
+  row.appendChild(bubble);
+  chatMessages.appendChild(row);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+
+  return bubble;
+}
+
+// Unique intro message (no “I speak 100 languages”)
+appendMessage(
+  'ai',
+  "Yo, I'm the tiny brain wired into Demo.website.\nAsk me about your ideas, code, videos, or whatever’s on your mind."
+);
+
+const textarea = document.getElementById('ai-input');
+const sendBtn = document.getElementById('ai-send');
+
+let isSending = false;
+
+async function sendMessage() {
+  if (isSending) return;
+  const text = textarea.value.trim();
+  if (!text) return;
+
+  isSending = true;
+  textarea.value = '';
+
+  appendMessage('user', text);
+
+  const typingRow = document.createElement('div');
+  typingRow.className = 'typing-indicator';
+  typingRow.textContent = 'AI is thinking…';
+  chatMessages.appendChild(typingRow);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+
+  const aiBubble = appendMessage('ai', '');
+  chatMessages.removeChild(typingRow);
+
+  try {
+    // Endpoint for your AI backend.
+    // When you have a real URL, replace '/api/chat' with it.
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ message: text }),
+    });
+
+    if (!response.body) {
+      const data = await response.json();
+      aiBubble.textContent =
+        data.reply || 'Something glitched out for a second.';
+      return;
+    }
+
+    // Smooth streaming text
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let done = false;
+    let buffer = '';
+
+    while (!done) {
+      const res = await reader.read();
+      done = res.done;
+      if (res.value) {
+        buffer += decoder.decode(res.value, { stream: true });
+        aiBubble.textContent = buffer;
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        await new Promise((r) => setTimeout(r, 18)); // smooth typing feel
+      }
+    }
+  } catch (err) {
+    aiBubble.textContent =
+      "I tried to answer but something broke on the way. Try again in a bit.";
+  } finally {
+    isSending = false;
+  }
+}
+
+sendBtn.addEventListener('click', sendMessage);
+textarea.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+    </script>
   </body>
 </html>

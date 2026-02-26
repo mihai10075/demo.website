@@ -14,18 +14,50 @@
 
     <!-- CSS -->
     <link rel="stylesheet" href="style.css" />
+    <style>
+      /* INLINE EXTRA STYLES FOR THE NEW BUTTON (you can move to style.css) */
+      .top-ai-callout {
+        margin-top: 32px;
+        display: flex;
+        justify-content: center;
+      }
+
+      .top-ai-button {
+        padding: 10px 20px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #4b7cff, #9b6bff);
+        color: #ffffff;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-decoration: none;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+        border: 1px solid rgba(255, 255, 255, 0.24);
+        backdrop-filter: blur(12px);
+        transition: transform 0.18s ease, box-shadow 0.18s ease,
+          background 0.18s ease;
+      }
+
+      .top-ai-button:hover {
+        transform: translateY(-1px) scale(1.02);
+        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
+        background: linear-gradient(135deg, #6088ff, #b275ff);
+      }
+    </style>
   </head>
   <body>
+    <!-- TOP NAV -->
     <div class="top-nav">
       <a href="index.html" class="nav-link">Main page</a>
       <a href="ai.html" class="nav-link nav-link-primary">Chat with our new AI</a>
     </div>
 
+    <!-- ORBIT BACKGROUND -->
     <div class="glow-orbit"></div>
 
+    <!-- MAIN CARD -->
     <div class="card">
       <div class="card-inner">
-        <!-- Top bar with title + search -->
+        <!-- HEADER / TITLE SECTION -->
         <div class="top-bar">
           <div class="top-left">
             <div class="pill">
@@ -55,6 +87,14 @@
           </div>
         </div>
 
+        <!-- CHAT WITH AI BUTTON UNDER SEARCH -->
+        <div class="top-ai-callout">
+          <a href="ai.html" class="top-ai-button">
+            Chat with our new AI
+          </a>
+        </div>
+
+        <!-- CREATOR ROW -->
         <header>
           <div class="creator-row">
             <div class="creator">
@@ -63,7 +103,10 @@
                 id="creator-trigger"
                 title="Click me!"
               >
-                <img src="Screenshot 2026-02-24 215015.png" alt="Quandel avatar" />
+                <img
+                  src="Screenshot 2026-02-24 215015.png"
+                  alt="Quandel avatar"
+                />
               </div>
               <div class="creator-label">
                 <span class="creator-label-main">creator</span>
@@ -74,7 +117,7 @@
           </div>
         </header>
 
-        <!-- Wall section -->
+        <!-- WALL SECTION -->
         <section class="section">
           <p class="section-title">Wall</p>
           <ul>
@@ -84,12 +127,45 @@
           <p class="wall-note">more stuff coming! check back soon.</p>
         </section>
 
-        <!-- Videos -->
+        <!-- VIDEOS SECTION -->
         <section class="section video-block">
           <p class="section-title">Videos</p>
 
-          <!-- all your existing video items stay exactly the same here -->
-          <!-- (Aw shucks, Jeffy's infinite irida, etc.) -->
+          <div class="video-grid">
+            <!-- VIDEO 1 -->
+            <a
+              class="video-card"
+              href="https://www.youtube.com/watch?v=XXXXXXXXXXX"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <div class="video-thumb">
+                <img src="thumb1.png" alt="Video 1 thumbnail" />
+              </div>
+              <div class="video-info">
+                <p class="video-title">Aw shucks</p>
+                <p class="video-meta">YouTube · 2026</p>
+              </div>
+            </a>
+
+            <!-- VIDEO 2 -->
+            <a
+              class="video-card"
+              href="https://www.youtube.com/watch?v=YYYYYYYYYYY"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <div class="video-thumb">
+                <img src="thumb2.png" alt="Video 2 thumbnail" />
+              </div>
+              <div class="video-info">
+                <p class="video-title">Jeffy's infinite irida</p>
+                <p class="video-meta">YouTube · 2026</p>
+              </div>
+            </a>
+
+            <!-- Add more video-card blocks here for each video you had -->
+          </div>
 
           <a
             class="celebrate-btn"
@@ -101,15 +177,13 @@
           </a>
         </section>
 
-        <!-- COMMENTS SECTION -->
+        <!-- COMMENTS SECTION (GISCUS) -->
         <section class="section">
           <p class="section-title">Comments</p>
-
-          <!-- Giscus will render here -->
           <div class="giscus"></div>
         </section>
-        <!-- END COMMENTS SECTION -->
 
+        <!-- FOOTER -->
         <footer class="site-footer">
           <span class="footer-brand">s64mab1y</span>
           <span class="footer-dot">•</span>
@@ -119,36 +193,37 @@
       </div>
     </div>
 
-    <!-- Pop sound -->
+    <!-- POP SOUND -->
     <audio id="pop-sound" src="pop.mp3" preload="auto"></audio>
 
-    <!-- Confetti library -->
+    <!-- CONFETTI LIBRARY -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
-    <!-- Supabase client -->
+    <!-- SUPABASE CLIENT -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
-    <!-- Your JS -->
+    <!-- YOUR MAIN JS -->
     <script src="script.js"></script>
 
-    <!-- Giscus comments -->
-    <script src="https://giscus.app/client.js"
-            data-repo="mihai10075/demo.website"
-            data-repo-id="R_kgDORY9IBw"
-            data-category="Announcements"
-            data-category-id="DIC_kwDORY9IB84C3SUr"
-            data-mapping="pathname"
-            data-strict="0"
-            data-reactions-enabled="1"
-            data-emit-metadata="0"
-            data-input-position="bottom"
-            data-theme="preferred_color_scheme"
-            data-lang="en"
-            crossorigin="anonymous"
-            async>
-    </script>
+    <!-- GISCUS COMMENTS SCRIPT -->
+    <script
+      src="https://giscus.app/client.js"
+      data-repo="mihai10075/demo.website"
+      data-repo-id="R_kgDORY9IBw"
+      data-category="Announcements"
+      data-category-id="DIC_kwDORY9IB84C3SUr"
+      data-mapping="pathname"
+      data-strict="0"
+      data-reactions-enabled="1"
+      data-emit-metadata="0"
+      data-input-position="bottom"
+      data-theme="preferred_color_scheme"
+      data-lang="en"
+      crossorigin="anonymous"
+      async
+    ></script>
 
-    <!-- Polyglot AI Chat Widget -->
+    <!-- POLYGLOT AI CHAT WIDGET HOOK -->
     <div id="polyglot-widget"></div>
     <script src="chat-widget.js"></script>
   </body>
