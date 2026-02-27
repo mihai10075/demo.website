@@ -44,11 +44,12 @@ export default async function handler(req, res) {
     });
 
     if (!openaiRes.ok) {
-      const errorText = await openaiRes.text();
-      console.error('OpenAI error:', errorText);
-      res.status(500).json({ error: 'AI request failed' });
-      return;
-    }
+  const errorText = await openaiRes.text();
+  console.error('OpenAI error:', errorText);
+  res.status(500).json({ error: 'AI request failed' });
+  return;
+}
+
 
     const data = await openaiRes.json();
     const reply =
