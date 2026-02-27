@@ -42,6 +42,43 @@
         box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
         background: linear-gradient(135deg, #6088ff, #b275ff);
       }
+
+      /* Responsive iframe videos */
+      .video-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 18px;
+      }
+
+      @media (min-width: 900px) {
+        .video-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      .video-embed {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .video-container {
+        position: relative;
+        padding-bottom: 56.25%; /* 16:9 */
+        height: 0;
+        overflow: hidden;
+        border-radius: 16px;
+        box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+      }
+
+      .video-container iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
     </style>
   </head>
   <body>
@@ -127,44 +164,100 @@
           <p class="wall-note">more stuff coming! check back soon.</p>
         </section>
 
-        <!-- VIDEOS SECTION -->
+        <!-- VIDEOS SECTION WITH IFRAMES -->
         <section class="section video-block">
           <p class="section-title">Videos</p>
 
           <div class="video-grid">
             <!-- VIDEO 1 -->
-            <a
-              class="video-card"
-              href="https://www.youtube.com/watch?v=XXXXXXXXXXX"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <div class="video-thumb">
-                <img src="thumb1.png" alt="Video 1 thumbnail" />
+            <div class="video-embed">
+              <div class="video-container">
+                <iframe
+                  src="https://www.youtube.com/embed/dNkLXkCOyLk"
+                  title="Wide Eyes"
+                  frameborder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowfullscreen
+                ></iframe>
               </div>
-              <div class="video-info">
-                <p class="video-title">Aw shucks</p>
-                <p class="video-meta">YouTube · 2026</p>
-              </div>
-            </a>
+              <p class="video-title">Wide Eyes</p>
+              <p class="video-meta">YouTube · 2026</p>
+            </div>
 
             <!-- VIDEO 2 -->
-            <a
-              class="video-card"
-              href="https://www.youtube.com/watch?v=YYYYYYYYYYY"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <div class="video-thumb">
-                <img src="thumb2.png" alt="Video 2 thumbnail" />
+            <div class="video-embed">
+              <div class="video-container">
+                <iframe
+                  src="https://www.youtube.com/embed/wMaC3mdkudk"
+                  title="Jeffy's infinite irida"
+                  frameborder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowfullscreen
+                ></iframe>
               </div>
-              <div class="video-info">
-                <p class="video-title">Jeffy's infinite irida</p>
-                <p class="video-meta">YouTube · 2026</p>
-              </div>
-            </a>
+              <p class="video-title">Jeffy's infinite irida</p>
+              <p class="video-meta">YouTube · 2026</p>
+            </div>
 
-            <!-- Add more video-card blocks here for each video you had -->
+            <!-- VIDEO 3 -->
+            <div class="video-embed">
+              <div class="video-container">
+                <iframe
+                  src="https://www.youtube.com/embed/5D3crqpClPY"
+                  title="50 Cent - Many Men (Wish Death)"
+                  frameborder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowfullscreen
+                ></iframe>
+              </div>
+              <p class="video-title">50 Cent - Many Men (Wish Death)</p>
+              <p class="video-meta">YouTube</p>
+            </div>
+
+            <!-- VIDEO 4 -->
+            <div class="video-embed">
+              <div class="video-container">
+                <iframe
+                  src="https://www.youtube.com/embed/Upd4jT2IO9s"
+                  title="Video 4"
+                  frameborder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowfullscreen
+                ></iframe>
+              </div>
+              <p class="video-title">Video 4</p>
+              <p class="video-meta">YouTube</p>
+            </div>
+
+            <!-- VIDEO 5 -->
+            <div class="video-embed">
+              <div class="video-container">
+                <iframe
+                  src="https://www.youtube.com/embed/K2a_lttVAgU"
+                  title="Video 5"
+                  frameborder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowfullscreen
+                ></iframe>
+              </div>
+              <p class="video-title">Video 5</p>
+              <p class="video-meta">YouTube</p>
+            </div>
+
+            <!-- VIDEO 6 -->
+            <div class="video-embed">
+              <div class="video-container">
+                <iframe
+                  src="https://www.youtube.com/embed/GlOQnsVOa2o"
+                  title="Oliver eats an Apple"
+                  frameborder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowfullscreen
+                ></iframe>
+              </div>
+              <p class="video-title">Oliver eats an Apple</p>
+              <p class="video-meta">YouTube</p>
+            </div>
           </div>
 
           <a
