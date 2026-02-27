@@ -12,80 +12,13 @@
       href="Screenshot 2026-02-24 215015.png"
     />
 
-    <!-- CSS -->
+    <!-- Main CSS -->
     <link rel="stylesheet" href="style.css" />
-    <style>
-      /* INLINE EXTRA STYLES FOR THE NEW BUTTON (you can move to style.css) */
-      .top-ai-callout {
-        margin-top: 32px;
-        display: flex;
-        justify-content: center;
-      }
-
-      .top-ai-button {
-        padding: 10px 20px;
-        border-radius: 999px;
-        background: linear-gradient(135deg, #4b7cff, #9b6bff);
-        color: #ffffff;
-        font-size: 0.9rem;
-        font-weight: 600;
-        text-decoration: none;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
-        border: 1px solid rgba(255, 255, 255, 0.24);
-        backdrop-filter: blur(12px);
-        transition: transform 0.18s ease, box-shadow 0.18s ease,
-          background 0.18s ease;
-      }
-
-      .top-ai-button:hover {
-        transform: translateY(-1px) scale(1.02);
-        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
-        background: linear-gradient(135deg, #6088ff, #b275ff);
-      }
-
-      /* Responsive iframe videos */
-      .video-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr);
-        gap: 18px;
-      }
-
-      @media (min-width: 900px) {
-        .video-grid {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-      }
-
-      .video-embed {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-      }
-
-      .video-container {
-        position: relative;
-        padding-bottom: 56.25%; /* 16:9 */
-        height: 0;
-        overflow: hidden;
-        border-radius: 16px;
-        box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-      }
-
-      .video-container iframe {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-      }
-    </style>
   </head>
   <body>
     <!-- TOP NAV -->
     <div class="top-nav">
-      <a href="index.html" class="nav-link">Main page</a>
-      <a href="ai.html" class="nav-link nav-link-primary">Chat with our new AI</a>
+      <a href="index.html" class="nav-link nav-link-primary">Main page</a>
     </div>
 
     <!-- ORBIT BACKGROUND -->
@@ -122,13 +55,6 @@
               <line x1="15.15" y1="15.15" x2="20" y2="20" stroke-width="1.5" />
             </svg>
           </div>
-        </div>
-
-        <!-- CHAT WITH AI BUTTON UNDER SEARCH -->
-        <div class="top-ai-callout">
-          <a href="ai.html" class="top-ai-button">
-            Chat with our new AI
-          </a>
         </div>
 
         <!-- CREATOR ROW -->
@@ -214,33 +140,33 @@
               <p class="video-meta">YouTube</p>
             </div>
 
-            <!-- VIDEO 4 -->
+            <!-- VIDEO 4 (Revenant) -->
             <div class="video-embed">
               <div class="video-container">
                 <iframe
                   src="https://www.youtube.com/embed/Upd4jT2IO9s"
-                  title="Video 4"
+                  title="Revenant"
                   frameborder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowfullscreen
                 ></iframe>
               </div>
-              <p class="video-title">Video 4</p>
+              <p class="video-title">Revenant</p>
               <p class="video-meta">YouTube</p>
             </div>
 
-            <!-- VIDEO 5 -->
+            <!-- VIDEO 5 (Jeffy's Infinite Irida) -->
             <div class="video-embed">
               <div class="video-container">
                 <iframe
                   src="https://www.youtube.com/embed/K2a_lttVAgU"
-                  title="Video 5"
+                  title="Jeffy's Infinite Irida"
                   frameborder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowfullscreen
                 ></iframe>
               </div>
-              <p class="video-title">Video 5</p>
+              <p class="video-title">Jeffy's Infinite Irida</p>
               <p class="video-meta">YouTube</p>
             </div>
 
