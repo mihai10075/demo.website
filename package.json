@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
-    "openai": "^4.73.0"
+    "openai": "^4.73.0",
+    "node-fetch": "^2.7.0"
   }
 }
