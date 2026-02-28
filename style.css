@@ -470,3 +470,30 @@ ul li::before {
   box-shadow: 0 8px 18px rgba(14, 165, 233, 0.5);
   background: #38bdf8;
 }
+
+/* ===== AI LINK BUTTON ON MAIN PAGE ===== */
+
+.ai-link-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: #020617;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+  box-shadow: 0 8px 20px rgba(14, 165, 233, 0.45);
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease,
+    background 0.12s ease;
+}
+
+.ai-link-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(14, 165, 233, 0.65);
+  background: #38bdf8;
+}

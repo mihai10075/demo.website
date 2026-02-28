@@ -5,7 +5,14 @@ const chatBox = document.getElementById("chat-box");
 
 function addMessage(text, who) {
   const div = document.createElement("div");
-  div.className = `chat-msg chat-msg-${who}`;
+
+  // special styling for typing bubble so it looks like AI
+  if (who === "ai-typing") {
+    div.className = "chat-msg chat-msg-ai chat-msg-ai-typing";
+  } else {
+    div.className = `chat-msg chat-msg-${who}`;
+  }
+
   div.textContent = text;
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
@@ -16,8 +23,11 @@ form.addEventListener("submit", async (e) => {
   const text = input.value.trim();
   if (!text) return;
 
+  // user message
   addMessage(text, "user");
   input.value = "";
+
+  // typing indicator
   addMessage("…", "ai-typing");
 
   try {
@@ -28,6 +38,7 @@ form.addEventListener("submit", async (e) => {
     });
 
     const data = await res.json();
+
     // remove typing bubble
     const typing = chatBox.querySelector(".chat-msg-ai-typing");
     if (typing) typing.remove();
