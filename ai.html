@@ -4,14 +4,13 @@
     <meta charset="UTF-8" />
     <title>demo.website – AI chat</title>
     <link rel="stylesheet" href="style.css" />
-    <!-- you can remove this if all styles are in style.css now -->
-    <!-- <link rel="stylesheet" href="chat-widget.css" /> -->
   </head>
   <body class="ai-body">
     <div class="glow-orbit"></div>
 
     <main class="card">
       <div class="card-inner">
+        <!-- HEADER: title + back to main page -->
         <header class="top-bar">
           <div class="top-left">
             <div class="pill">
@@ -22,25 +21,38 @@
             <p class="tagline">talk to a tiny brain in the cloud</p>
           </div>
 
-          <div class="creator-row">
-            <div class="creator">
-              <div class="creator-avatar">
-                <!-- change dog.png to your real filename if different -->
-                <img src="dog.png" alt="site mascot dog" />
-              </div>
-              <div class="creator-label">
-                <span class="creator-label-main">mascot</span>
-                <span class="creator-label-name">site dog</span>
-              </div>
-            </div>
-          </div>
+          <a href="index.html" class="ai-link-btn">← go back to main page</a>
         </header>
 
+        <!-- CHAT SECTION WITH REX IN THE MIDDLE -->
         <section class="section">
           <h2 class="section-title">chat</h2>
 
+          <!-- Rex mascot centered above chat -->
+          <div class="creator-row" style="margin-bottom: 10px; justify-content: center;">
+            <div class="creator">
+              <div
+                class="creator-avatar"
+                id="ai-mascot"
+                title="Click Rex!"
+              >
+                <img
+                  src="Screenshot 2026-02-24 215015.png"
+                  alt="Rex mascot"
+                />
+              </div>
+              <div class="creator-label">
+                <span class="creator-label-main">mascot</span>
+                <span class="creator-label-name">Rex – the website mascot</span>
+                <span class="creator-side-note">click Rex for confetti</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chat messages -->
           <div id="chat-box" class="chat-box"></div>
 
+          <!-- Chat form -->
           <form id="chat-form" class="chat-form">
             <input
               id="chat-input"
@@ -54,6 +66,11 @@
       </div>
     </main>
 
+    <!-- Pop sound for Rex -->
+    <audio id="pop-sound" src="pop.mp3" preload="auto"></audio>
+
+    <!-- Confetti + chat logic -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="chat-widget.js"></script>
   </body>
 </html>
