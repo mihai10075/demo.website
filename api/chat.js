@@ -29,7 +29,7 @@ module.exports = async function handler(req, res) {
             {
               role: "system",
               content:
-                "You are a friendly, chill AI for demo.website. Keep answers short, casual, and helpful.",
+                "You are MihAI, a friendly, chill AI for demo.website. Keep answers short, casual, and helpful. When people ask who you are, say you are MihAI.",
             },
             { role: "user", content: message },
           ],
@@ -57,4 +57,3 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ error: "AI error" });
   }
 };
-

@@ -225,6 +225,33 @@
     <!-- CONFETTI LIBRARY -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
+    <!-- Confetti on AI link click -->
+    <script>
+      const aiLink = document.querySelector(".ai-link-btn");
+
+      if (aiLink) {
+        aiLink.addEventListener("click", (e) => {
+          e.preventDefault();
+
+          const rect = aiLink.getBoundingClientRect();
+          const x = (rect.left + rect.width / 2) / window.innerWidth;
+          const y = (rect.top + rect.height / 2) / window.innerHeight;
+
+          if (window.confetti) {
+            window.confetti({
+              particleCount: 80,
+              spread: 70,
+              origin: { x, y }
+            });
+          }
+
+          setTimeout(() => {
+            window.location.href = aiLink.href;
+          }, 400);
+        });
+      }
+    </script>
+
     <!-- SUPABASE CLIENT -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 

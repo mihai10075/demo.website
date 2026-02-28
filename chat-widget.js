@@ -18,6 +18,24 @@ function addMessage(text, who) {
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
+// smooth typing for AI reply
+async function typeMessage(text) {
+  const div = document.createElement("div");
+  div.className = "chat-msg chat-msg-ai";
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
+
+  let i = 0;
+  const speed = 18; // ms per character
+
+  while (i < text.length) {
+    div.textContent = text.slice(0, i + 1);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    i++;
+    await new Promise((r) => setTimeout(r, speed));
+  }
+}
+
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const text = input.value.trim();
@@ -48,7 +66,8 @@ form.addEventListener("submit", async (e) => {
       return;
     }
 
-    addMessage(data.reply, "ai");
+    // smooth typing instead of instant message
+    await typeMessage(data.reply);
   } catch (err) {
     console.error(err);
     const typing = chatBox.querySelector(".chat-msg-ai-typing");
