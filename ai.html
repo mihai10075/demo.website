@@ -1,46 +1,59 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>demo.website – AI chat</title>
-    <link rel="stylesheet" href="style.css" />
-    <!-- you can remove this if all styles are in style.css now -->
-    <!-- <link rel="stylesheet" href="chat-widget.css" /> -->
-  </head>
-  <body class="ai-body">
-    <div class="glow-orbit"></div>
+const fetch = require("node-fetch");
 
-    <main class="card">
-      <div class="card-inner">
-        <header class="top-bar">
-          <div class="top-left">
-            <div class="pill">
-              <span class="pill-dot"></span>
-              <span>demo.website / ai chat</span>
-            </div>
-            <h1>ai chat</h1>
-            <p class="tagline">talk to a tiny brain in the cloud</p>
-          </div>
-        </header>
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
-        <section class="section">
-          <h2 class="section-title">chat</h2>
+module.exports = async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
 
-          <div id="chat-box" class="chat-box"></div>
+  try {
+    const { message } = req.body;
 
-          <form id="chat-form" class="chat-form">
-            <input
-              id="chat-input"
-              type="text"
-              placeholder="say something..."
-              autocomplete="off"
-            />
-            <button type="submit">Send</button>
-          </form>
-        </section>
-      </div>
-    </main>
+    if (!message || typeof message !== "string") {
+      return res.status(400).json({ error: "Missing message" });
+    }
 
-    <script src="chat-widget.js"></script>
-  </body>
-</html>
+    // 1) Call Groq's OpenAI-compatible chat endpoint
+    const groqResponse = await fetch(
+      "https://api.groq.com/openai/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${GROQ_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "llama-3.1-8b-instant",
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are MihAI, a friendly, chill AI for demo.website. Keep answers short, casual, and helpful. When people ask who you are, say you are MihAI.",
+            },
+            { role: "user", content: message },
+          ],
+        }),
+      }
+    );
+
+    if (!groqResponse.ok) {
+      const errorText = await groqResponse.text();
+      console.error("Groq API error:", groqResponse.status, errorText);
+      return res
+        .status(500)
+        .json({ error: "AI error from Groq", details: errorText });
+    }
+
+    const data = await groqResponse.json();
+
+    const reply =
+      data.choices?.[0]?.message?.content ||
+      "I had trouble generating a reply.";
+
+    return res.status(200).json({ reply });
+  } catch (err) {
+    console.error("Groq handler error:", err);
+    return res.status(500).json({ error: "AI error" });
+  }
+} 
