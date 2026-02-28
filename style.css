@@ -26,6 +26,7 @@ body {
   padding: 56px 16px 40px;
 }
 
+/* Glow background */
 .glow-orbit {
   position: fixed;
   inset: 0;
@@ -37,6 +38,31 @@ body {
     radial-gradient(circle at 90% 80%, rgba(249, 115, 22, 0.16) 0, transparent 50%);
 }
 
+/* Top nav */
+.top-nav {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  z-index: 10;
+}
+
+.nav-link {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.nav-link-primary {
+  color: var(--accent-soft);
+  font-weight: 600;
+}
+
+/* Main card */
 .card {
   background: linear-gradient(145deg, var(--bg) 0, var(--bg-soft) 40%, #020617 100%);
   border-radius: 24px;
@@ -71,6 +97,7 @@ body {
   z-index: 1;
 }
 
+/* Top bar */
 .top-bar {
   display: flex;
   align-items: center;
@@ -85,6 +112,7 @@ body {
   gap: 4px;
 }
 
+/* Pill */
 .pill {
   display: inline-flex;
   align-items: center;
@@ -106,6 +134,7 @@ body {
   box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.3);
 }
 
+/* Heading */
 h1 {
   margin: 0;
   font-size: clamp(26px, 4vw, 32px);
@@ -120,6 +149,7 @@ h1 {
   color: var(--text-muted);
 }
 
+/* Search */
 .top-search {
   display: flex;
   align-items: center;
@@ -149,6 +179,7 @@ h1 {
   stroke: var(--accent-soft);
 }
 
+/* Creator row */
 header {
   margin-bottom: 12px;
 }
@@ -217,6 +248,7 @@ header {
   color: var(--text-muted);
 }
 
+/* Sections */
 .section {
   margin-top: 18px;
   padding-top: 8px;
@@ -231,6 +263,7 @@ header {
   color: var(--text-muted);
 }
 
+/* Wall list */
 ul {
   margin: 0 0 8px;
   padding: 0;
@@ -254,7 +287,7 @@ ul li::before {
   margin: 0;
 }
 
-/* Videos section with grid + bigger frames */
+/* Videos */
 .video-block {
   margin-top: 14px;
 }
@@ -277,10 +310,10 @@ ul li::before {
   gap: 6px;
 }
 
-/* bigger videos using container + iframe */
 .video-container {
   position: relative;
-  padding-bottom: 65%; /* taller than 16:9 */
+  padding-top: 56.25%;
+  margin-bottom: 6px;
   height: 0;
   overflow: hidden;
   border-radius: 16px;
@@ -332,6 +365,7 @@ ul li::before {
   transform: translateY(-1px);
 }
 
+/* Footer */
 .site-footer {
   margin-top: 22px;
   padding-top: 10px;
@@ -353,28 +387,18 @@ ul li::before {
   color: var(--text-main);
 }
 
-.footer-dot {
-  opacity: 0.7;
-}
-
+.footer-dot,
 .footer-year {
   opacity: 0.7;
 }
 
 /* Responsive tweaks */
-@media (max-width: 700px) {
-  .video-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
 @media (max-width: 600px) {
   body {
     padding-top: 32px;
     padding-bottom: 32px;
   }
   .card {
-    padding-inline: 18px;
     border-radius: 20px;
   }
   .video-container {
@@ -395,7 +419,6 @@ ul li::before {
 
 /* ===== AI CHAT PAGE ===== */
 
-/* Use same full-screen layout but only when body has class="ai-body" */
 body.ai-body {
   margin: 0;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
@@ -479,8 +502,32 @@ body.ai-body {
   background: #38bdf8;
 }
 
-/* ===== AI LINK BUTTON ON MAIN PAGE ===== */
+/* Follow button under chat */
+.follow-section {
+  margin-top: 16px;
+  text-align: center;
+}
 
+.follow-btn {
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: none;
+  background: var(--accent-soft);
+  color: #020617;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(14, 165, 233, 0.45);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+
+.follow-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(14, 165, 233, 0.65);
+  background: #38bdf8;
+}
+
+/* AI link button on main page */
 .ai-link-btn {
   display: inline-flex;
   align-items: center;
