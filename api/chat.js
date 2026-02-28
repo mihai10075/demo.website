@@ -14,7 +14,7 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: "Missing message" });
     }
 
-    // Call Groq's OpenAI-compatible chat endpoint
+    // 1) Call Groq's OpenAI-compatible chat endpoint
     const groqResponse = await fetch(
       "https://api.groq.com/openai/v1/chat/completions",
       {
@@ -24,7 +24,7 @@ module.exports = async function handler(req, res) {
           Authorization: `Bearer ${GROQ_API_KEY}`,
         },
         body: JSON.stringify({
-          model: "llama3-8b-8192",
+          model: "llama-3.1-8b-instant",
           messages: [
             {
               role: "system",
@@ -57,3 +57,4 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ error: "AI error" });
   }
 };
+
