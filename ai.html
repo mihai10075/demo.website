@@ -1,144 +1,393 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>demo.website – AI chat</title>
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body class="ai-body">
-    <div class="glow-orbit"></div>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MihAI</title>
 
-    <main class="card">
-      <div class="card-inner">
-        <!-- HEADER: title + back to main page -->
-        <header class="top-bar">
-          <div class="top-left">
-            <div class="pill">
-              <span class="pill-dot"></span>
-              <span>demo.website / ai chat</span>
-            </div>
-            <h1>ai chat</h1>
-            <p class="tagline">talk to a tiny brain in the cloud</p>
-          </div>
+<style>
+/* ===============================
+   RESET
+=================================*/
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+}
 
-          <a href="index.html" class="ai-link-btn">← go back to main page</a>
-        </header>
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
 
-        <!-- GITHUB-STYLE LOGIN CARD -->
-        <div class="auth-row">
-          <div class="login-card">
-            <h2 class="login-title">Sign in to demo.website</h2>
+/* ===============================
+   SIDEBAR
+=================================*/
+.sidebar {
+  width: 260px;
+  background: #0b1220;
+  border-right: 1px solid #1f2937;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+}
 
-            <button class="btn-github" onclick="signInWithEmail()">
-              <span class="btn-github-icon">🐙</span>
-              <span>Sign in with email</span>
-            </button>
+.sidebar h2 {
+  margin-bottom: 16px;
+}
 
-            <p class="login-hint">
-              We’ll send you a magic link. No password needed.
-            </p>
+.new-chat-btn {
+  background: #2563eb;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  margin-bottom: 16px;
+}
 
-            <button class="btn-logout" onclick="signOut()">
-              Sign out
-            </button>
-          </div>
-        </div>
+.chat-list {
+  flex: 1;
+  overflow-y: auto;
+}
 
-        <!-- CHAT SECTION WITH REX IN THE MIDDLE -->
-        <section class="section">
-          <h2 class="section-title">chat</h2>
+.chat-item {
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-bottom: 6px;
+}
 
-          <!-- Rex mascot centered above chat -->
-          <div
-            class="creator-row"
-            style="margin-bottom: 10px; justify-content: center;"
-          >
-            <div class="creator">
-              <div
-                class="creator-avatar"
-                id="ai-mascot"
-                title="Click Rex!"
-              >
-                <img
-                  src="Screenshot 2026-02-24 215015.png"
-                  alt="Rex mascot"
-                />
-              </div>
-              <div class="creator-label">
-                <span class="creator-label-main">mascot</span>
-                <span class="creator-label-name">Rex – the website mascot</span>
-                <span class="creator-side-note">click Rex for confetti</span>
-              </div>
-            </div>
-          </div>
+.chat-item:hover {
+  background: #1f2937;
+}
 
-          <!-- Chat messages -->
-          <div id="chat-box" class="chat-box"></div>
+/* ===============================
+   MAIN
+=================================*/
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
 
-          <!-- Chat form -->
-          <form id="chat-form" class="chat-form">
-            <input
-              id="chat-input"
-              type="text"
-              placeholder="say something..."
-              autocomplete="off"
-            />
-            <button type="submit">Send</button>
-          </form>
+.header {
+  padding: 16px 24px;
+  border-bottom: 1px solid #1f2937;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #111827;
+}
 
-          <!-- Follow me button -->
-          <div class="follow-section">
-            <button
-              class="follow-btn"
-              onclick="window.open('https://instagram.com/your_handle', '_blank')"
-            >
-              Follow me
-            </button>
-          </div>
-        </section>
-      </div>
-    </main>
+.logo {
+  font-weight: 600;
+}
 
-    <!-- Pop sound for Rex -->
-    <audio id="pop-sound" src="pop.mp3" preload="auto"></audio>
+.header-buttons button {
+  margin-left: 8px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
 
-    <!-- Supabase Auth -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-      const supabaseUrl = "https://rhmnbnzyahasydfshhkc.supabase.co";
-      const supabaseAnonKey = "sb_publishable_zxfOSKAYtecmcxpFfQ9NRQ_Q3MPxL4I";
+/* ===============================
+   CHAT
+=================================*/
+.chat-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
 
-      window.supabaseClient = window.supabase.createClient(
-        supabaseUrl,
-        supabaseAnonKey
-      );
+.message {
+  max-width: 70%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  white-space: pre-wrap;
+}
 
-      async function signInWithEmail() {
-        const email = prompt("Enter your email:");
-        if (!email) return;
+.user {
+  background: #2563eb;
+  margin-left: auto;
+}
 
-        const { error } = await window.supabaseClient.auth.signInWithOtp({
-          email,
-          options: {
-            emailRedirectTo: "https://demo-website-zf3z.vercel.app/ai.html",
-          },
-        });
+.assistant {
+  background: #1f2937;
+}
 
-        if (error) {
-          alert("Error sending magic link: " + error.message);
-        } else {
-          alert("Check your email for a magic link to log in.");
-        }
-      }
+.input-area {
+  display: flex;
+  padding: 16px;
+  border-top: 1px solid #1f2937;
+}
 
-      async function signOut() {
-        await window.supabaseClient.auth.signOut();
-        alert("Signed out.");
-      }
-    </script>
+.input-area input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+}
 
-    <!-- Confetti + chat logic -->
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <script src="chat-widget.js"></script>
-  </body>
-</html>
+.input-area button {
+  margin-left: 10px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  background: #10b981;
+  color: white;
+  cursor: pointer;
+}
+
+/* ===============================
+   LIGHT THEME
+=================================*/
+body.light {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+body.light .sidebar {
+  background: #ffffff;
+  border-right: 1px solid #e2e8f0;
+}
+
+body.light .assistant {
+  background: #e2e8f0;
+}
+
+body.light .header {
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+/* ===============================
+   MOBILE
+=================================*/
+@media (max-width: 768px) {
+  .sidebar {
+    display: none;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <h2>MihAI</h2>
+  <button class="new-chat-btn" id="newChatBtn">+ New Chat</button>
+  <div class="chat-list" id="chatList"></div>
+</div>
+
+<div class="main">
+  <div class="header">
+    <div class="logo">MihAI Pro</div>
+    <div class="header-buttons">
+      <button id="themeToggle">Theme</button>
+      <button onclick="window.location='/api/auth/github'">Login</button>
+    </div>
+  </div>
+
+  <div class="chat-container" id="chatContainer"></div>
+
+  <div class="input-area">
+    <input id="messageInput" placeholder="Type a message..." />
+    <button id="sendBtn">Send</button>
+  </div>
+</div>
+
+<script>
+/* ===============================
+   STATE
+=================================*/
+
+let userId = localStorage.getItem("mihai_user") 
+  || "guest-" + crypto.randomUUID();
+
+localStorage.setItem("mihai_user", userId);
+
+let chats = JSON.parse(localStorage.getItem("mihai_chats") || "{}");
+let currentChatId = null;
+
+/* ===============================
+   DOM
+=================================*/
+
+const chatContainer = document.getElementById("chatContainer");
+const messageInput = document.getElementById("messageInput");
+const sendBtn = document.getElementById("sendBtn");
+const newChatBtn = document.getElementById("newChatBtn");
+const chatList = document.getElementById("chatList");
+const themeToggle = document.getElementById("themeToggle");
+
+/* ===============================
+   CHAT LOGIC
+=================================*/
+
+function saveChats() {
+  localStorage.setItem("mihai_chats", JSON.stringify(chats));
+}
+
+function createNewChat() {
+  const id = "chat-" + crypto.randomUUID();
+  chats[id] = {
+    title: "New Chat",
+    messages: []
+  };
+  currentChatId = id;
+  saveChats();
+  renderChats();
+  renderMessages();
+}
+
+function renderChats() {
+  chatList.innerHTML = "";
+  Object.entries(chats).forEach(([id, chat]) => {
+    const div = document.createElement("div");
+    div.className = "chat-item";
+    div.textContent = chat.title;
+    div.onclick = () => {
+      currentChatId = id;
+      renderMessages();
+    };
+    chatList.appendChild(div);
+  });
+}
+
+function renderMessages() {
+  chatContainer.innerHTML = "";
+  if (!currentChatId) return;
+  chats[currentChatId].messages.forEach(msg => {
+    addMessageToUI(msg.role, msg.content);
+  });
+  scrollBottom();
+}
+
+function addMessageToUI(role, content) {
+  const div = document.createElement("div");
+  div.className = "message " + role;
+  div.textContent = content;
+  chatContainer.appendChild(div);
+}
+
+function scrollBottom() {
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+/* ===============================
+   STREAMING SEND
+=================================*/
+
+async function sendMessage() {
+  const text = messageInput.value.trim();
+  if (!text || !currentChatId) return;
+
+  messageInput.value = "";
+
+  chats[currentChatId].messages.push({
+    role: "user",
+    content: text
+  });
+
+  addMessageToUI("user", text);
+
+  const assistantDiv = document.createElement("div");
+  assistantDiv.className = "message assistant";
+  chatContainer.appendChild(assistantDiv);
+
+  scrollBottom();
+
+  const response = await fetch("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      userId,
+      chatId: currentChatId,
+      messages: chats[currentChatId].messages,
+      stream: true
+    })
+  });
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let fullText = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const chunk = decoder.decode(value);
+    fullText += chunk;
+    assistantDiv.textContent = fullText;
+    scrollBottom();
+  }
+
+  chats[currentChatId].messages.push({
+    role: "assistant",
+    content: fullText
+  });
+
+  if (chats[currentChatId].title === "New Chat") {
+    chats[currentChatId].title = text.slice(0, 20);
+  }
+
+  saveChats();
+  renderChats();
+}
+
+sendBtn.onclick = sendMessage;
+messageInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") sendMessage();
+});
+
+newChatBtn.onclick = createNewChat;
+
+/* ===============================
+   THEME
+=================================*/
+
+if (localStorage.getItem("mihai_theme") === "light") {
+  document.body.classList.add("light");
+}
+
+themeToggle.onclick = () => {
+  document.body.classList.toggle("light");
+  localStorage.setItem(
+    "mihai_theme",
+    document.body.classList.contains("light") ? "light" : "dark"
+  );
+};
+
+/* ===============================
+   INIT
+=================================*/
+
+if (Object.keys(chats).length === 0) {
+  createNewChat();
+} else {
+  currentChatId = Object.keys(chats)[0];
+  renderChats();
+  renderMessages();
+}
+</script>
+
+<div id="commandPalette" class="command-palette hidden">
+  <div class="command-box glass">
+    <input type="text" id="commandInput" placeholder="Type a command..." />
+    <ul id="commandList">
+      <li data-command="new">New Chat</li>
+      <li data-command="theme">Toggle Theme</li>
+      <li data-command="export">Export Chat</li>
+      <li data-command="clear">Clear Chat</li>
+    </ul>
+  </div>
+</div>
+
+</body>
+</html> this is html
