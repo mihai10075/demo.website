@@ -46,18 +46,32 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { message, messages, userId } = req.body || {};
+    const body = req.body || {};
+    const { message, messages, userId } = body;
 
-    // Prefer explicit `message`, otherwise take last from `messages`
-    let finalMessage = message;
-    if ((!finalMessage || typeof finalMessage !== "string") && Array.isArray(messages)) {
-      const lastUser = [...messages]
+    // Normalize messages to an array
+    const msgs = Array.isArray(messages) ? messages : [];
+
+    // Prefer explicit `message`, otherwise take last non‑empty message
+    let finalMessage =
+      typeof message === "string" && message.trim().length > 0
+        ? message.trim()
+        : null;
+
+    if (!finalMessage && msgs.length > 0) {
+      const last = [...msgs]
         .reverse()
-        .find(m => m && m.role === "user" && typeof m.content === "string");
-      if (lastUser) finalMessage = lastUser.content;
+        .find(
+          (m) =>
+            m &&
+            typeof m.content === "string" &&
+            m.content.trim().length > 0
+        );
+      if (last) finalMessage = last.content.trim();
     }
 
-    if (!finalMessage || typeof finalMessage !== "string") {
+    if (!finalMessage) {
+      console.error("Bad body:", body);
       return res.status(400).json({ error: "Missing message" });
     }
 
