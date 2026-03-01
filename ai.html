@@ -282,7 +282,7 @@ function scrollBottom() {
 }
 
 /* ===============================
-   STREAMING SEND
+   SIMPLE SEND (no streaming)
 =================================*/
 
 async function sendMessage() {
@@ -291,6 +291,7 @@ async function sendMessage() {
 
   messageInput.value = "";
 
+  // Save user message locally
   chats[currentChatId].messages.push({
     role: "user",
     content: text
@@ -304,42 +305,41 @@ async function sendMessage() {
 
   scrollBottom();
 
-  const response = await fetch("/api/chat", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      userId,
-      chatId: currentChatId,
-      messages: chats[currentChatId].messages,
-      stream: true
-    })
-  });
+  try {
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: text
+      })
+    });
 
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let fullText = "";
+    const data = await response.json();
+    const fullText = data.reply || "No reply";
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    const chunk = decoder.decode(value);
-    fullText += chunk;
     assistantDiv.textContent = fullText;
     scrollBottom();
+
+    chats[currentChatId].messages.push({
+      role: "assistant",
+      content: fullText
+    });
+
+    if (chats[currentChatId].title === "New Chat") {
+      chats[currentChatId].title = text.slice(0, 20);
+    }
+
+    saveChats();
+    renderChats();
+  } catch (err) {
+    assistantDiv.textContent = "Error talking to AI.";
+    console.error(err);
   }
-
-  chats[currentChatId].messages.push({
-    role: "assistant",
-    content: fullText
-  });
-
-  if (chats[currentChatId].title === "New Chat") {
-    chats[currentChatId].title = text.slice(0, 20);
-  }
-
-  saveChats();
-  renderChats();
 }
+
+/* ===============================
+   EVENTS
+=================================*/
 
 sendBtn.onclick = sendMessage;
 messageInput.addEventListener("keydown", e => {
@@ -378,4 +378,4 @@ if (Object.keys(chats).length === 0) {
 </script>
 
 </body>
-</html> this is html
+</html>

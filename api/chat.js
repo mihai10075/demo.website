@@ -46,9 +46,32 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { message, userId } = req.body || {};
+    const body = req.body || {};
+    const { message, messages, userId } = body;
 
-    if (!message || typeof message !== "string") {
+    // Normalize messages to an array
+    const msgs = Array.isArray(messages) ? messages : [];
+
+    // Prefer explicit `message`, otherwise take last non‑empty message
+    let finalMessage =
+      typeof message === "string" && message.trim().length > 0
+        ? message.trim()
+        : null;
+
+    if (!finalMessage && msgs.length > 0) {
+      const last = [...msgs]
+        .reverse()
+        .find(
+          (m) =>
+            m &&
+            typeof m.content === "string" &&
+            m.content.trim().length > 0
+        );
+      if (last) finalMessage = last.content.trim();
+    }
+
+    if (!finalMessage) {
+      console.error("Bad body:", body);
       return res.status(400).json({ error: "Missing message" });
     }
 
@@ -64,7 +87,7 @@ module.exports = async function handler(req, res) {
     }
 
     // 1) Save user message in Base44
-    await saveMessage(safeUserId, "user", message).catch((e) =>
+    await saveMessage(safeUserId, "user", finalMessage).catch((e) =>
       console.error("saveMessage(user) failed:", e)
     );
 
@@ -99,9 +122,8 @@ Behavior:
         role: m.role === "user" ? "user" : "assistant",
         content: m.content,
       })),
+      { role: "user", content: finalMessage },
     ];
-
-    groqMessages.push({ role: "user", content: message });
 
     // 4) Call Groq chat completions API
     const aiRes = await fetch(
