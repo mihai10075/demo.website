@@ -91,9 +91,7 @@
     <!-- Supabase Auth -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-      // You already set these as env vars on Vercel:
-      // NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY
-      // For now, we can hardcode them; later you can swap to process.env if you bundle.
+      // Put your real Supabase values here:
       const supabaseUrl = "REPLACE_WITH_YOUR_SUPABASE_URL";
       const supabaseAnonKey = "REPLACE_WITH_YOUR_SUPABASE_ANON_KEY";
 
@@ -115,7 +113,11 @@
 
         const { error } = await window.supabaseClient.auth.signInWithOtp({
           email,
+          options: {
+            emailRedirectTo: "https://demo-website-zf3z.vercel.app/ai.html",
+          },
         });
+
         if (error) {
           alert("Error sending magic link: " + error.message);
         } else {
