@@ -10,7 +10,7 @@
 
     <main class="card">
       <div class="card-inner">
-        <!-- HEADER: title + image button + back to main page -->
+        <!-- HEADER: title + back to main page -->
         <header class="top-bar">
           <div class="top-left">
             <div class="pill">
@@ -21,18 +21,14 @@
             <p class="tagline">talk to a tiny brain in the cloud</p>
           </div>
 
-          <div class="top-actions">
-            <button
-              class="icon-btn"
-              type="button"
-              title="Upload image (coming soon)"
-              onclick="alert('Image upload coming soon 👀')"
-            >
-              📷
-            </button>
-            <a href="index.html" class="ai-link-btn">← go back to main page</a>
-          </div>
+          <a href="index.html" class="ai-link-btn">← go back to main page</a>
         </header>
+
+        <!-- SIMPLE AUTH CONTROLS -->
+        <div class="auth-row" style="margin-bottom: 12px; display: flex; gap: 8px;">
+          <button onclick="signInWithEmail()">Sign in with email</button>
+          <button onclick="signOut()">Sign out</button>
+        </div>
 
         <!-- CHAT SECTION WITH REX IN THE MIDDLE -->
         <section class="section">
@@ -91,6 +87,47 @@
 
     <!-- Pop sound for Rex -->
     <audio id="pop-sound" src="pop.mp3" preload="auto"></audio>
+
+    <!-- Supabase Auth -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+      // You already set these as env vars on Vercel:
+      // NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY
+      // For now, we can hardcode them; later you can swap to process.env if you bundle.
+      const supabaseUrl = "REPLACE_WITH_YOUR_SUPABASE_URL";
+      const supabaseAnonKey = "REPLACE_WITH_YOUR_SUPABASE_ANON_KEY";
+
+      window.supabaseClient = window.supabase.createClient(
+        supabaseUrl,
+        supabaseAnonKey
+      );
+
+      async function getUserId() {
+        const {
+          data: { session },
+        } = await window.supabaseClient.auth.getSession();
+        return session?.user?.id || null;
+      }
+
+      async function signInWithEmail() {
+        const email = prompt("Enter your email:");
+        if (!email) return;
+
+        const { error } = await window.supabaseClient.auth.signInWithOtp({
+          email,
+        });
+        if (error) {
+          alert("Error sending magic link: " + error.message);
+        } else {
+          alert("Check your email for a magic link to log in.");
+        }
+      }
+
+      async function signOut() {
+        await window.supabaseClient.auth.signOut();
+        alert("Signed out.");
+      }
+    </script>
 
     <!-- Confetti + chat logic -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>

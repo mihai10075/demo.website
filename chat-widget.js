@@ -55,12 +55,12 @@ async function typeMessage(text) {
 
 // save chat history to localStorage
 function saveChatHistory() {
-  const messages = Array.from(chatBox.querySelectorAll(".chat-msg")).map(
-    (el) => ({
-      text: el.textContent,
-      who: el.classList.contains("chat-msg-user") ? "user" : "ai",
-    })
-  );
+  const messages = Array.from(
+    chatBox.querySelectorAll(".chat-msg")
+  ).map((el) => ({
+    text: el.textContent,
+    who: el.classList.contains("chat-msg-user") ? "user" : "ai",
+  }));
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
   } catch (e) {
@@ -121,10 +121,26 @@ form.addEventListener("submit", async (e) => {
   addMessage("…", "ai-typing");
 
   try {
+    // Try to use Supabase userId if logged in
+    let userId = null;
+    if (window.supabaseClient) {
+      try {
+        const {
+          data: { session },
+        } = await window.supabaseClient.auth.getSession();
+        userId = session?.user?.id || null;
+      } catch (e) {
+        console.error("Failed to get Supabase session", e);
+      }
+    }
+
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: text, sessionId: SESSION_ID }),
+      body: JSON.stringify({
+        message: text,
+        userId: userId || SESSION_ID, // logged-in user or fallback per-device
+      }),
     });
 
     const data = await res.json();
