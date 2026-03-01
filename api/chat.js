@@ -1,131 +1,146 @@
-const chatBox = document.getElementById("chatBox");
-const userInput = document.getElementById("userInput");
-const sendBtn = document.getElementById("sendBtn");
-const celebrateBtn = document.getElementById("celebrateBtn");
+const fetch = require("node-fetch");
 
-let isTyping = false;
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
-// Helper: scroll chat to bottom
-function scrollChat() {
-  chatBox.scrollTop = chatBox.scrollHeight;
+// ---- Base44 backend ----
+const BASE44 =
+  "https://preview-sandbox--69a42efbe70340373718146e.base44.app/functions";
+
+// Save a message to Base44
+async function saveMessage(userId, role, content) {
+  const res = await fetch(`${BASE44}/messages`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    // Base44 still expects `sessionId`, we just pass the userId into that field
+    body: JSON.stringify({ sessionId: userId, role, content }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    console.error("Base44 saveMessage error:", res.status, text);
+    return null;
+  }
+
+  return res.json();
 }
 
-// Helper: add a chat message
-function addMessage(content, role = "ai") {
-  const msg = document.createElement("div");
-  msg.className = "chat-msg " + (role === "user" ? "chat-msg-user" : "chat-msg-ai");
-  msg.textContent = content;
-  chatBox.appendChild(msg);
-  scrollChat();
+// Get message history for a user
+async function getMessages(userId) {
+  const res = await fetch(
+    `${BASE44}/messages?sessionId=${encodeURIComponent(userId)}`
+  );
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    console.error("Base44 getMessages error:", res.status, text);
+    return [];
+  }
+
+  return res.json(); // array of messages
 }
 
-// Typing indicator
-function addTypingIndicator() {
-  const typing = document.createElement("div");
-  typing.id = "typingIndicator";
-  typing.className = "chat-msg chat-msg-ai";
-  typing.textContent = "MihAI is typing...";
-  chatBox.appendChild(typing);
-  scrollChat();
-}
-
-function removeTypingIndicator() {
-  const typing = document.getElementById("typingIndicator");
-  if (typing) typing.remove();
-}
-
-// Handle sending user message
-async function sendMessage() {
-  const message = userInput.value.trim();
-  if (!message || isTyping) return;
-  
-  addMessage(message, "user");
-  userInput.value = "";
-  
-  isTyping = true;
-  addTypingIndicator();
+// ---- Main chat handler ----
+module.exports = async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
 
   try {
-    const res = await fetch("/api/ai", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message, userId: localStorage.getItem("userId") || "anon" })
+    const { message, userId } = req.body || {};
+
+    if (!message || typeof message !== "string") {
+      return res.status(400).json({ error: "Missing message" });
+    }
+
+    // If frontend didn't send a userId, fall back to anon
+    const safeUserId =
+      typeof userId === "string" && userId.trim().length > 0
+        ? userId.trim()
+        : "anon-default";
+
+    if (!GROQ_API_KEY) {
+      console.error("Missing GROQ_API_KEY");
+      return res.status(500).json({ error: "Server misconfigured" });
+    }
+
+    // 1) Save user message in Base44
+    await saveMessage(safeUserId, "user", message).catch((e) =>
+      console.error("saveMessage(user) failed:", e)
+    );
+
+    // 2) Load history from Base44
+    const history = await getMessages(safeUserId).catch((e) => {
+      console.error("getMessages failed:", e);
+      return [];
     });
 
-    const data = await res.json();
-    removeTypingIndicator();
-    isTyping = false;
+    // 3) Build messages for Groq: system + history + latest user
+    const groqMessages = [
+      {
+        role: "system",
+        content: `
+You are MihAI, an expressive, slightly chaotic but kind AI friend living on demo.website.
 
-    // Animate reply character by character
-    const reply = data.reply || "Oops, something went wrong 😅";
-    animateReply(reply);
-  } catch (err) {
-    removeTypingIndicator();
-    isTyping = false;
-    addMessage("Error contacting AI backend 😭");
-    console.error(err);
-  }
-}
+Style:
+- Use varied greetings; do NOT always say the same thing. Examples: "yo, what are you up to today? 😄", "heyy, what’s on your mind?", "oh hi, nice to see you here 🙌".
+- Use emojis naturally to show light emotions (😄 🤔 😭 💀 😴 🔥), but max 2–3 per reply so it doesn't look spammy.
+- Match the user's energy: if they type chill and simple, keep it low-key; if they are excited or spam emojis, you can be more hype.
+- You can use internet slang sometimes ("bruh", "lmao", "ngl"), but keep answers readable.
+- Never pretend to be human; you are an AI called MihAI.
 
-// Animate AI message text
-function animateReply(text) {
-  const msg = document.createElement("div");
-  msg.className = "chat-msg chat-msg-ai";
-  chatBox.appendChild(msg);
-  scrollChat();
+Behavior:
+- Keep answers short, casual, and helpful: usually 1–4 sentences.
+- When the user just says something like "hi", "yo", "hello", reply with a warm greeting + a tiny follow-up question.
+- When the user shares something personal, briefly acknowledge the feeling first, then help.
+- If you don't know something, admit it honestly but still try to be helpful.
+`.trim(),
+      },
+      ...history.map((m) => ({
+        role: m.role === "user" ? "user" : "assistant",
+        content: m.content,
+      })),
+    ];
 
-  let i = 0;
-  const interval = setInterval(() => {
-    msg.textContent += text[i];
-    i++;
-    scrollChat();
-    if (i >= text.length) clearInterval(interval);
-  }, 20);
-}
+    groqMessages.push({ role: "user", content: message });
 
-// Celebrate confetti
-celebrateBtn.addEventListener("click", () => {
-  confetti();
-});
-
-// Enter key sends message
-userInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") sendMessage();
-});
-
-// Send button
-sendBtn.addEventListener("click", sendMessage);
-
-// Confetti animation
-function confetti() {
-  const colors = ["#38bdf8", "#f97316", "#22c55e", "#facc15"];
-  for (let i = 0; i < 80; i++) {
-    const particle = document.createElement("div");
-    particle.style.position = "fixed";
-    particle.style.background = colors[Math.floor(Math.random() * colors.length)];
-    particle.style.width = particle.style.height = `${Math.random() * 6 + 4}px`;
-    particle.style.left = `${Math.random() * window.innerWidth}px`;
-    particle.style.top = `-${Math.random() * 20}px`;
-    particle.style.borderRadius = "50%";
-    particle.style.opacity = 0.8;
-    particle.style.zIndex = 9999;
-    particle.style.pointerEvents = "none";
-    document.body.appendChild(particle);
-
-    let fall = 0;
-    const fallInterval = setInterval(() => {
-      fall += Math.random() * 4 + 2;
-      particle.style.top = fall + "px";
-      particle.style.transform = `rotate(${fall * 3}deg)`;
-      if (fall > window.innerHeight) {
-        particle.remove();
-        clearInterval(fallInterval);
+    // 4) Call Groq chat completions API
+    const aiRes = await fetch(
+      "https://api.groq.com/openai/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${GROQ_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile", // use any Groq model you like
+          messages: groqMessages,
+        }),
       }
-    }, 16);
-  }
-}
+    );
 
-// Initialize user ID
-if (!localStorage.getItem("userId")) {
-  localStorage.setItem("userId", "user-" + Math.floor(Math.random() * 1e6));
-}
+    if (!aiRes.ok) {
+      const errorText = await aiRes.text();
+      console.error("Groq API error:", aiRes.status, errorText);
+      return res
+        .status(500)
+        .json({ error: "AI backend error", details: errorText });
+    }
+
+    const data = await aiRes.json();
+
+    const reply =
+      data?.choices?.[0]?.message?.content ||
+      "I had trouble generating a reply.";
+
+    // 5) Save assistant reply in Base44
+    await saveMessage(safeUserId, "assistant", reply).catch((e) =>
+      console.error("saveMessage(assistant) failed:", e)
+    );
+
+    return res.status(200).json({ reply });
+  } catch (err) {
+    console.error("AI handler error:", err);
+    return res.status(500).json({ error: "AI error" });
+  }
+};

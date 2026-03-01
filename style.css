@@ -26,7 +26,6 @@ body {
   justify-content: center;
   align-items: flex-start;
   padding: 56px 16px 40px;
-  transition: background 0.3s ease, color 0.3s ease;
 }
 
 /* Glow background */
@@ -39,7 +38,6 @@ body {
   background:
     radial-gradient(circle at 10% 10%, rgba(56, 189, 248, 0.18) 0, transparent 45%),
     radial-gradient(circle at 90% 80%, rgba(249, 115, 22, 0.16) 0, transparent 50%);
-  transition: opacity 0.3s ease;
 }
 
 /* Top nav */
@@ -53,19 +51,12 @@ body {
   background: rgba(15, 23, 42, 0.9);
   border: 1px solid rgba(148, 163, 184, 0.4);
   z-index: 10;
-  display: flex;
-  gap: 12px;
 }
 
 .nav-link {
   color: var(--text-muted);
   text-decoration: none;
   font-size: 13px;
-  transition: color 0.2s ease;
-}
-
-.nav-link:hover {
-  color: var(--accent-soft);
 }
 
 .nav-link-primary {
@@ -86,7 +77,6 @@ body {
   border: 1px solid rgba(148, 163, 184, 0.22);
   position: relative;
   overflow: hidden;
-  transition: all 0.3s ease;
 }
 
 .card::before {
@@ -116,7 +106,6 @@ body {
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 18px;
-  flex-wrap: wrap;
 }
 
 .top-left {
@@ -137,7 +126,6 @@ body {
   font-size: 12px;
   color: var(--text-muted);
   width: fit-content;
-  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .pill-dot {
@@ -172,7 +160,6 @@ h1 {
   border-radius: 999px;
   padding: 4px 10px 4px 12px;
   border: 1px solid rgba(148, 163, 184, 0.5);
-  transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .top-search input {
@@ -181,11 +168,17 @@ h1 {
   background: transparent;
   color: var(--text-main);
   font-size: 13px;
-  width: 140px;
+  width: 120px;
 }
 
 .top-search input::placeholder {
   color: var(--text-muted);
+}
+
+.top-search-icon {
+  width: 16px;
+  height: 16px;
+  stroke: var(--accent-soft);
 }
 
 /* Creator row */
@@ -367,7 +360,6 @@ ul li::before {
   box-shadow: 0 8px 20px rgba(249, 115, 22, 0.4);
   font-size: 14px;
   cursor: pointer;
-  transition: all 0.2s ease;
 }
 
 .celebrate-btn:hover {
@@ -427,6 +419,299 @@ ul li::before {
   }
 }
 
-/* ===== AI PAGE & CHAT STYLES ===== */
+/* ===== AI CHAT PAGE (FULL) ===== */
 
-/* (All AI page styles from your original CSS are preserved, unchanged) */
+body.ai-body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  background: radial-gradient(circle at top, #1d2538 0, #020617 55%);
+  color: var(--text-main);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  padding: 56px 16px 40px;
+}
+
+/* Make the AI card bigger on this page */
+body.ai-body .card {
+  max-width: 960px;
+  width: 100%;
+  min-height: min(720px, calc(100vh - 120px));
+  display: flex;
+  flex-direction: column;
+  padding: 22px 22px 20px;
+}
+
+/* Header inside AI card */
+body.ai-body .top-bar {
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.9);
+  padding-bottom: 8px;
+}
+
+/* Chat section fills remaining space */
+body.ai-body .section {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: none;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* Chat shell: mascot + messages + form */
+body.ai-body .section > .creator-row {
+  margin-bottom: 10px !important;
+}
+
+.chat-box {
+  margin-top: 8px;
+  flex: 1;
+  max-height: none;
+  overflow-y: auto;
+  padding: 12px 10px;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.85);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.chat-msg {
+  padding: 8px 10px;
+  border-radius: 10px;
+  max-width: 80%;
+}
+
+.chat-msg-user {
+  align-self: flex-end;
+  background: #38bdf8;
+  color: #0b1120;
+}
+
+.chat-msg-ai {
+  align-self: flex-start;
+  background: #020617;
+  color: #e5e7eb;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+/* Chat form pinned under chat */
+.chat-form {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+}
+
+.chat-form input {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: rgba(15, 23, 42, 0.96);
+  color: #e5e7eb;
+}
+
+.chat-form input::placeholder {
+  color: var(--text-muted);
+}
+
+.chat-form button {
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: none;
+  background: var(--accent-soft);
+  color: #020617;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease,
+    background 0.12s ease;
+}
+
+.chat-form button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(14, 165, 233, 0.5);
+  background: #38bdf8;
+}
+
+/* Follow button under chat */
+.follow-section {
+  margin-top: 12px;
+  text-align: center;
+}
+
+.follow-btn {
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: none;
+  background: var(--accent-soft);
+  color: #020617;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(14, 165, 233, 0.45);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+
+.follow-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(14, 165, 233, 0.65);
+  background: #38bdf8;
+}
+
+/* AI link button on main page */
+.ai-link-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: #020617;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+  box-shadow: 0 8px 20px rgba(14, 165, 233, 0.45);
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease,
+    background 0.12s ease;
+}
+
+.ai-link-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(14, 165, 233, 0.65);
+  background: #38bdf8;
+}
+
+/* Top actions area in AI header (image button + back link) */
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Small circular icon button (for images) */
+.icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: rgba(15, 23, 42, 0.96);
+  color: var(--text-main);
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease,
+    background 0.12s ease;
+}
+
+.icon-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.7);
+  background: rgba(30, 64, 175, 0.9);
+}
+
+/* Mobile tweaks for AI page */
+@media (max-width: 600px) {
+  body.ai-body {
+    padding-top: 32px;
+    padding-bottom: 24px;
+  }
+  body.ai-body .card {
+    border-radius: 20px;
+    min-height: calc(100vh - 80px);
+    padding: 18px 14px 16px;
+  }
+  .top-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+/* ===== GITHUB-STYLE LOGIN CARD (AI PAGE) ===== */
+
+.auth-row {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.login-card {
+  background: #010409;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 16px 20px;
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+}
+
+.login-title {
+  font-size: 18px;
+  margin-bottom: 12px;
+  color: #e6edf3;
+}
+
+.btn-github {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #30363d;
+  background: #21262d;
+  color: #f0f6fc;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease,
+    transform 0.05s ease;
+}
+
+.btn-github:hover {
+  background: #30363d;
+  border-color: #8b949e;
+}
+
+.btn-github:active {
+  transform: translateY(1px);
+}
+
+.btn-github-icon {
+  font-size: 16px;
+}
+
+.login-hint {
+  margin-top: 10px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: #8b949e;
+}
+
+.btn-logout {
+  margin-top: 4px;
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #30363d;
+  background: transparent;
+  color: #e6edf3;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-logout:hover {
+  background: #151b23;
+  border-color: #8b949e;
+}
