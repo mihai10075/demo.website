@@ -10,7 +10,7 @@
 
     <main class="card">
       <div class="card-inner">
-        <!-- HEADER: title + back to main page -->
+        <!-- HEADER: title + image button + back to main page -->
         <header class="top-bar">
           <div class="top-left">
             <div class="pill">
@@ -21,7 +21,17 @@
             <p class="tagline">talk to a tiny brain in the cloud</p>
           </div>
 
-          <a href="index.html" class="ai-link-btn">← go back to main page</a>
+          <div class="top-actions">
+            <button
+              class="icon-btn"
+              type="button"
+              title="Upload image (coming soon)"
+              onclick="alert('Image upload coming soon 👀')"
+            >
+              📷
+            </button>
+            <a href="index.html" class="ai-link-btn">← go back to main page</a>
+          </div>
         </header>
 
         <!-- CHAT SECTION WITH REX IN THE MIDDLE -->
@@ -29,7 +39,10 @@
           <h2 class="section-title">chat</h2>
 
           <!-- Rex mascot centered above chat -->
-          <div class="creator-row" style="margin-bottom: 10px; justify-content: center;">
+          <div
+            class="creator-row"
+            style="margin-bottom: 10px; justify-content: center;"
+          >
             <div class="creator">
               <div
                 class="creator-avatar"

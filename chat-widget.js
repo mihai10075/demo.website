@@ -4,6 +4,21 @@ const input = document.getElementById("chat-input");
 const chatBox = document.getElementById("chat-box");
 
 const STORAGE_KEY = "demo_website_ai_chat";
+const SESSION_KEY = "demo_website_ai_session";
+
+function getSessionId() {
+  let id = localStorage.getItem(SESSION_KEY);
+  if (!id) {
+    id =
+      "sess_" +
+      Math.random().toString(36).slice(2) +
+      Date.now().toString(36);
+    localStorage.setItem(SESSION_KEY, id);
+  }
+  return id;
+}
+
+const SESSION_ID = getSessionId();
 
 // add a message (user, ai, or typing)
 function addMessage(text, who) {
@@ -109,7 +124,7 @@ form.addEventListener("submit", async (e) => {
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: text }),
+      body: JSON.stringify({ message: text, sessionId: SESSION_ID }),
     });
 
     const data = await res.json();
