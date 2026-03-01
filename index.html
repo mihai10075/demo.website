@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Home • Our Site</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Glow background -->
+  <div class="glow-orbit"></div>
+
+  <!-- Top navigation -->
+  <nav class="top-nav">
+    <a href="#" class="nav-link">Home</a>
+    <a href="ai.html" class="nav-link nav-link-primary">AI Chat</a>
+    <a href="#" class="nav-link">About</a>
+  </nav>
+
+  <!-- Main card -->
+  <div class="card">
+    <div class="card-inner">
+
+      <!-- Header: creator info -->
+      <header class="creator-row">
+        <div class="creator">
+          <div class="creator-avatar">
+            <img src="avatar.jpg" alt="Creator Avatar">
+          </div>
+          <div class="creator-label">
+            <span class="creator-label-name">Your Name</span>
+            <span class="creator-label-main">Web & AI Enthusiast</span>
+          </div>
+        </div>
+        <div class="top-search">
+          <input type="text" placeholder="Search videos..." />
+          <svg class="top-search-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 3a7.5 7.5 0 006.15 13.65z" />
+          </svg>
+        </div>
+      </header>
+
+      <!-- Section: Videos -->
+      <section class="section">
+        <h2 class="section-title">Featured Videos</h2>
+        <div class="video-grid">
+          <div class="video-embed">
+            <div class="video-container">
+              <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="Video 1" frameborder="0" allowfullscreen></iframe>
+            </div>
+            <p class="video-title">Video Title 1</p>
+            <p class="video-meta">2.3k views • 3 days ago</p>
+          </div>
+          <div class="video-embed">
+            <div class="video-container">
+              <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="Video 2" frameborder="0" allowfullscreen></iframe>
+            </div>
+            <p class="video-title">Video Title 2</p>
+            <p class="video-meta">1.1k views • 1 week ago</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- AI link button -->
+      <div class="section">
+        <a href="ai.html" class="ai-link-btn">Go to AI Chat</a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <span class="footer-brand">OurSite</span>
+    <span class="footer-dot">•</span>
+    <span class="footer-year">2026</span>
+    <span class="footer-dot">•</span>
+    <span class="footer-name">Crafted with care</span>
+  </footer>
+</body>
+</html>
