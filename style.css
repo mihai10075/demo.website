@@ -635,3 +635,83 @@ body.ai-body .section > .creator-row {
     justify-content: flex-end;
   }
 }
+
+/* ===== GITHUB-STYLE LOGIN CARD (AI PAGE) ===== */
+
+.auth-row {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.login-card {
+  background: #010409;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 16px 20px;
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+}
+
+.login-title {
+  font-size: 18px;
+  margin-bottom: 12px;
+  color: #e6edf3;
+}
+
+.btn-github {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #30363d;
+  background: #21262d;
+  color: #f0f6fc;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease,
+    transform 0.05s ease;
+}
+
+.btn-github:hover {
+  background: #30363d;
+  border-color: #8b949e;
+}
+
+.btn-github:active {
+  transform: translateY(1px);
+}
+
+.btn-github-icon {
+  font-size: 16px;
+}
+
+.login-hint {
+  margin-top: 10px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: #8b949e;
+}
+
+.btn-logout {
+  margin-top: 4px;
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #30363d;
+  background: transparent;
+  color: #e6edf3;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-logout:hover {
+  background: #151b23;
+  border-color: #8b949e;
+}

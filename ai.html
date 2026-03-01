@@ -24,10 +24,24 @@
           <a href="index.html" class="ai-link-btn">← go back to main page</a>
         </header>
 
-        <!-- SIMPLE AUTH CONTROLS -->
-        <div class="auth-row" style="margin-bottom: 12px; display: flex; gap: 8px;">
-          <button onclick="signInWithEmail()">Sign in with email</button>
-          <button onclick="signOut()">Sign out</button>
+        <!-- GITHUB-STYLE LOGIN CARD -->
+        <div class="auth-row">
+          <div class="login-card">
+            <h2 class="login-title">Sign in to demo.website</h2>
+
+            <button class="btn-github" onclick="signInWithEmail()">
+              <span class="btn-github-icon">🐙</span>
+              <span>Sign in with email</span>
+            </button>
+
+            <p class="login-hint">
+              We’ll send you a magic link. No password needed.
+            </p>
+
+            <button class="btn-logout" onclick="signOut()">
+              Sign out
+            </button>
+          </div>
         </div>
 
         <!-- CHAT SECTION WITH REX IN THE MIDDLE -->
@@ -98,13 +112,6 @@
         supabaseUrl,
         supabaseAnonKey
       );
-
-      async function getUserId() {
-        const {
-          data: { session },
-        } = await window.supabaseClient.auth.getSession();
-        return session?.user?.id || null;
-      }
 
       async function signInWithEmail() {
         const email = prompt("Enter your email:");
