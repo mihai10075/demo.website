@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MihAI Chat</title>
   <style>
-    /* your existing styles, unchanged */
     * {
       box-sizing: border-box;
       margin: 0;
@@ -448,8 +447,19 @@
         const data = await response.json();
         const fullText = data.reply || "No reply from MihAI.";
 
-        assistantDiv.textContent = fullText;
-        scrollBottom();
+        // smooth typing effect
+        assistantDiv.textContent = "";
+        let i = 0;
+        const speed = 18; // ms per character
+
+        const interval = setInterval(() => {
+          assistantDiv.textContent += fullText[i] || "";
+          i++;
+          scrollBottom();
+          if (i >= fullText.length) {
+            clearInterval(interval);
+          }
+        }, speed);
 
         chats[currentChatId].messages.push({
           role: "assistant",
