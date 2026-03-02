@@ -1,25 +1,61 @@
 const fetch = require("node-fetch");
+const Groq = require("groq-sdk");
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
-const BASE44 =
-  "https://preview-sandbox--69a42efbe70340373718146e.base44.app/functions";
+// ─── Base44 helpers ──────────────────────────────────────────────────────────
+const BASE44_APP_URL = "https://mihai-memory-core.base44.app"; // your app
 
 async function saveMessage(userId, role, content) {
-  const res = await fetch(`${BASE44}/messages`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ sessionId: userId, role, content }),
-  });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    console.error("Base44 saveMessage error:", res.status, text);
+  try {
+    const res = await fetch(`${BASE44_APP_URL}/functions/saveMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, role, content }),
+    });
+    return await res.json();
+  } catch (e) {
+    console.error("[saveMessage]", e.message);
     return null;
   }
-
-  return res.json();
 }
+
+async function upsertMemoryFacts(userId, factsToUpsert = [], factsToDelete = []) {
+  try {
+    const res = await fetch(`${BASE44_APP_URL}/functions/upsertMemory`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, upsert: factsToUpsert, delete: factsToDelete }),
+    });
+    return await res.json();
+  } catch (e) {
+    console.error("[upsertMemoryFacts]", e.message);
+    return null;
+  }
+}
+
+async function loadRelevantMemory(userId, lastUserMessage) {
+  try {
+    const res = await fetch(`${BASE44_APP_URL}/functions/queryMemory`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, message: lastUserMessage, limit: 8 }),
+    });
+    const { facts } = await res.json();
+    return facts ?? [];
+  } catch (e) {
+    console.error("[loadRelevantMemory]", e.message);
+    return [];
+  }
+}
+
+// ─── Groq client ─────────────────────────────────────────────────────────────
+const groq = new Groq({ apiKey: GROQ_API_KEY });
+
+const SYSTEM_PROMPT = `You are MihAI — expressive, slightly chaotic but kind AI friend.
+You keep things casual and fun while actually being helpful.
+You remember things the user tells you across conversations.
+If the MEMORY block is present, use it to personalize your answers naturally.`;
 
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
@@ -27,18 +63,11 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    const start = Date.now();
     const { userId, messages } = req.body || {};
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return res.status(400).json({ error: "Missing messages array" });
-    }
-
-    const lastUserMessage = messages
-      .filter((m) => m.role === "user")
-      .slice(-1)[0];
-
-    if (!lastUserMessage || typeof lastUserMessage.content !== "string") {
-      return res.status(400).json({ error: "Missing user message" });
     }
 
     const safeUserId =
@@ -51,68 +80,84 @@ module.exports = async function handler(req, res) {
       return res.status(500).json({ error: "Server misconfigured" });
     }
 
-    await saveMessage(safeUserId, "user", lastUserMessage.content).catch(
-      (e) => console.error("saveMessage(user) failed:", e)
-    );
+    const lastUserMessage = messages.at(-1)?.content ?? "";
 
-    const groqMessages = [
-      {
-        role: "system",
-        content: `
-You are MihAI, an expressive, slightly chaotic but kind AI friend.
+    // Step 1: load memory
+    const memoryFacts = await loadRelevantMemory(safeUserId, lastUserMessage);
 
-Style:
-- Use varied greetings; do NOT always say the same thing.
-- Use emojis naturally to show light emotions (😄 🤔 😭 💀 😴 🔥), but max 2–3 per reply.
-- Match the user's energy and slang.
-- Never pretend to be human; you are an AI called MihAI.
-
-Behavior:
-- Keep answers short, casual, and helpful: usually 1–4 sentences.
-- For simple greetings, respond with a warm greeting + a tiny follow-up question.
-- Acknowledge feelings briefly, then help.
-- If you don't know something, admit it and still try to be useful.
-`.trim(),
-      },
-      ...messages.map((m) => ({
-        role: m.role === "user" ? "user" : "assistant",
-        content: m.content,
-      })),
-    ];
-
-    const aiRes = await fetch(
-      "https://api.groq.com/openai/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${GROQ_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
-          messages: groqMessages,
-        }),
-      }
-    );
-
-    if (!aiRes.ok) {
-      const errorText = await aiRes.text();
-      console.error("Groq API error:", aiRes.status, errorText);
-      return res
-        .status(500)
-        .json({ error: "AI backend error", details: errorText });
+    // Step 2: build MEMORY block
+    let memoryBlock = "";
+    if (memoryFacts.length > 0) {
+      const lines = memoryFacts
+        .map((f) => `• [${f.category}] ${f.key}: ${f.value}`)
+        .join("\n");
+      memoryBlock = `\n\n---\nMEMORY (things you know about this user):\n${lines}\n---`;
     }
 
-    const data = await aiRes.json();
+    // Step 3: call Groq
+    const groqMessages = [
+      { role: "system", content: SYSTEM_PROMPT + memoryBlock },
+      ...messages,
+    ];
+
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages: groqMessages,
+      max_tokens: 1024,
+    });
+
     const reply =
-      data?.choices?.[0]?.message?.content ||
+      completion.choices?.[0]?.message?.content ||
       "I had trouble generating a reply.";
 
-    await saveMessage(safeUserId, "assistant", reply).catch((e) =>
-      console.error("saveMessage(assistant) failed:", e)
-    );
+    // Step 4: fire-and-forget save + memory extraction
+    (async () => {
+      try {
+        await Promise.all([
+          saveMessage(safeUserId, "user", lastUserMessage),
+          saveMessage(safeUserId, "assistant", reply),
+        ]);
 
-    return res.status(200).json({ reply });
+        const extraction = await groq.chat.completions.create({
+          model: "llama-3.3-70b-versatile",
+          messages: [
+            {
+              role: "system",
+              content: `Extract factual things to remember about the user from this exchange.
+Return JSON only: { "upsert": [{ "key": "...", "value": "...", "category": "identity|preference|project|habit|constraint|goal|context", "confidence": 0.0-1.0, "source": "user_explicit|user_implied|assistant_inferred" }], "delete": ["key_to_forget"] }
+Only include facts that are genuinely worth remembering long-term. If nothing notable, return { "upsert": [], "delete": [] }.`,
+            },
+            { role: "user", content: lastUserMessage },
+            { role: "assistant", content: reply },
+          ],
+          response_format: { type: "json_object" },
+          max_tokens: 512,
+        });
+
+        try {
+          const { upsert = [], delete: del = [] } = JSON.parse(
+            extraction.choices[0].message.content
+          );
+          if (upsert.length > 0 || del.length > 0) {
+            await upsertMemoryFacts(safeUserId, upsert, del);
+          }
+        } catch (e) {
+          console.error("Memory JSON parse failed:", e);
+        }
+      } catch (e) {
+        console.error("Background memory tasks failed:", e);
+      }
+    })();
+
+    // Step 5: respond to frontend
+    return res.status(200).json({
+      reply,
+      meta: {
+        latencyMs: Date.now() - start,
+        model: "llama-3.3-70b-versatile",
+        memoryUsed: memoryFacts.length,
+      },
+    });
   } catch (err) {
     console.error("AI handler error:", err);
     return res.status(500).json({ error: "AI error" });
