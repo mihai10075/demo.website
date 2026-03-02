@@ -58,7 +58,8 @@ module.exports = async function handler(req, res) {
     const safeUserId = `gh_${githubId}`;
 
     // 3) Return HTML that saves userId to localStorage and redirects back to chat.html
-    const redirectUrl = "https://demo-website-6ub1o4xo9-mihai10075s-projects.vercel.app/chat.html";
+    const redirectUrl = "https://demo-website-h5tqjbizi-mihai10075s-projects.vercel.app/chat.html";
+
 
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.end(`
