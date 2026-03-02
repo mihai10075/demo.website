@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MihAI Chat</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background: #020617;
+      color: #e5e7eb;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .layout {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      height: 100%;
+    }
+
+    @media (max-width: 768px) {
+      .layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .sidebar {
+        display: none;
+      }
+    }
+
+    .sidebar {
+      background: #020617;
+      border-right: 1px solid #111827;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .sidebar-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-sub {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-bottom: 10px;
+    }
+
+    .btn-primary {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #022c22;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-primary span.icon {
+      font-size: 15px;
+    }
+
+    .chat-list {
+      flex: 1;
+      margin-top: 10px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .chat-item {
+      padding: 7px 9px;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      margin-bottom: 6px;
+      color: #e5e7eb;
+      border: 1px solid transparent;
+    }
+
+    .chat-item:hover {
+      background: #020617;
+      border-color: #1e293b;
+    }
+
+    .chat-item.active {
+      background: #020617;
+      border-color: #22c55e;
+    }
+
+    .sidebar-footer {
+      font-size: 11px;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+
+    .main {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .topbar {
+      height: 52px;
+      border-bottom: 1px solid #111827;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #020617;
+    }
+
+    .top-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 10px rgba(34, 197, 94, 0.8);
+    }
+
+    .logo-text {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .top-model {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid #1f2937;
+      color: #9ca3af;
+    }
+
+    .top-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .top-link {
+      color: #9ca3af;
+      text-decoration: none;
+      padding: 4px 9px;
+      border-radius: 999px;
+      border: 1px solid #1f2937;
+    }
+
+    .theme-btn {
+      border-radius: 999px;
+      border: 1px solid #1f2937;
+      background: transparent;
+      color: #e5e7eb;
+      font-size: 12px;
+      padding: 4px 9px;
+      cursor: pointer;
+    }
+
+    .chat-container {
+      flex: 1;
+      padding: 16px 16px 10px;
+      overflow-y: auto;
+      background: radial-gradient(circle at top, rgba(37, 99, 235, 0.15), transparent 55%),
+                  radial-gradient(circle at bottom, rgba(16, 185, 129, 0.12), transparent 55%),
+                  #020617;
+    }
+
+    .message {
+      max-width: 70%;
+      padding: 9px 12px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      white-space: pre-wrap;
+      font-size: 14px;
+    }
+
+    .message.user {
+      margin-left: auto;
+      background: #1d4ed8;
+    }
+
+    .message.assistant {
+      background: #020617;
+      border: 1px solid #1f2937;
+    }
+
+    .input-wrap {
+      border-top: 1px solid #111827;
+      padding: 10px 14px 14px;
+      background: #020617;
+    }
+
+    .input-shell {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      background: #020617;
+      border-radius: 16px;
+      border: 1px solid #1f2937;
+      padding: 6px 8px 6px 10px;
+    }
+
+    textarea {
+      border: none;
+      outline: none;
+      resize: none;
+      flex: 1;
+      background: transparent;
+      color: #e5e7eb;
+      font-size: 14px;
+      max-height: 120px;
+      min-height: 28px;
+    }
+
+    .send-btn {
+      border-radius: 999px;
+      border: none;
+      background: #22c55e;
+      color: #022c22;
+      width: 30px;
+      height: 30px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .hint {
+      font-size: 11px;
+      color: #6b7280;
+      margin-top: 6px;
+      padding: 0 4px;
+    }
+
+    body.light {
+      background: #f9fafb;
+      color: #020617;
+    }
+
+    body.light .sidebar {
+      background: #f9fafb;
+      border-right-color: #e5e7eb;
+    }
+
+    body.light .topbar {
+      background: #f9fafb;
+      border-bottom-color: #e5e7eb;
+    }
+
+    body.light .chat-container {
+      background: #f3f4f6;
+    }
+
+    body.light .message.assistant {
+      background: #ffffff;
+      border-color: #e5e7eb;
+    }
+
+    body.light .message.user {
+      background: #2563eb;
+    }
+
+    body.light .input-shell {
+      background: #ffffff;
+      border-color: #e5e7eb;
+    }
+
+    body.light .theme-btn {
+      border-color: #e5e7eb;
+      color: #111827;
+    }
+
+    body.light .top-link {
+      border-color: #e5e7eb;
+      color: #111827;
+    }
+
+    body.light .chat-item:hover {
+      background: #f9fafb;
+      border-color: #e5e7eb;
+    }
+
+    .assistant.error {
+      border-color: #b91c1c;
+      color: #fecaca;
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div>
+        <div class="sidebar-title">MihAI chats</div>
+        <div class="sidebar-sub">Saved locally in your browser.</div>
+        <button id="newChatBtn" class="btn-primary">
+          <span class="icon">➕</span>
+          New chat
+        </button>
+      </div>
+      <div id="chatList" class="chat-list"></div>
+      <div class="sidebar-footer">
+        Tip: Press Enter to send, Shift+Enter for a new line.
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="top-left">
+          <div class="logo-dot"></div>
+          <div class="logo-text">MihAI chat</div>
+          <div class="top-model">Llama 3.3 · Groq</div>
+        </div>
+        <div class="top-right">
+          <a href="/" class="top-link">← Back to home</a>
+          <button id="themeToggle" class="theme-btn">Toggle theme</button>
+        </div>
+      </header>
+
+      <section id="chatContainer" class="chat-container"></section>
+
+      <section class="input-wrap">
+        <div class="input-shell">
+          <textarea
+            id="messageInput"
+            rows="1"
+            placeholder="Talk to MihAI..."
+          ></textarea>
+          <button id="sendBtn" class="send-btn">➤</button>
+        </div>
+        <div class="hint">
+          MihAI is an expressive, slightly chaotic but kind AI friend. Keep it chill and it will, too.
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    let userId =
+      localStorage.getItem("mihai_user") || "guest-" + crypto.randomUUID();
+    localStorage.setItem("mihai_user", userId);
+
+    let chats = JSON.parse(localStorage.getItem("mihai_chats") || "{}");
+    let currentChatId = null;
+
+    const chatContainer = document.getElementById("chatContainer");
+    const messageInput = document.getElementById("messageInput");
+    const sendBtn = document.getElementById("sendBtn");
+    const newChatBtn = document.getElementById("newChatBtn");
+    const chatList = document.getElementById("chatList");
+    const themeToggle = document.getElementById("themeToggle");
+
+    function saveChats() {
+      localStorage.setItem("mihai_chats", JSON.stringify(chats));
+    }
+
+    function createNewChat() {
+      const id = "chat-" + crypto.randomUUID();
+      chats[id] = {
+        title: "New chat",
+        messages: [],
+      };
+      currentChatId = id;
+      saveChats();
+      renderChats();
+      renderMessages();
+    }
+
+    function renderChats() {
+      chatList.innerHTML = "";
+      Object.entries(chats).forEach(([id, chat]) => {
+        const div = document.createElement("div");
+        div.className = "chat-item" + (id === currentChatId ? " active" : "");
+        div.textContent = chat.title;
+        div.onclick = () => {
+          currentChatId = id;
+          renderChats();
+          renderMessages();
+        };
+        chatList.appendChild(div);
+      });
+    }
+
+    function renderMessages() {
+      chatContainer.innerHTML = "";
+      if (!currentChatId) return;
+      chats[currentChatId].messages.forEach((msg) => {
+        addMessageToUI(msg.role, msg.content);
+      });
+      scrollBottom();
+    }
+
+    function addMessageToUI(role, content, isError = false) {
+      const div = document.createElement("div");
+      div.className = "message " + role;
+      if (isError && role === "assistant") {
+        div.classList.add("error");
+      }
+      div.textContent = content;
+      chatContainer.appendChild(div);
+    }
+
+    function scrollBottom() {
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const text = messageInput.value.trim();
+      if (!text) return;
+      if (!currentChatId) {
+        createNewChat();
+      }
+
+      messageInput.value = "";
+      messageInput.style.height = "auto";
+
+      chats[currentChatId].messages.push({
+        role: "user",
+        content: text,
+      });
+      addMessageToUI("user", text);
+
+      const assistantDiv = document.createElement("div");
+      assistantDiv.className = "message assistant";
+      assistantDiv.textContent = "Thinking...";
+      chatContainer.appendChild(assistantDiv);
+      scrollBottom();
+
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId,
+            messages: chats[currentChatId].messages,
+          }),
+        });
+
+        const data = await response.json();
+        const fullText = data.reply || "No reply from MihAI.";
+
+        assistantDiv.textContent = fullText;
+        scrollBottom();
+
+        chats[currentChatId].messages.push({
+          role: "assistant",
+          content: fullText,
+        });
+
+        if (
+          chats[currentChatId].title === "New chat" &&
+          text.trim().length > 0
+        ) {
+          chats[currentChatId].title = text.slice(0, 24);
+        }
+
+        saveChats();
+        renderChats();
+      } catch (err) {
+        console.error(err);
+        assistantDiv.textContent = "Error talking to MihAI.";
+        assistantDiv.classList.add("error");
+      }
+    }
+
+    sendBtn.onclick = sendMessage;
+
+    messageInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    messageInput.addEventListener("input", () => {
+      messageInput.style.height = "auto";
+      messageInput.style.height = messageInput.scrollHeight + "px";
+    });
+
+    newChatBtn.onclick = createNewChat;
+
+    if (localStorage.getItem("mihai_theme") === "light") {
+      document.body.classList.add("light");
+    }
+
+    themeToggle.onclick = () => {
+      document.body.classList.toggle("light");
+      localStorage.setItem(
+        "mihai_theme",
+        document.body.classList.contains("light") ? "light" : "dark"
+      );
+    };
+
+    if (Object.keys(chats).length === 0) {
+      createNewChat();
+    } else {
+      currentChatId = Object.keys(chats)[0];
+      renderChats();
+      renderMessages();
+    }
+  </script>
+</body>
+</html>
