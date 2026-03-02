@@ -3,66 +3,301 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MihAI Ultra</title>
-  <link rel="stylesheet" href="css/styles.css" />
+  <title>MihAI Home</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #1d4ed8 0, #020617 45%, #000 100%);
+      color: #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .shell {
+      width: 100%;
+      max-width: 960px;
+      border-radius: 24px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      background: rgba(15, 23, 42, 0.85);
+      box-shadow: 0 20px 60px rgba(15, 23, 42, 0.8);
+      padding: 28px 28px 24px;
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr);
+      gap: 32px;
+      backdrop-filter: blur(18px);
+    }
+
+    @media (max-width: 768px) {
+      .shell {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(15, 118, 110, 0.1);
+      border: 1px solid rgba(45, 212, 191, 0.4);
+      color: #a5f3fc;
+      margin-bottom: 16px;
+    }
+
+    .badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 12px rgba(34, 197, 94, 0.8);
+    }
+
+    h1 {
+      font-size: clamp(32px, 4vw, 40px);
+      line-height: 1.1;
+      margin-bottom: 12px;
+    }
+
+    h1 span {
+      background: linear-gradient(to right, #a855f7, #22c55e, #0ea5e9);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #cbd5f5;
+      max-width: 520px;
+      margin-bottom: 20px;
+    }
+
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .btn-main {
+      border-radius: 999px;
+      padding: 10px 20px;
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #022c22;
+      font-weight: 600;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 12px 35px rgba(21, 128, 61, 0.55);
+      text-decoration: none;
+    }
+
+    .btn-main span.icon {
+      font-size: 16px;
+    }
+
+    .btn-ghost {
+      border-radius: 999px;
+      padding: 9px 16px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      background: transparent;
+      color: #e5e7eb;
+      font-size: 13px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 22px;
+    }
+
+    .pill {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      color: #c7d2fe;
+      background: rgba(15, 23, 42, 0.7);
+    }
+
+    .mini-label {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-bottom: 4px;
+    }
+
+    .mini-line {
+      font-size: 11px;
+      color: #e5e7eb;
+    }
+
+    .right {
+      border-radius: 18px;
+      padding: 14px 14px 16px;
+      background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.5), transparent 55%),
+                  radial-gradient(circle at bottom right, rgba(22, 163, 74, 0.4), transparent 60%),
+                  rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .right-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .right-title {
+      font-size: 13px;
+      color: #e5e7eb;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 10px rgba(34, 197, 94, 0.8);
+    }
+
+    .right-chip {
+      font-size: 11px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.8);
+      color: #cbd5f5;
+      background: rgba(15, 23, 42, 0.8);
+    }
+
+    .fake-chat {
+      border-radius: 14px;
+      padding: 10px;
+      background: rgba(15, 23, 42, 0.85);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .bubble {
+      max-width: 80%;
+      padding: 7px 10px;
+      border-radius: 10px;
+      white-space: pre-wrap;
+    }
+
+    .bubble.user {
+      margin-left: auto;
+      background: #1d4ed8;
+    }
+
+    .bubble.ai {
+      background: #020617;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+    }
+
+    .tiny-hint {
+      font-size: 10px;
+      color: #9ca3af;
+      margin-top: 6px;
+    }
+  </style>
 </head>
-
 <body>
+  <div class="shell">
+    <div>
+      <div class="badge">
+        <span class="badge-dot"></span>
+        MihAI workspace
+      </div>
 
-<div class="sidebar" id="sidebar">
-  <div class="sidebar-header">
-    <h2>MihAI</h2>
-    <button id="newChatBtn">＋</button>
-  </div>
-  <div class="chat-list" id="chatList"></div>
-</div>
+      <h1>
+        Meet <span>MihAI</span>, your chaotic little brain upgrade.
+      </h1>
 
-<div class="main">
+      <p class="subtitle">
+        Chat, brainstorm, or just rant. MihAI keeps the vibe casual while still actually helping you ship ideas, fix code, and figure life out at 2 AM.
+      </p>
 
-  <div class="header">
-    <div class="left-controls">
-      <button id="toggleSidebarBtn">☰</button>
-      <div class="logo">MihAI Ultra</div>
+      <div class="cta-row">
+        <a href="/chat.html" class="btn-main">
+          <span class="icon">✨</span>
+          Open MihAI chat
+        </a>
+        <a href="https://vercel.com" target="_blank" rel="noreferrer" class="btn-ghost">
+          <span>View deployment</span>
+        </a>
+      </div>
+
+      <div class="pill-row">
+        <div class="pill">Groq powered · fast replies</div>
+        <div class="pill">Local chat history</div>
+        <div class="pill">Dark / light theme</div>
+      </div>
+
+      <div>
+        <div class="mini-label">Tip</div>
+        <div class="mini-line">
+          Start simple: “help me plan a study session” or “explain this error like I’m 14”.
+        </div>
+      </div>
     </div>
 
-    <div class="right-controls">
-      <select id="modelSelector">
-        <option value="default">Default</option>
-        <option value="gpt4">GPT-4</option>
-        <option value="claude">Claude</option>
-        <option value="local">Local</option>
-      </select>
+    <div class="right">
+      <div class="right-header">
+        <div class="right-title">
+          <span class="status-dot"></span>
+          MihAI preview
+        </div>
+        <div class="right-chip">Llama 3.3 · Groq</div>
+      </div>
 
-      <button id="exportBtn">Export</button>
-      <button id="themeToggle">Theme</button>
-      <button id="voiceToggle">Voice</button>
-      <input type="file" id="fileInput" hidden />
-      <button id="uploadBtn">Upload</button>
+      <div class="fake-chat">
+        <div class="bubble.user">
+          bruh I broke my project again
+        </div>
+        <div class="bubble.ai">
+          ngl that’s kinda the dev experience 😂  
+          Tell me what you changed last and we’ll debug it together.
+        </div>
+        <div class="bubble.user">
+          I just want a clean fresh MihAI page
+        </div>
+        <div class="bubble.ai">
+          Easy. Hit “Open MihAI chat”, send your first message, and I’ll keep you from nuking it this time.
+        </div>
+      </div>
+
+      <div class="tiny-hint">
+        The real MihAI lives on the chat page – this is just a vibe check.
+      </div>
     </div>
   </div>
-
-  <div class="chat-container" id="chatContainer"></div>
-
-  <div class="token-bar" id="tokenBar">
-    Tokens: <span id="tokenCount">0</span>
-  </div>
-
-  <div class="input-area" id="inputArea">
-    <input id="messageInput" placeholder="Type a message..." />
-    <button id="micBtn">🎤</button>
-    <button id="sendBtn">Send</button>
-  </div>
-
-</div>
-
-<script src="js/state.js"></script>
-<script src="js/storage.js"></script>
-<script src="js/api.js"></script>
-<script src="js/markdown.js"></script>
-<script src="js/memory.js"></script>
-<script src="js/voice.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/app.js"></script>
-
 </body>
 </html>
