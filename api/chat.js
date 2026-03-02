@@ -11,7 +11,6 @@ async function saveMessage(userId, role, content) {
   const res = await fetch(`${BASE44}/messages`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    // Base44 still expects `sessionId`, we just pass the userId into that field
     body: JSON.stringify({ sessionId: userId, role, content }),
   });
 
@@ -24,7 +23,7 @@ async function saveMessage(userId, role, content) {
   return res.json();
 }
 
-// Get message history for a user
+// Get message history for a user (fallback if ever needed)
 async function getMessages(userId) {
   const res = await fetch(
     `${BASE44}/messages?sessionId=${encodeURIComponent(userId)}`
@@ -46,36 +45,20 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const body = req.body || {};
-    const { message, messages, userId } = body;
+    const { userId, messages } = req.body || {};
 
-    // Normalize messages to an array
-    const msgs = Array.isArray(messages) ? messages : [];
-
-    // Prefer explicit `message`, otherwise take last non‑empty message
-    let finalMessage =
-      typeof message === "string" && message.trim().length > 0
-        ? message.trim()
-        : null;
-
-    if (!finalMessage && msgs.length > 0) {
-      const last = [...msgs]
-        .reverse()
-        .find(
-          (m) =>
-            m &&
-            typeof m.content === "string" &&
-            m.content.trim().length > 0
-        );
-      if (last) finalMessage = last.content.trim();
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return res.status(400).json({ error: "Missing messages array" });
     }
 
-    if (!finalMessage) {
-      console.error("Bad body:", body);
-      return res.status(400).json({ error: "Missing message" });
+    const lastUserMessage = messages
+      .filter((m) => m.role === "user")
+      .slice(-1)[0];
+
+    if (!lastUserMessage || typeof lastUserMessage.content !== "string") {
+      return res.status(400).json({ error: "Missing user message" });
     }
 
-    // If frontend didn't send a userId, fall back to anon
     const safeUserId =
       typeof userId === "string" && userId.trim().length > 0
         ? userId.trim()
@@ -86,18 +69,12 @@ module.exports = async function handler(req, res) {
       return res.status(500).json({ error: "Server misconfigured" });
     }
 
-    // 1) Save user message in Base44
-    await saveMessage(safeUserId, "user", finalMessage).catch((e) =>
-      console.error("saveMessage(user) failed:", e)
+    // 1) Save latest user message in Base44
+    await saveMessage(safeUserId, "user", lastUserMessage.content).catch(
+      (e) => console.error("saveMessage(user) failed:", e)
     );
 
-    // 2) Load history from Base44
-    const history = await getMessages(safeUserId).catch((e) => {
-      console.error("getMessages failed:", e);
-      return [];
-    });
-
-    // 3) Build messages for Groq: system + history + latest user
+    // 2) Build messages for Groq
     const groqMessages = [
       {
         role: "system",
@@ -118,14 +95,13 @@ Behavior:
 - If you don't know something, admit it honestly but still try to be helpful.
 `.trim(),
       },
-      ...history.map((m) => ({
+      ...messages.map((m) => ({
         role: m.role === "user" ? "user" : "assistant",
         content: m.content,
       })),
-      { role: "user", content: finalMessage },
     ];
 
-    // 4) Call Groq chat completions API
+    // 3) Call Groq chat completions API
     const aiRes = await fetch(
       "https://api.groq.com/openai/v1/chat/completions",
       {
@@ -135,7 +111,7 @@ Behavior:
           Authorization: `Bearer ${GROQ_API_KEY}`,
         },
         body: JSON.stringify({
-          model: "llama-3.3-70b-versatile", // use any Groq model you like
+          model: "llama-3.3-70b-versatile",
           messages: groqMessages,
         }),
       }
@@ -155,7 +131,7 @@ Behavior:
       data?.choices?.[0]?.message?.content ||
       "I had trouble generating a reply.";
 
-    // 5) Save assistant reply in Base44
+    // 4) Save assistant reply in Base44
     await saveMessage(safeUserId, "assistant", reply).catch((e) =>
       console.error("saveMessage(assistant) failed:", e)
     );

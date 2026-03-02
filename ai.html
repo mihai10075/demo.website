@@ -208,8 +208,8 @@ body.light .header {
    STATE
 =================================*/
 
-let userId = localStorage.getItem("mihai_user") 
-  || "guest-" + crypto.randomUUID();
+let userId =
+  localStorage.getItem("mihai_user") || "guest-" + crypto.randomUUID();
 
 localStorage.setItem("mihai_user", userId);
 
@@ -239,7 +239,7 @@ function createNewChat() {
   const id = "chat-" + crypto.randomUUID();
   chats[id] = {
     title: "New Chat",
-    messages: []
+    messages: [],
   };
   currentChatId = id;
   saveChats();
@@ -264,7 +264,7 @@ function renderChats() {
 function renderMessages() {
   chatContainer.innerHTML = "";
   if (!currentChatId) return;
-  chats[currentChatId].messages.forEach(msg => {
+  chats[currentChatId].messages.forEach((msg) => {
     addMessageToUI(msg.role, msg.content);
   });
   scrollBottom();
@@ -282,7 +282,7 @@ function scrollBottom() {
 }
 
 /* ===============================
-   SIMPLE SEND (no streaming)
+   SEND (JSON, NO STREAM)
 =================================*/
 
 async function sendMessage() {
@@ -291,10 +291,9 @@ async function sendMessage() {
 
   messageInput.value = "";
 
-  // Save user message locally
   chats[currentChatId].messages.push({
     role: "user",
-    content: text
+    content: text,
   });
 
   addMessageToUI("user", text);
@@ -310,19 +309,20 @@ async function sendMessage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        message: text
-      })
+        userId,
+        messages: chats[currentChatId].messages,
+      }),
     });
 
     const data = await response.json();
-    const fullText = data.reply || "No reply";
+    const fullText = data.reply || "No reply from AI.";
 
     assistantDiv.textContent = fullText;
     scrollBottom();
 
     chats[currentChatId].messages.push({
       role: "assistant",
-      content: fullText
+      content: fullText,
     });
 
     if (chats[currentChatId].title === "New Chat") {
@@ -332,17 +332,13 @@ async function sendMessage() {
     saveChats();
     renderChats();
   } catch (err) {
-    assistantDiv.textContent = "Error talking to AI.";
-    console.error(err);
+    console.error("Send error", err);
+    assistantDiv.textContent = "Error talking to MihAI.";
   }
 }
 
-/* ===============================
-   EVENTS
-=================================*/
-
 sendBtn.onclick = sendMessage;
-messageInput.addEventListener("keydown", e => {
+messageInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") sendMessage();
 });
 
@@ -376,6 +372,18 @@ if (Object.keys(chats).length === 0) {
   renderMessages();
 }
 </script>
+
+<div id="commandPalette" class="command-palette hidden">
+  <div class="command-box glass">
+    <input type="text" id="commandInput" placeholder="Type a command..." />
+    <ul id="commandList">
+      <li data-command="new">New Chat</li>
+      <li data-command="theme">Toggle Theme</li>
+      <li data-command="export">Export Chat</li>
+      <li data-command="clear">Clear Chat</li>
+    </ul>
+  </div>
+</div>
 
 </body>
 </html>

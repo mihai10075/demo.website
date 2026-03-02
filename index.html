@@ -1,283 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Demo.website</title>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MihAI Ultra</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
 
-    <!-- Tab icon / profile image -->
-    <link
-      rel="icon"
-      type="image/png"
-      href="Screenshot 2026-02-24 215015.png"
-    />
+<body>
 
-    <!-- Main CSS -->
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <!-- TOP NAV -->
-    <div class="top-nav">
-      <a href="index.html" class="nav-link nav-link-primary">Main page</a>
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h2>MihAI</h2>
+    <button id="newChatBtn">＋</button>
+  </div>
+  <div class="chat-list" id="chatList"></div>
+</div>
+
+<div class="main">
+
+  <div class="header">
+    <div class="left-controls">
+      <button id="toggleSidebarBtn">☰</button>
+      <div class="logo">MihAI Ultra</div>
     </div>
 
-    <!-- ORBIT BACKGROUND -->
-    <div class="glow-orbit"></div>
+    <div class="right-controls">
+      <select id="modelSelector">
+        <option value="default">Default</option>
+        <option value="gpt4">GPT-4</option>
+        <option value="claude">Claude</option>
+        <option value="local">Local</option>
+      </select>
 
-    <!-- MAIN CARD -->
-    <div class="card">
-      <div class="card-inner">
-        <!-- HEADER / TITLE SECTION -->
-        <div class="top-bar">
-          <div class="top-left">
-            <div class="pill">
-              <span class="pill-dot"></span>
-              <span>Demo.website</span>
-            </div>
-            <h1>hello world</h1>
-            <p class="tagline">Html coding is very cool! =)</p>
-            <p class="tagline" style="margin-top: 4px;">
-              This is my tiny corner of the internet. More experiments coming soon.
-            </p>
-            <p class="tagline" style="margin-top: 6px; color: var(--accent-soft);">
-              brand: s64mab1y
-            </p>
-          </div>
-
-          <div class="top-search">
-            <input
-              type="text"
-              placeholder="Search videos..."
-              id="search-input"
-            />
-            <svg class="top-search-icon" viewBox="0 0 24 24" fill="none">
-              <circle cx="11" cy="11" r="6.5" stroke-width="1.5" />
-              <line x1="15.15" y1="15.15" x2="20" y2="20" stroke-width="1.5" />
-            </svg>
-          </div>
-        </div>
-
-        <!-- LINK TO AI CHAT PAGE -->
-        <section class="section">
-          <a href="ai.html" class="ai-link-btn">
-            talk with the ai →
-          </a>
-          <!-- tiny hint about the AI -->
-          <p style="margin-top: 6px; font-size: 12px; opacity: 0.8;">
-            Rex can help with homework, explain videos, or just chat.
-          </p>
-        </section>
-
-        <!-- CREATOR ROW -->
-        <header>
-          <div class="creator-row">
-            <div class="creator">
-              <div
-                class="creator-avatar"
-                id="creator-trigger"
-                title="Click me!"
-              >
-                <img
-                  src="Screenshot 2026-02-24 215015.png"
-                  alt="Quandel avatar"
-                />
-              </div>
-              <div class="creator-label">
-                <span class="creator-label-main">creator</span>
-                <span class="creator-label-name">Quandel</span>
-                <span class="creator-side-note">click for a little surprise</span>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        <!-- WALL SECTION -->
-        <section class="section">
-          <p class="section-title">Wall</p>
-          <ul>
-            <li>Crew: Mani, ma3i</li>
-            <li>Currently coding and vibing.</li>
-          </ul>
-          <p class="wall-note">more stuff coming! check back soon.</p>
-        </section>
-
-        <!-- VIDEOS SECTION WITH IFRAMES -->
-        <section class="section video-block">
-          <p class="section-title">Videos</p>
-
-          <div class="video-grid">
-            <!-- VIDEO 1 -->
-            <div class="video-embed">
-              <div class="video-container">
-                <iframe
-                  src="https://www.youtube.com/embed/dNkLXkCOyLk"
-                  title="Wide Eyes"
-                  frameborder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowfullscreen
-                ></iframe>
-              </div>
-              <p class="video-title">Wide Eyes</p>
-              <p class="video-meta">YouTube · 2026</p>
-            </div>
-
-            <!-- VIDEO 2 -->
-            <div class="video-embed">
-              <div class="video-container">
-                <iframe
-                  src="https://www.youtube.com/embed/wMaC3mdkudk"
-                  title="Jeffy's infinite irida"
-                  frameborder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowfullscreen
-                ></iframe>
-              </div>
-              <p class="video-title">Jeffy's infinite irida</p>
-              <p class="video-meta">YouTube · 2026</p>
-            </div>
-
-            <!-- VIDEO 3 -->
-            <div class="video-embed">
-              <div class="video-container">
-                <iframe
-                  src="https://www.youtube.com/embed/5D3crqpClPY"
-                  title="50 Cent - Many Men (Wish Death)"
-                  frameborder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowfullscreen
-                ></iframe>
-              </div>
-              <p class="video-title">50 Cent - Many Men (Wish Death)</p>
-              <p class="video-meta">YouTube</p>
-            </div>
-
-            <!-- VIDEO 4 (Revenant) -->
-            <div class="video-embed">
-              <div class="video-container">
-                <iframe
-                  src="https://www.youtube.com/embed/Upd4jT2IO9s"
-                  title="Revenant"
-                  frameborder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowfullscreen
-                ></iframe>
-              </div>
-              <p class="video-title">Revenant</p>
-              <p class="video-meta">YouTube</p>
-            </div>
-
-            <!-- VIDEO 5 (Jeffy's Infinite Irida) -->
-            <div class="video-embed">
-              <div class="video-container">
-                <iframe
-                  src="https://www.youtube.com/embed/K2a_lttVAgU"
-                  title="Jeffy's Infinite Irida"
-                  frameborder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowfullscreen
-                ></iframe>
-              </div>
-              <p class="video-title">Jeffy's Infinite Irida</p>
-              <p class="video-meta">YouTube</p>
-            </div>
-
-            <!-- VIDEO 6 -->
-            <div class="video-embed">
-              <div class="video-container">
-                <iframe
-                  src="https://www.youtube.com/embed/GlOQnsVOa2o"
-                  title="Oliver eats an Apple"
-                  frameborder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowfullscreen
-                ></iframe>
-              </div>
-              <p class="video-title">Oliver eats an Apple</p>
-              <p class="video-meta">YouTube</p>
-            </div>
-          </div>
-
-          <a
-            class="celebrate-btn"
-            href="https://www.tiktok.com/@quandel_100?is_from_webapp=1&sender_device=pc"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            give me a <strong>follow</strong> =)
-          </a>
-        </section>
-
-        <!-- COMMENTS SECTION (GISCUS) -->
-        <section class="section">
-          <p class="section-title">Comments</p>
-          <div class="giscus"></div>
-        </section>
-
-        <!-- FOOTER -->
-        <footer class="site-footer">
-          <span class="footer-brand">s64mab1y</span>
-          <span class="footer-dot">•</span>
-          <span class="footer-name">Demo.website</span>
-          <span class="footer-year">© 2026</span>
-        </footer>
-      </div>
+      <button id="exportBtn">Export</button>
+      <button id="themeToggle">Theme</button>
+      <button id="voiceToggle">Voice</button>
+      <input type="file" id="fileInput" hidden />
+      <button id="uploadBtn">Upload</button>
     </div>
+  </div>
 
-    <!-- POP SOUND -->
-    <audio id="pop-sound" src="pop.mp3" preload="auto"></audio>
+  <div class="chat-container" id="chatContainer"></div>
 
-    <!-- CONFETTI LIBRARY -->
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <div class="token-bar" id="tokenBar">
+    Tokens: <span id="tokenCount">0</span>
+  </div>
 
-    <!-- Confetti on AI link click -->
-    <script>
-      const aiLink = document.querySelector(".ai-link-btn");
+  <div class="input-area" id="inputArea">
+    <input id="messageInput" placeholder="Type a message..." />
+    <button id="micBtn">🎤</button>
+    <button id="sendBtn">Send</button>
+  </div>
 
-      if (aiLink) {
-        aiLink.addEventListener("click", (e) => {
-          e.preventDefault();
+</div>
 
-          const rect = aiLink.getBoundingClientRect();
-          const x = (rect.left + rect.width / 2) / window.innerWidth;
-          const y = (rect.top + rect.height / 2) / window.innerHeight;
+<script src="js/state.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/api.js"></script>
+<script src="js/markdown.js"></script>
+<script src="js/memory.js"></script>
+<script src="js/voice.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/app.js"></script>
 
-          if (window.confetti) {
-            window.confetti({
-              particleCount: 80,
-              spread: 70,
-              origin: { x, y }
-            });
-          }
-
-          setTimeout(() => {
-            window.location.href = aiLink.href;
-          }, 400);
-        });
-      }
-    </script>
-
-    <!-- SUPABASE CLIENT -->
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-
-    <!-- YOUR MAIN JS -->
-    <script src="script.js"></script>
-
-    <!-- GISCUS COMMENTS SCRIPT -->
-    <script
-      src="https://giscus.app/client.js"
-      data-repo="mihai10075/demo.website"
-      data-repo-id="R_kgDORY9IBw"
-      data-category="Announcements"
-      data-category-id="DIC_kwDORY9IB84C3SUr"
-      data-mapping="pathname"
-      data-strict="0"
-      data-reactions-enabled="1"
-      data-emit-metadata="0"
-      data-input-position="bottom"
-      data-theme="preferred_color_scheme"
-      data-lang="en"
-      crossorigin="anonymous"
-      async
-    ></script>
-  </body>
+</body>
 </html>
