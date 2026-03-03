@@ -246,6 +246,51 @@
         flex-direction: column;
       }
     }
+
+    /* Rex mascot styles */
+    .rex-btn {
+      width: 72px;
+      height: 72px;
+      border-radius: 999px;
+      border: 2px solid #38bdf8;
+      background: radial-gradient(circle at 30% 20%, #f97316, #0f172a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow:
+        0 0 18px rgba(56, 189, 248, 0.7),
+        0 0 0 4px rgba(15, 23, 42, 0.9);
+      transition: transform 0.15s ease, box-shadow 0.15s ease,
+        border-color 0.15s ease, background 0.15s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .rex-btn img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .rex-btn:hover {
+      transform: translateY(-2px) scale(1.05);
+      box-shadow:
+        0 0 24px rgba(56, 189, 248, 1),
+        0 0 0 4px rgba(15, 23, 42, 0.95);
+      border-color: #f97316;
+      background: radial-gradient(circle at 30% 20%, #fb923c, #020617);
+    }
+    .rex-label {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-top: 6px;
+      text-align: center;
+    }
+    .rex-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
   </style>
 
   <!-- Confetti + sound -->
@@ -269,11 +314,9 @@
             <span>●</span> Llama 3.3 · Groq · remembers you with GitHub login
           </div>
 
-          <!-- Hello World + grey line -->
           <div class="hello-title">Hello World</div>
           <div class="hello-sub">css and html language is very cool :)</div>
 
-          <!-- Crew -->
           <div class="crew">Crew:</div>
           <a class="crew-btn"
              href="https://www.tiktok.com/@ma3i21?_r=1&_t=ZN-94Mjmnlb8eU"
@@ -281,14 +324,12 @@
             Ma3iPrO
           </a>
 
-          <!-- Main text + buttons -->
           <div class="cta">
             <p class="note">
               Chat with MihAI about code, gaming, or whatever is on your mind.
               It can remember your preferences over time and adapt to your vibe.
             </p>
 
-            <!-- AI PAGE BUTTON with confetti + pop -->
             <a class="btn-main" href="/chat.html" id="ai-button">
               <span class="icon">💬</span>
               Open MihAI chat
@@ -307,17 +348,26 @@
           </div>
         </div>
 
-        <!-- Search bar on the right -->
-        <div class="top-search">
-          <input
-            type="text"
-            id="search-input"
-            placeholder="Search videos..."
-          />
-          <svg class="top-search-icon" viewBox="0 0 24 24" fill="none">
-            <circle cx="11" cy="11" r="6.5" stroke-width="1.5" />
-            <line x1="15.15" y1="15.15" x2="20" y2="20" stroke-width="1.5" />
-          </svg>
+        <!-- RIGHT SIDE: search + Rex mascot -->
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:12px;">
+          <div class="top-search">
+            <input
+              type="text"
+              id="search-input"
+              placeholder="Search videos..."
+            />
+            <svg class="top-search-icon" viewBox="0 0 24 24" fill="none">
+              <circle cx="11" cy="11" r="6.5" stroke-width="1.5" />
+              <line x1="15.15" y1="15.15" x2="20" y2="20" stroke-width="1.5" />
+            </svg>
+          </div>
+
+          <div class="rex-wrapper">
+            <button id="rex-btn" class="rex-btn" type="button">
+              <img src="dog.png" alt="Rex the Mascot" />
+            </button>
+            <div class="rex-label">Rex · website mascot</div>
+          </div>
         </div>
       </div>
 
@@ -325,7 +375,6 @@
       <section class="video-section">
         <p class="section-title">Videos</p>
         <div class="video-grid" id="video-grid">
-          <!-- Shuck With Lyrics² | Jeffy's Infinite Irida |【SynthV2 Cover】 -->
           <div class="video-embed" data-title="Shuck With Lyrics Jeffy's Infinite Irida SynthV2 Cover">
             <div class="video-container">
               <iframe
@@ -340,7 +389,6 @@
             <p class="video-meta">YouTube</p>
           </div>
 
-          <!-- 【中文字幕】Kim Jung Goon 金正控- Hyperbaiter lyrics -->
           <div class="video-embed" data-title="Kim Jung Goon Hyperbaiter lyrics">
             <div class="video-container">
               <iframe
@@ -355,7 +403,6 @@
             <p class="video-meta">YouTube</p>
           </div>
 
-          <!-- wide eyes (feat. dltzk & juno) -->
           <div class="video-embed" data-title="wide eyes feat dltzk juno">
             <div class="video-container">
               <iframe
@@ -370,7 +417,6 @@
             <p class="video-meta">YouTube</p>
           </div>
 
-          <!-- 50 Cent - Many Men (Wish Death) (Dirty Version) -->
           <div class="video-embed" data-title="50 Cent Many Men Wish Death Dirty Version">
             <div class="video-container">
               <iframe
@@ -385,7 +431,6 @@
             <p class="video-meta">YouTube</p>
           </div>
 
-          <!-- [FNF/SML] IRIDA V1.5 - Semi-Accurate | Jeffy's Infinite Irida [CANNED] -->
           <div class="video-embed" data-title="FNF SML IRIDA V1.5 Semi-Accurate Jeffy's Infinite Irida CANNED">
             <div class="video-container">
               <iframe
@@ -400,7 +445,6 @@
             <p class="video-meta">YouTube</p>
           </div>
 
-          <!-- DigBar- Big Dick Randy (Official Music Video) -->
           <div class="video-embed" data-title="DigBar Big Dick Randy Official Music Video">
             <div class="video-container">
               <iframe
@@ -415,7 +459,6 @@
             <p class="video-meta">YouTube</p>
           </div>
 
-          <!-- Ding Dong Ditching in the Hood! -->
           <div class="video-embed" data-title="Ding Dong Ditching in the Hood">
             <div class="video-container">
               <iframe
@@ -430,7 +473,6 @@
             <p class="video-meta">YouTube</p>
           </div>
 
-          <!-- EXTREME Ding Dong Ditching! -->
           <div class="video-embed" data-title="EXTREME Ding Dong Ditching">
             <div class="video-container">
               <iframe
@@ -447,6 +489,12 @@
         </div>
       </section>
 
+      <!-- Comments under videos -->
+      <section class="video-section">
+        <p class="section-title">Comments</p>
+        <div class="giscus"></div>
+      </section>
+
       <div class="footer">
         <span>Built by Mihai • 2026</span>
         <a href="https://github.com/mihai10075/demo.website" target="_blank" rel="noreferrer">
@@ -457,10 +505,11 @@
   </main>
 
   <script>
-    // Confetti + pop on AI button
     const aiBtn = document.getElementById('ai-button');
     const popSound = document.getElementById('pop-sound');
+    const rexBtn = document.getElementById('rex-btn');
 
+    // Confetti + pop on AI button + redirect
     if (aiBtn) {
       aiBtn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -488,6 +537,28 @@
       });
     }
 
+    // Rex mascot: pop + confetti, no redirect
+    if (rexBtn) {
+      rexBtn.addEventListener('click', () => {
+        if (popSound) {
+          popSound.currentTime = 0;
+          popSound.play().catch(() => {});
+        }
+
+        const rect = rexBtn.getBoundingClientRect();
+        const x = (rect.left + rect.width / 2) / window.innerWidth;
+        const y = (rect.top + rect.height / 2) / window.innerHeight;
+
+        if (window.confetti) {
+          window.confetti({
+            particleCount: 90,
+            spread: 80,
+            origin: { x, y }
+          });
+        }
+      });
+    }
+
     // Simple video search filter
     const searchInput = document.getElementById('search-input');
     const videoGrid = document.getElementById('video-grid');
@@ -503,5 +574,23 @@
       });
     }
   </script>
+
+  <!-- Giscus comments script -->
+  <script
+    src="https://giscus.app/client.js"
+    data-repo="mihai10075/demo.website"
+    data-repo-id="R_kgDORY9IBw"
+    data-category="Announcements"
+    data-category-id="DIC_kwDORY9IB84C3SUr"
+    data-mapping="pathname"
+    data-strict="0"
+    data-reactions-enabled="1"
+    data-emit-metadata="0"
+    data-input-position="bottom"
+    data-theme="preferred_color_scheme"
+    data-lang="en"
+    crossorigin="anonymous"
+    async
+  ></script>
 </body>
 </html>
