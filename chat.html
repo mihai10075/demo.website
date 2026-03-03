@@ -154,6 +154,13 @@
       padding: 4px 9px;
       cursor: pointer;
     }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #22c55e;
+      margin-right: 4px;
+    }
     .chat-container {
       flex: 1;
       padding: 16px 16px 10px;
@@ -219,8 +226,6 @@
     .hint {
       font-size: 11px;
       color: #6b7280;
-      margin-top: 6px;
-      padding: 0 4px;
     }
     body.light {
       background: #f9fafb;
@@ -264,6 +269,45 @@
       border-color: #b91c1c;
       color: #fecaca;
     }
+
+    /* delete modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 40;
+    }
+    .modal {
+      background: #020617;
+      border-radius: 12px;
+      border: 1px solid #1f2937;
+      padding: 16px 18px;
+      max-width: 320px;
+      width: 100%;
+      font-size: 14px;
+    }
+    .modal-buttons {
+      margin-top: 12px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .modal-btn {
+      border-radius: 999px;
+      padding: 6px 12px;
+      border: 1px solid #1f2937;
+      background: #020617;
+      color: #e5e7eb;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .modal-btn-danger {
+      background: #b91c1c;
+      border-color: #7f1d1d;
+    }
   </style>
 </head>
 <body>
@@ -272,10 +316,15 @@
       <div>
         <div class="sidebar-title">MihAI chats</div>
         <div class="sidebar-sub">Saved locally in your browser.</div>
-        <button id="newChatBtn" class="btn-primary">
-          <span class="icon">➕</span>
-          New chat
-        </button>
+        <div style="display:flex; gap:6px; margin-top:4px;">
+          <button id="newChatBtn" class="btn-primary">
+            <span class="icon">➕</span>
+            New chat
+          </button>
+          <button id="deleteChatBtn" class="theme-btn" style="font-size:12px;">
+            🗑 Delete
+          </button>
+        </div>
       </div>
       <div id="chatList" class="chat-list"></div>
       <div class="sidebar-footer">
@@ -292,6 +341,7 @@
         </div>
         <div class="top-right">
           <span id="user-label"></span>
+          <span id="status-label"><span class="status-dot"></span>ready</span>
           <button id="login-github-btn" class="theme-btn">Login with GitHub</button>
           <a href="/" class="top-link">← Back to home</a>
           <button id="themeToggle" class="theme-btn">Toggle theme</button>
@@ -302,6 +352,7 @@
 
       <section class="input-wrap">
         <div class="input-shell">
+          <button id="voiceBtn" class="send-btn" style="background:#0f172a;color:#e5e7eb;font-size:14px;">🎙</button>
           <textarea
             id="messageInput"
             rows="1"
@@ -309,8 +360,15 @@
           ></textarea>
           <button id="sendBtn" class="send-btn">➤</button>
         </div>
-        <div class="hint">
-          MihAI is an expressive, slightly chaotic but kind AI friend. Keep it chill and it will, too.
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; padding:0 4px;">
+          <label style="font-size:11px; color:#9ca3af; cursor:pointer;">
+            📎 Attach .txt
+            <input id="fileInput" type="file" accept=".txt" style="display:none;" />
+          </label>
+          <div class="hint">
+            MihAI is an expressive, slightly chaotic but kind AI friend. Keep it chill and it will, too.
+          </div>
         </div>
       </section>
     </main>
@@ -318,8 +376,12 @@
 
   <script>
     function getUserId() {
+      const ghId = localStorage.getItem("mihai_github_id");
+      if (ghId) return "github-" + ghId;
+
       const stored = localStorage.getItem("mihai_user_id");
       if (stored) return stored;
+
       const anon = "anon-" + crypto.randomUUID();
       localStorage.setItem("mihai_user_id", anon);
       return anon;
@@ -334,12 +396,15 @@
     const messageInput = document.getElementById("messageInput");
     const sendBtn = document.getElementById("sendBtn");
     const newChatBtn = document.getElementById("newChatBtn");
+    const deleteChatBtn = document.getElementById("deleteChatBtn");
     const chatList = document.getElementById("chatList");
     const themeToggle = document.getElementById("themeToggle");
     const loginBtn = document.getElementById("login-github-btn");
     const userLabel = document.getElementById("user-label");
+    const statusLabel = document.getElementById("status-label");
+    const voiceBtn = document.getElementById("voiceBtn");
+    const fileInput = document.getElementById("fileInput");
 
-    // Show current user label
     const ghLogin = localStorage.getItem("mihai_github_login");
     if (userLabel) {
       if (ghLogin) {
@@ -351,11 +416,20 @@
       }
     }
 
-    // Login button -> GitHub OAuth
     if (loginBtn) {
       loginBtn.addEventListener("click", () => {
         window.location.href = "/api/login-github";
       });
+    }
+
+    function setStatus(text, isThinking) {
+      if (!statusLabel) return;
+      statusLabel.textContent = "";
+      const dot = document.createElement("span");
+      dot.className = "status-dot";
+      dot.style.background = isThinking ? "#facc15" : "#22c55e";
+      statusLabel.appendChild(dot);
+      statusLabel.appendChild(document.createTextNode(isThinking ? "thinking…" : text));
     }
 
     function saveChats() {
@@ -412,6 +486,65 @@
       chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
+    // File upload → system document
+    if (fileInput) {
+      fileInput.addEventListener("change", async () => {
+        const file = fileInput.files[0];
+        if (!file || !currentChatId) return;
+
+        try {
+          const text = await file.text();
+          const snippet = text.slice(0, 12000);
+          chats[currentChatId].messages.push({
+            role: "system",
+            content: "Document:\n" + snippet,
+          });
+          saveChats();
+          alert("Document loaded into context for this chat.");
+        } catch (e) {
+          console.error("File read error", e);
+          alert("Could not read that file.");
+        } finally {
+          fileInput.value = "";
+        }
+      });
+    }
+
+    // Voice input
+    let recognition = null;
+    if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SR();
+      recognition.lang = "en-US";
+
+      recognition.onresult = (e) => {
+        const transcript = e.results[0][0].transcript;
+        messageInput.value = transcript;
+        sendMessage();
+      };
+    }
+
+    if (voiceBtn) {
+      voiceBtn.addEventListener("click", () => {
+        if (!recognition) {
+          alert("Voice recognition not supported in this browser.");
+          return;
+        }
+        recognition.start();
+      });
+    }
+
+    // TTS
+    function speak(text) {
+      try {
+        if (!window.speechSynthesis) return;
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.rate = 1;
+        utter.pitch = 1;
+        speechSynthesis.speak(utter);
+      } catch (_) {}
+    }
+
     async function sendMessage() {
       const text = messageInput.value.trim();
       if (!text) return;
@@ -433,6 +566,7 @@
       assistantDiv.textContent = "Thinking...";
       chatContainer.appendChild(assistantDiv);
       scrollBottom();
+      setStatus("thinking…", true);
 
       try {
         const response = await fetch("/api/chat", {
@@ -447,10 +581,9 @@
         const data = await response.json();
         const fullText = data.reply || "No reply from MihAI.";
 
-        // smooth typing effect
         assistantDiv.textContent = "";
         let i = 0;
-        const speed = 18; // ms per character
+        const speed = 18;
 
         const interval = setInterval(() => {
           assistantDiv.textContent += fullText[i] || "";
@@ -460,6 +593,8 @@
             clearInterval(interval);
           }
         }, speed);
+
+        speak(fullText);
 
         chats[currentChatId].messages.push({
           role: "assistant",
@@ -475,10 +610,12 @@
 
         saveChats();
         renderChats();
+        setStatus("ready", false);
       } catch (err) {
         console.error(err);
         assistantDiv.textContent = "Error talking to MihAI.";
         assistantDiv.classList.add("error");
+        setStatus("ready", false);
       }
     }
 
@@ -497,6 +634,56 @@
     });
 
     newChatBtn.onclick = createNewChat;
+
+    function showDeleteModal() {
+      if (!currentChatId) return;
+
+      const backdrop = document.createElement("div");
+      backdrop.className = "modal-backdrop";
+
+      const modal = document.createElement("div");
+      modal.className = "modal";
+      modal.innerHTML = `
+        <div>Are you sure you wanna delete this chat?<br />You can't undo it.</div>
+        <div class="modal-buttons">
+          <button class="modal-btn" data-action="no">No</button>
+          <button class="modal-btn modal-btn-danger" data-action="yes">Yes</button>
+        </div>
+      `;
+      backdrop.appendChild(modal);
+      document.body.appendChild(backdrop);
+
+      backdrop.addEventListener("click", (e) => {
+        const action = e.target.getAttribute("data-action");
+        if (!action) {
+          if (e.target === backdrop) document.body.removeChild(backdrop);
+          return;
+        }
+
+        if (action === "no") {
+          document.body.removeChild(backdrop);
+          return;
+        }
+
+        if (action === "yes") {
+          delete chats[currentChatId];
+          const keys = Object.keys(chats);
+          if (keys.length === 0) {
+            createNewChat();
+          } else {
+            currentChatId = keys[0];
+          }
+          saveChats();
+          renderChats();
+          renderMessages();
+          document.body.removeChild(backdrop);
+        }
+      });
+    }
+
+    if (deleteChatBtn) {
+      deleteChatBtn.addEventListener("click", showDeleteModal);
+    }
 
     if (localStorage.getItem("mihai_theme") === "light") {
       document.body.classList.add("light");
@@ -517,6 +704,8 @@
       renderChats();
       renderMessages();
     }
+
+    setStatus("ready", false);
   </script>
 </body>
 </html>

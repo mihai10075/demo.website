@@ -1,8 +1,7 @@
 // api/login-github.js
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   const clientId = process.env.GITHUB_CLIENT_ID;
 
-  // use your stable domain here
   const redirectUri = "https://demo-website-one-ashy.vercel.app/api/github-callback";
   const state = "mihai-state"; // TODO: for real security, generate random per session
 
@@ -14,4 +13,4 @@ module.exports = async function handler(req, res) {
 
   res.writeHead(302, { Location: githubAuthUrl });
   res.end();
-};
+}

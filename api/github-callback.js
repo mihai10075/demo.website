@@ -1,7 +1,5 @@
 // api/github-callback.js
-const fetch = require("node-fetch");
-
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   const { code, state } = req.query || {};
 
   if (!code) {
@@ -57,9 +55,7 @@ module.exports = async function handler(req, res) {
 
     const safeUserId = `gh_${githubId}`;
 
-    // 3) Return HTML that saves userId to localStorage and redirects back to chat.html
-   const redirectUrl = "https://demo-website-one-ashy.vercel.app/chat.html";
-   
+    const redirectUrl = "https://demo-website-one-ashy.vercel.app/chat.html";
 
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.end(`
@@ -80,4 +76,4 @@ module.exports = async function handler(req, res) {
     console.error("GitHub callback error", e);
     res.status(500).send("GitHub callback error");
   }
-};
+}
