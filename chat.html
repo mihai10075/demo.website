@@ -1362,7 +1362,9 @@
         });
 
         const data = await response.json();
-        const fullText = data.reply || "No reply from MihAI.";
+        const fullText = typeof data.reply === "string"
+          ? data.reply
+          : "MihAI had trouble generating a reply.";
         renderSourcesBar(data.sources || []);
 
         removeTypingIndicator();
@@ -1558,7 +1560,9 @@
         });
 
         const data = await response.json();
-        const fullText = data.reply || "No reply from MihAI.";
+        const fullText = typeof data.reply === "string"
+          ? data.reply
+          : "MihAI had trouble generating a reply.";
         renderSourcesBar(data.sources || []);
 
         assistantDiv.textContent = fullText;
@@ -1620,7 +1624,9 @@
         });
 
         const data = await response.json();
-        const fullText = data.reply || "No reply from MihAI.";
+       const fullText = typeof data.reply === "string"
+  ? data.reply
+  : "MihAI had trouble generating a reply."; 
         renderSourcesBar(data.sources || []);
 
         assistantDiv.textContent = fullText;
@@ -1682,7 +1688,9 @@
         });
 
         const data = await response.json();
-        const fullText = data.reply || "No reply from MihAI.";
+const fullText = typeof data.reply === "string"
+  ? data.reply
+  : "MihAI had trouble generating a reply."; 
         renderSourcesBar(data.sources || []);
 
         assistantDiv.textContent = fullText;

@@ -328,6 +328,13 @@ DEPTH: NORMAL
 - Use a balanced amount of context from earlier in the conversation.`;
     }
 
+    // Strip unsupported fields like `attachments` before sending to Groq
+    const cleanedMessages = messages.map((m) => ({
+      role: m.role,
+      content: m.content,
+      // keep name if you ever use it; drop attachments and others
+    }));
+
     const groqMessages = [
       {
         role: "system",
@@ -339,7 +346,7 @@ DEPTH: NORMAL
           attachmentNote +
           webBlock,
       },
-      ...messages,
+      ...cleanedMessages,
     ];
 
     const completion = await groq.chat.completions.create({
