@@ -61,6 +61,26 @@
     .prompt-chips button:active {
       transform:scale(0.97);
     }
+
+    /* typing effect for assistant */
+    .message.assistant.typing-target {
+      position: relative;
+    }
+    .message.assistant.typing-target .message-body {
+      white-space: pre-wrap;
+    }
+    .message.assistant.typing-target .cursor {
+      display: inline-block;
+      width: 6px;
+      height: 1em;
+      margin-left: 2px;
+      background: #e5e7eb;
+      animation: blink 0.9s steps(1, start) infinite;
+      vertical-align: text-bottom;
+    }
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
   </style>
 </head>
 <body>
@@ -738,13 +758,15 @@
       bar.className = "message-actions";
 
       const copyBtn = document.createElement("button");
-      copyBtn.textContent = "Copy";
+      copyBtn.textContent = "Copy text";
+      copyBtn.title = "Copy this message to clipboard";
       copyBtn.onclick = () => copyToClipboard(content);
       bar.appendChild(copyBtn);
 
       if (role === "assistant") {
         const regenBtn = document.createElement("button");
         regenBtn.textContent = "Regenerate";
+        regenBtn.title = "Ask MihAI to answer again differently";
         regenBtn.onclick = () => {
           if (!currentChatId) return;
           const chat = chats[currentChatId];
@@ -768,6 +790,7 @@
 
       const followBtn = document.createElement("button");
       followBtn.textContent = "Follow-up";
+      followBtn.title = "Start a follow-up question based on this message";
       followBtn.onclick = () => {
         messageInput.value = `Can you go deeper on: "${content.slice(0, 80)}" ?`;
         messageInput.focus();
@@ -776,6 +799,7 @@
 
       const delBtn = document.createElement("button");
       delBtn.textContent = "Delete";
+      delBtn.title = "Remove this message from the chat history";
       delBtn.onclick = () => {
         if (!currentChatId) return;
         const chat = chats[currentChatId];
@@ -833,14 +857,14 @@
         toolbar.className = "message-toolbar";
 
         const speakBtn = document.createElement("button");
-        speakBtn.textContent = "🔊";
-        speakBtn.title = "Read aloud";
+        speakBtn.textContent = "🔊 Read";
+        speakBtn.title = "Read this answer out loud";
         speakBtn.onclick = () => speak(displayContent);
         toolbar.appendChild(speakBtn);
 
         const copyBtn = document.createElement("button");
-        copyBtn.textContent = "📋";
-        copyBtn.title = "Copy";
+        copyBtn.textContent = "📋 Copy";
+        copyBtn.title = "Copy this answer to clipboard";
         copyBtn.onclick = () => copyToClipboard(displayContent);
         toolbar.appendChild(copyBtn);
 
@@ -1376,6 +1400,67 @@
       if (stopBtn) stopBtn.style.display = "none";
     }
 
+    function addAssistantMessageTyped(fullText, msgObj) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "message-wrap";
+
+      const div = document.createElement("div");
+      div.className = "message assistant typing-target";
+
+      const body = document.createElement("div");
+      body.className = "message-body";
+
+      const textSpan = document.createElement("span");
+      textSpan.textContent = "";
+      body.appendChild(textSpan);
+
+      const cursor = document.createElement("span");
+      cursor.className = "cursor";
+      body.appendChild(cursor);
+
+      div.appendChild(body);
+
+      const toolbar = document.createElement("div");
+      toolbar.className = "message-toolbar";
+      toolbar.style.marginTop = "4px";
+
+      const speakBtn = document.createElement("button");
+      speakBtn.textContent = "🔊 Read";
+      speakBtn.title = "Read this answer out loud";
+      speakBtn.onclick = () => speak(fullText);
+      toolbar.appendChild(speakBtn);
+
+      const copyBtn = document.createElement("button");
+      copyBtn.textContent = "📋 Copy";
+      copyBtn.title = "Copy this answer to clipboard";
+      copyBtn.onclick = () => copyToClipboard(fullText);
+      toolbar.appendChild(copyBtn);
+
+      div.appendChild(toolbar);
+
+      wrapper.appendChild(div);
+      chatContainer.appendChild(wrapper);
+      scrollBottom();
+
+      if (msgObj) {
+        addMessageActionBar(wrapper, "assistant", fullText, msgObj);
+        updateMessageFromUI(wrapper, msgObj);
+      }
+
+      let i = 0;
+      const speed = 12;
+      const interval = setInterval(() => {
+        if (i >= fullText.length) {
+          clearInterval(interval);
+          cursor.remove();
+          return;
+        }
+        textSpan.textContent += fullText[i];
+        i++;
+        scrollBottom();
+      }, speed);
+    }
+
     async function sendMessage() {
       if (isSending) return;
       isSending = true;
@@ -1493,7 +1578,7 @@
         }
         saveChats();
         renderChats();
-        addMessageToUI("assistant", fullText, [], false, aiMsgObj);
+        addAssistantMessageTyped(fullText, aiMsgObj);
         scrollBottom();
         setStatus("ready", false);
         renderFollowUpSuggestions(fullText);

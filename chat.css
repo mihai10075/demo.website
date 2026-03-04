@@ -478,3 +478,24 @@ body.light .source-pill-snippet {
   height:14px;
   border-radius:3px;
 }
+.message.assistant.typing-target {
+  position: relative;
+}
+
+.message.assistant.typing-target .message-body {
+  white-space: pre-wrap;
+}
+
+.message.assistant.typing-target .cursor {
+  display: inline-block;
+  width: 6px;
+  height: 1em;
+  margin-left: 2px;
+  background: #e5e7eb;
+  animation: blink 0.9s steps(1, start) infinite;
+  vertical-align: text-bottom;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
