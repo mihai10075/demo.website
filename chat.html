@@ -673,31 +673,7 @@
       } else {
         const textSpan = document.createElement("span");
         textSpan.textContent = content;
-
-        const delBtn = document.createElement("button");
-        delBtn.textContent = "🗑";
-        delBtn.style.marginLeft = "6px";
-        delBtn.style.border = "none";
-        delBtn.style.background = "transparent";
-        delBtn.style.cursor = "pointer";
-        delBtn.style.color = "inherit";
-        delBtn.title = "Delete this message";
-
-        delBtn.onclick = () => {
-          if (!currentChatId) return;
-          const chat = chats[currentChatId];
-          const idx = chat.messages.findIndex(
-            (m) => m.role === role && m.content === content
-          );
-          if (idx !== -1) {
-            chat.messages.splice(idx, 1);
-            saveChats();
-            renderMessages();
-          }
-        };
-
         div.appendChild(textSpan);
-        div.appendChild(delBtn);
       }
 
       chatContainer.appendChild(div);
@@ -771,7 +747,7 @@
       });
     }
 
-    // Image upload → /api/upload + attach to chat
+    // Image upload → /api/vision + attach to chat with vision description
     if (imageInput) {
       imageInput.addEventListener("change", async () => {
         const file = imageInput.files[0];
@@ -781,39 +757,56 @@
           const formData = new FormData();
           formData.append("file", file);
 
-          const res = await fetch("/api/upload", {
+          // Call vision endpoint
+          const res = await fetch("/api/vision", {
             method: "POST",
             body: formData,
           });
 
           const data = await res.json();
           if (!data.ok) {
-            throw new Error(data.error || "Upload failed");
+            throw new Error(data.error || "Vision failed");
           }
 
-          const f = data.file;
+          const f = data.file || {
+            name: file.name,
+            type: file.type,
+            size: file.size,
+          };
 
           if (!chats[currentChatId].attachments) {
             chats[currentChatId].attachments = [];
           }
 
+          // Track the image as an attachment
           chats[currentChatId].attachments.push({
             name: f.name,
             type: f.type,
             size: f.size,
           });
 
+          // System message: basic info about the uploaded image
           chats[currentChatId].messages.push({
             role: "system",
             content:
-              `User uploaded an image file named "${f.name}" (type: ${f.type}, size: ${f.size} bytes). ` +
-              `You cannot see the pixels yet, so ask them to describe the picture or paste any text from it so you can help.`,
+              `User uploaded an image file named "${f.name}" (type: ${f.type}, size: ${f.size} bytes).`,
           });
+
+          // System message: vision description text
+          if (data.description) {
+            chats[currentChatId].messages.push({
+              role: "system",
+              content:
+                `Vision tool says about the uploaded image: "${data.description}". ` +
+                `Use this as if you actually saw the photo when answering questions about it.`,
+            });
+          }
+
           saveChats();
-          alert("Photo uploaded and attached to this chat.");
+          alert("Photo analyzed and attached to this chat.");
         } catch (e) {
-          console.error("Image upload error", e);
-          alert("Could not upload that image.");
+          console.error("Image upload / vision error", e);
+          alert("Could not process that image.");
         } finally {
           imageInput.value = "";
         }
