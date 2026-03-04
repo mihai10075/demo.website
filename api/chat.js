@@ -349,14 +349,11 @@ DEPTH: NORMAL
       ...cleanedMessages,
     ];
 
-    // SPEED TWEAK: smaller max tokens for non-deep, faster model for non-coder/non-research
+    // SPEED TWEAK: smaller max tokens for non-deep
     const maxTokens = depth === 2 ? 1024 : 512;
 
     const completion = await groq.chat.completions.create({
-      model:
-        mode === "coder" || research
-          ? "llama-3.3-70b-versatile"
-          : "llama-3.3-70b-specdec", // adjust to a real faster model if needed
+      model: "llama-3.3-70b-versatile", // known-good model
       messages: groqMessages,
       max_tokens: maxTokens,
     });
@@ -422,7 +419,12 @@ Use keys like "current_project", "recent_topic" for chat-specific history.`,
             }
             if (historyUpsert.length || historyDel.length) {
               tasks.push(
-                upsertMemoryFacts(historyKey, historyUpsert, historyDel, "history")
+                upsertMemoryFacts(
+                  historyKey,
+                  historyUpsert,
+                  historyDel,
+                  "history"
+                )
               );
             }
             if (tasks.length) {
@@ -442,10 +444,7 @@ Use keys like "current_project", "recent_topic" for chat-specific history.`,
       sources: sourcesForClient,
       meta: {
         latencyMs: Date.now() - start,
-        model:
-          mode === "coder" || research
-            ? "llama-3.3-70b-versatile"
-            : "llama-3.3-70b-specdec",
+        model: "llama-3.3-70b-versatile",
         memoryUsed: (profileFacts?.length || 0) + (historyFacts?.length || 0),
         webUsed: !!webSearchResult.used,
         mode,
