@@ -5,6 +5,63 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MihAI Chat</title>
   <link rel="stylesheet" href="/chat.css" />
+  <style>
+    .settings-section {
+      border-top: 1px solid #1f2937;
+      padding-top: 6px;
+      margin-top: 6px;
+    }
+    .settings-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 6px;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+    }
+    .stat-item {
+      border: 1px solid #1f2937;
+      border-radius: 6px;
+      padding: 4px 6px;
+      background: #020617;
+    }
+    .stat-label {
+      font-size: 10px;
+      color: #9ca3af;
+    }
+    .stat-value {
+      font-size: 12px;
+      color: #e5e7eb;
+      margin-top: 2px;
+    }
+    .prompt-chips {
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      margin-top:6px;
+      padding:0 4px;
+    }
+    .prompt-chips button {
+      border:1px solid #1f2937;
+      border-radius:999px;
+      padding:3px 8px;
+      font-size:11px;
+      background:#020617;
+      color:#e5e7eb;
+      cursor:pointer;
+      transition:background 0.12s ease,border-color 0.12s ease,transform 0.05s ease;
+    }
+    .prompt-chips button:hover {
+      background:#111827;
+      border-color:#4b5563;
+    }
+    .prompt-chips button:active {
+      transform:scale(0.97);
+    }
+  </style>
 </head>
 <body>
   <div class="layout">
@@ -23,15 +80,7 @@
         </div>
       </div>
 
-      <!-- Sidebar stats panel -->
-      <div id="statsPanel" class="sidebar-stats">
-        <div class="sidebar-stats-title">Session stats</div>
-        <div class="sidebar-stats-row"><span>Chats</span><span id="statChatCount">0</span></div>
-        <div class="sidebar-stats-row"><span>Messages</span><span id="statMessageCount">0</span></div>
-        <div class="sidebar-stats-row"><span>Top mode</span><span id="statTopMode">chat</span></div>
-        <div class="sidebar-stats-row"><span>Web chats</span><span id="statWebChats">0</span></div>
-        <div class="sidebar-stats-row"><span>Depth</span><span id="statDepthLabel">Normal</span></div>
-      </div>
+      <!-- (stats panel removed, moved into Settings) -->
 
       <div id="chatList" class="chat-list"></div>
       <div class="sidebar-footer">
@@ -52,12 +101,7 @@
           </span>
           <span id="status-label"><span class="status-dot"></span>ready</span>
 
-          <!-- Depth slider -->
-          <div class="depth-wrap">
-            <label for="depthSlider" style="font-size:11px; color:#9ca3af; margin-right:4px;">Depth</label>
-            <input id="depthSlider" type="range" min="0" max="2" step="1" />
-            <span id="depthLabel" style="font-size:11px; margin-left:4px;">Normal</span>
-          </div>
+          <!-- Depth slider removed; depth now in Settings -->
 
           <!-- Research toggle -->
           <label id="researchToggle" class="theme-btn" style="margin-left:8px; font-size:11px; display:flex; align-items:center; gap:4px; cursor:pointer;">
@@ -79,6 +123,23 @@
           <div id="settingsMenu" class="menu-popover">
             <button data-setting="theme-dark">Dark mode</button>
             <button data-setting="theme-light">Light mode</button>
+
+            <!-- Depth in settings -->
+            <div class="settings-section">
+              <div style="font-size:11px; color:#9ca3af; margin-bottom:4px;">
+                Depth
+              </div>
+              <div class="settings-row">
+                <label style="font-size:11px; color:#e5e7eb;">Response depth</label>
+                <select id="depthSelect" style="width:100%; background:#020617; border:1px solid #1f2937; border-radius:6px; color:#e5e7eb; font-size:12px; padding:2px 6px;">
+                  <option value="0">Shallow (focus on latest)</option>
+                  <option value="1">Normal (balanced)</option>
+                  <option value="2">Deep (more context)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Personality -->
             <div class="settings-section">
               <div style="font-size:11px; color:#9ca3af; margin-bottom:4px;">
                 Personality
@@ -105,6 +166,36 @@
                 <input id="helpfulSlider" type="range" min="0" max="4" step="1" />
               </div>
             </div>
+
+            <!-- Session stats moved here -->
+            <div class="settings-section">
+              <div style="font-size:11px; color:#9ca3af; margin-bottom:4px;">
+                Session stats
+              </div>
+              <div class="stats-grid">
+                <div class="stat-item">
+                  <div class="stat-label">Chats</div>
+                  <div class="stat-value" id="statChats">0</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-label">Messages</div>
+                  <div class="stat-value" id="statMessages">0</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-label">Top mode</div>
+                  <div class="stat-value" id="statTopMode">chat</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-label">Web chats</div>
+                  <div class="stat-value" id="statWebChats">0</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-label">Depth</div>
+                  <div class="stat-value" id="statDepth">Normal</div>
+                </div>
+              </div>
+            </div>
+
             <button id="memoryBtn" data-setting="memory-open">Memory</button>
           </div>
 
@@ -159,7 +250,7 @@
             rows="1"
             placeholder="Talk to MihAI... (try /short, /story, /code, /stats)"
           ></textarea>
-          <button id="stopBtn" class="send-btn" style="background:#ef4444;">✕</button>
+          <button id="stopBtn" class="send-btn" style="background:#ef4444; display:none;">✕</button>
           <button id="sendBtn" class="send-btn">➤</button>
         </div>
 
@@ -251,7 +342,6 @@
     }
 
     let userId = getUserId();
-
     let chats = JSON.parse(localStorage.getItem("mihai_chats") || "{}");
     let currentChatId = null;
 
@@ -293,15 +383,12 @@
     const attachmentEditBtn = document.getElementById("attachmentEditBtn");
     const attachmentClearBtn = document.getElementById("attachmentClearBtn");
 
-    const statsPanel = document.getElementById("statsPanel");
-    const statChatCount = document.getElementById("statChatCount");
-    const statMessageCount = document.getElementById("statMessageCount");
+    const depthSelect = document.getElementById("depthSelect");
+    const statChats = document.getElementById("statChats");
+    const statMessages = document.getElementById("statMessages");
     const statTopMode = document.getElementById("statTopMode");
     const statWebChats = document.getElementById("statWebChats");
-    const statDepthLabel = document.getElementById("statDepthLabel");
-
-    const depthSlider = document.getElementById("depthSlider");
-    const depthLabel = document.getElementById("depthLabel");
+    const statDepth = document.getElementById("statDepth");
 
     const researchToggle = document.getElementById("researchToggle");
     const researchCheckbox = document.getElementById("researchCheckbox");
@@ -357,14 +444,19 @@
       }
     }
 
-    function updateDepthUI() {
-      if (!depthSlider || !depthLabel) return;
-      depthSlider.value = String(currentDepth);
-      let label = "Normal";
-      if (currentDepth === 0) label = "Shallow";
-      if (currentDepth === 2) label = "Deep";
-      depthLabel.textContent = label;
-      if (statDepthLabel) statDepthLabel.textContent = label;
+    function depthLabel(d) {
+      if (d === 0) return "Shallow";
+      if (d === 2) return "Deep";
+      return "Normal";
+    }
+
+    if (depthSelect) {
+      depthSelect.value = String(currentDepth);
+      depthSelect.addEventListener("change", () => {
+        currentDepth = parseInt(depthSelect.value, 10);
+        localStorage.setItem("mihai_depth", String(currentDepth));
+        updateSessionStatsUI();
+      });
     }
 
     function updateResearchUI() {
@@ -372,15 +464,6 @@
       researchCheckbox.checked = researchMode;
       researchToggle.style.opacity = researchMode ? "1" : "0.6";
     }
-
-    if (depthSlider) {
-      depthSlider.addEventListener("input", () => {
-        currentDepth = parseInt(depthSlider.value, 10);
-        localStorage.setItem("mihai_depth", String(currentDepth));
-        updateDepthUI();
-      });
-    }
-    updateDepthUI();
 
     if (researchCheckbox) {
       researchCheckbox.addEventListener("change", () => {
@@ -518,6 +601,7 @@
         currentMode = m;
         localStorage.setItem("mihai_chat_mode", currentMode);
         updateModeButtonsUI();
+        updateSessionStatsUI();
       });
     }
     updateModeButtonsUI();
@@ -534,7 +618,7 @@
 
     function saveChats() {
       localStorage.setItem("mihai_chats", JSON.stringify(chats));
-      updateStatsPanel();
+      updateSessionStatsUI();
     }
 
     function createNewChat() {
@@ -576,6 +660,7 @@
           currentChatId = id;
           renderChats();
           renderMessages();
+          updateSessionStatsUI();
         };
         chatList.appendChild(div);
       });
@@ -627,7 +712,6 @@
           textSpan.textContent = att.name || "attachment";
         }
         chip.appendChild(textSpan);
-
         row.appendChild(chip);
       });
       container.appendChild(row);
@@ -1072,6 +1156,11 @@
 
     if (stopBtn) {
       stopBtn.addEventListener("click", () => {
+        // abort streaming request if there is one
+        if (currentController) {
+          currentController.abort();
+          currentController = null;
+        }
         if (currentTypingInterval) {
           clearInterval(currentTypingInterval);
           currentTypingInterval = null;
@@ -1080,6 +1169,9 @@
           speechSynthesis.cancel();
           currentUtterance = null;
         }
+        // allow next message immediately
+        isSending = false;
+        hideStopButton();
         setStatus("ready", false);
         removeTypingIndicator();
       });
@@ -1258,78 +1350,98 @@
         mostUsedMode,
         modeCounts,
         chatsWithWeb,
+        depth: currentDepth,
       };
     }
 
-    function updateStatsPanel() {
-      if (!statsPanel) return;
+    function updateSessionStatsUI() {
+      if (!statChats) return;
       const stats = computeStats();
-      if (statChatCount) statChatCount.textContent = stats.chatCount;
-      if (statMessageCount) statMessageCount.textContent = stats.totalMessages;
-      if (statTopMode) statTopMode.textContent = stats.mostUsedMode;
-      if (statWebChats) statWebChats.textContent = stats.chatsWithWeb;
+      statChats.textContent = stats.chatCount;
+      statMessages.textContent = stats.totalMessages;
+      statTopMode.textContent = stats.mostUsedMode;
+      statWebChats.textContent = stats.chatsWithWeb;
+      statDepth.textContent = depthLabel(stats.depth);
     }
 
     function renderFollowUpSuggestions(fullText) {
       if (!promptChips) return;
       if (!fullText || fullText.length < 80) return;
-      // keep existing chips for now; you can expand this later
+      // you can extend later
+    }
+
+    // prevent overlapping requests
+    let isSending = false;
+    // controller used for streaming / cancel
+    let currentController = null;
+
+    // stop button helpers
+    function showStopButton() {
+      if (stopBtn) stopBtn.style.display = "inline-block";
+    }
+    function hideStopButton() {
+      if (stopBtn) stopBtn.style.display = "none";
     }
 
     async function sendMessage() {
-      let text = messageInput.value.trim();
-      if (!text && queuedAttachments.length === 0) return;
-      if (!currentChatId) {
-        createNewChat();
-      }
+      if (isSending) return; // guard against concurrent sends
+      isSending = true;
+      try {
+        let text = messageInput.value.trim();
+        if (!text && queuedAttachments.length === 0) return;
+        if (!currentChatId) {
+          createNewChat();
+        }
 
-      const { cleaned, command } = extractSlashCommand(text);
-      text = cleaned || text;
-      const slashSystem = slashCommandSystemMessage(command);
+        const { cleaned, command } = extractSlashCommand(text);
+        text = cleaned || text;
+        const slashSystem = slashCommandSystemMessage(command);
 
-      if (command === "/stats") {
+        if (command === "/stats") {
+          messageInput.value = "";
+          messageInput.style.height = "auto";
+          const stats = computeStats();
+          const summary =
+            `Stats for this browser:\n` +
+            `• Chats: ${stats.chatCount}\n` +
+            `• Total messages: ${stats.totalMessages}\n` +
+            `• Most used mode (approx): ${stats.mostUsedMode}\n` +
+            `• Mode usage: chat=${stats.modeCounts.chat}, coder=${stats.modeCounts.coder}, study=${stats.modeCounts.study}\n` +
+            (stats.chatsWithWeb > 0
+              ? `• Chats that used web search (approx): ${stats.chatsWithWeb}\n`
+              : "") +
+            `• Current depth: ${depthLabel(stats.depth)}\n`;
+
+          const userMsgObj = { role: "user", content: "/stats", attachments: [] };
+          addMessageToUI("user", "/stats", [], false, userMsgObj);
+          const aiMsgObj = { role: "assistant", content: summary };
+          addMessageToUI("assistant", summary, [], false, aiMsgObj);
+          scrollBottom();
+          setStatus("ready", false);
+          updateSessionStatsUI();
+          return;
+        }
+
         messageInput.value = "";
         messageInput.style.height = "auto";
-        const stats = computeStats();
-        const summary =
-          `Stats for this browser:\n` +
-          `• Chats: ${stats.chatCount}\n` +
-          `• Total messages: ${stats.totalMessages}\n` +
-          `• Most used mode (approx): ${stats.mostUsedMode}\n` +
-          `• Mode usage: chat=${stats.modeCounts.chat}, coder=${stats.modeCounts.coder}, study=${stats.modeCounts.study}\n` +
-          (stats.chatsWithWeb > 0
-            ? `• Chats that used web search (approx): ${stats.chatsWithWeb}\n`
-            : "");
 
-        const userMsgObj = { role: "user", content: "/stats", attachments: [] };
-        addMessageToUI("user", "/stats", [], false, userMsgObj);
-        const aiMsgObj = { role: "assistant", content: summary };
-        addMessageToUI("assistant", summary, [], false, aiMsgObj);
-        scrollBottom();
-        setStatus("ready", false);
-        return;
-      }
+        const attachmentsForThisMessage = queuedAttachments.slice();
+        queuedAttachments = [];
+        if (attachmentBar) attachmentBar.style.display = "none";
 
-      messageInput.value = "";
-      messageInput.style.height = "auto";
+        const userMsgObj = {
+          role: "user",
+          content: text || "(sent attachments)",
+          attachments: attachmentsForThisMessage,
+        };
+        chats[currentChatId].messages.push(userMsgObj);
+        addMessageToUI("user", text || "(sent attachments)", attachmentsForThisMessage, false, userMsgObj);
 
-      const attachmentsForThisMessage = queuedAttachments.slice();
-      queuedAttachments = [];
-      if (attachmentBar) attachmentBar.style.display = "none";
+        removeTypingIndicator();
+        showTypingIndicator();
+        setStatus("thinking…", true);
+        showStopButton();
 
-      const userMsgObj = {
-        role: "user",
-        content: text || "(sent attachments)",
-        attachments: attachmentsForThisMessage,
-      };
-      chats[currentChatId].messages.push(userMsgObj);
-      addMessageToUI("user", text || "(sent attachments)", attachmentsForThisMessage, false, userMsgObj);
-
-      removeTypingIndicator();
-      showTypingIndicator();
-      setStatus("thinking…", true);
-
-      try {
         const personalityMsg = buildPersonalityMessage();
         const messagesToSend = [personalityMsg];
         if (slashSystem) messagesToSend.push(slashSystem);
@@ -1347,6 +1459,8 @@
 
         messagesToSend.push(...contextSlice);
 
+        // set up abort controller for stop button
+        currentController = new AbortController();
         const response = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -1359,58 +1473,63 @@
             messages: messagesToSend,
             attachments: chats[currentChatId].attachments || [],
           }),
+          signal: currentController.signal,
         });
 
-        const data = await response.json();
-        const fullText = typeof data.reply === "string"
-          ? data.reply
-          : "MihAI had trouble generating a reply.";
-        renderSourcesBar(data.sources || []);
+        // streaming reader
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let fullText = "";
 
-        removeTypingIndicator();
-
-        const assistantDiv = document.createElement("div");
-        assistantDiv.className = "message assistant";
-        assistantDiv.textContent = "";
-        chatContainer.appendChild(assistantDiv);
+        // single DOM element for streaming content
+        const tempAssistantDiv = document.createElement("div");
+        tempAssistantDiv.className = "message assistant";
+        chatContainer.appendChild(tempAssistantDiv);
         scrollBottom();
 
-        let i = 0;
-        const speed = 18;
-
-        if (currentTypingInterval) {
-          clearInterval(currentTypingInterval);
+        try {
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            const chunk = decoder.decode(value, { stream: true });
+            fullText += chunk;
+            // strip any end marker if backend sends one
+            if (fullText.includes("[DONE]")) {
+              fullText = fullText.replace("[DONE]", "");
+              break;
+            }
+            // render markdown incrementally (assumes marked or similar is available)
+            if (window.marked) {
+              tempAssistantDiv.innerHTML = marked.parse(fullText);
+            } else {
+              tempAssistantDiv.textContent = fullText;
+            }
+            scrollBottom();
+          }
+        } catch (streamErr) {
+          // fetch was aborted or other stream error; treat partial text as final
+          if (streamErr.name !== "AbortError") {
+            console.error("Stream error", streamErr);
+          }
         }
 
-        currentTypingInterval = setInterval(() => {
-          if (i >= fullText.length) {
-            clearInterval(currentTypingInterval);
-            currentTypingInterval = null;
-            return;
-          }
-          assistantDiv.textContent += fullText[i] || "";
-          i++;
-          scrollBottom();
-        }, speed);
-
-        const aiMsgObj = {
-          role: "assistant",
-          content: fullText,
-        };
+        // once done (normal or aborted), finalize
+        if (tempAssistantDiv.parentNode) {
+          tempAssistantDiv.remove();
+        }
+        const aiMsgObj = { role: "assistant", content: fullText };
         chats[currentChatId].messages.push(aiMsgObj);
-
         if (
           chats[currentChatId].title === "New chat" &&
           (text || "").trim().length > 0
         ) {
           chats[currentChatId].title = (text || "").slice(0, 24);
         }
-
         saveChats();
         renderChats();
         setStatus("ready", false);
-
         renderFollowUpSuggestions(fullText);
+        currentController = null;
       } catch (err) {
         console.error(err);
         removeTypingIndicator();
@@ -1419,6 +1538,9 @@
         assistantDiv.textContent = "Error talking to MihAI.";
         chatContainer.appendChild(assistantDiv);
         setStatus("ready", false);
+      } finally {
+        hideStopButton();
+        isSending = false;
       }
     }
 
@@ -1442,12 +1564,24 @@
         if (!btn) return;
         const chip = btn.getAttribute("data-chip");
         if (!chip) return;
-        if (!messageInput.value.trim()) {
-          messageInput.value = chip + " ";
+        let prefix = "";
+        if (chip === "/code") {
+          prefix = "/code Please help fix this code:\n";
+        } else if (chip === "/explain") {
+          prefix = "/explain Please explain this step by step:\n";
+        } else if (chip === "/short") {
+          prefix = "/short Summarize this text:\n";
+        } else if (chip === "/story") {
+          prefix = "/story Turn this into a short story:\n";
         } else {
-          messageInput.value = chip + " " + messageInput.value;
+          prefix = chip + " ";
         }
+
+        const existing = messageInput.value.trim();
+        messageInput.value = prefix + (existing || "");
         messageInput.focus();
+        messageInput.selectionStart = messageInput.value.length;
+        messageInput.selectionEnd = messageInput.value.length;
       });
     }
 
@@ -1515,7 +1649,7 @@
       currentChatId = Object.keys(chats)[0];
       renderChats();
       renderMessages();
-      updateStatsPanel();
+      updateSessionStatsUI();
     }
 
     setStatus("ready", false);
@@ -1624,9 +1758,9 @@
         });
 
         const data = await response.json();
-       const fullText = typeof data.reply === "string"
-  ? data.reply
-  : "MihAI had trouble generating a reply."; 
+        const fullText = typeof data.reply === "string"
+          ? data.reply
+          : "MihAI had trouble generating a reply.";
         renderSourcesBar(data.sources || []);
 
         assistantDiv.textContent = fullText;
@@ -1688,9 +1822,9 @@
         });
 
         const data = await response.json();
-const fullText = typeof data.reply === "string"
-  ? data.reply
-  : "MihAI had trouble generating a reply."; 
+        const fullText = typeof data.reply === "string"
+          ? data.reply
+          : "MihAI had trouble generating a reply.";
         renderSourcesBar(data.sources || []);
 
         assistantDiv.textContent = fullText;
@@ -1757,17 +1891,20 @@ const fullText = typeof data.reply === "string"
         case "depth-shallow":
           currentDepth = 0;
           localStorage.setItem("mihai_depth", "0");
-          updateDepthUI();
+          if (depthSelect) depthSelect.value = "0";
+          updateSessionStatsUI();
           break;
         case "depth-normal":
           currentDepth = 1;
           localStorage.setItem("mihai_depth", "1");
-          updateDepthUI();
+          if (depthSelect) depthSelect.value = "1";
+          updateSessionStatsUI();
           break;
         case "depth-deep":
           currentDepth = 2;
           localStorage.setItem("mihai_depth", "2");
-          updateDepthUI();
+          if (depthSelect) depthSelect.value = "2";
+          updateSessionStatsUI();
           break;
         case "stats":
           const stats = computeStats();
