@@ -1,4 +1,4 @@
-// api/chat.js
+// pages/api/chat.js
 import Groq from "groq-sdk";
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
@@ -19,7 +19,11 @@ async function saveMessage(userId, role, content) {
   }
 }
 
-async function upsertMemoryFacts(userId, factsToUpsert = [], factsToDelete = []) {
+async function upsertMemoryFacts(
+  userId,
+  factsToUpsert = [],
+  factsToDelete = []
+) {
   try {
     const res = await fetch(`${BASE44_APP_URL}/functions/upsertMemory`, {
       method: "POST",
@@ -93,7 +97,7 @@ export default async function handler(req, res) {
 
   try {
     const start = Date.now();
-    const { userId, messages } = req.body || {};
+    const { userId, messages, chatId, attachments = [] } = req.body || {};
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return res.status(400).json({ error: "Missing messages array" });
@@ -104,6 +108,8 @@ export default async function handler(req, res) {
         ? userId.trim()
         : "anon-default";
 
+    const memoryKey = `${safeUserId}:${chatId || "default"}`;
+
     if (!GROQ_API_KEY) {
       console.error("Missing GROQ_API_KEY");
       return res.status(500).json({ error: "Server misconfigured" });
@@ -111,7 +117,8 @@ export default async function handler(req, res) {
 
     const lastUserMessage = messages.at(-1)?.content ?? "";
 
-    const memoryFacts = await loadRelevantMemory(safeUserId, lastUserMessage);
+    // Load per-chat memory
+    const memoryFacts = await loadRelevantMemory(memoryKey, lastUserMessage);
 
     let memoryBlock = "";
     if (memoryFacts.length > 0) {
@@ -121,8 +128,27 @@ export default async function handler(req, res) {
       memoryBlock = `\n\n---\nMEMORY (things you know about this user):\n${lines}\n---`;
     }
 
+    // Attachments block
+    let attachmentNote = "";
+    if (attachments.length > 0) {
+      const lines = attachments
+        .map(
+          (a) =>
+            `• ${a.name} (type: ${a.type}, size: ${a.size} bytes${
+              a.fileId ? `, id: ${a.fileId}` : ""
+            })`
+        )
+        .join("\n");
+
+      attachmentNote =
+        `\n\n---\nATTACHMENTS (files/images the user uploaded in this chat):\n` +
+        `${lines}\n` +
+        `You cannot literally open pixels or binary here, but you should act as if you know these files exist. ` +
+        `Ask the user what they want to do with them, what part matters, and use their description to help.\n---`;
+    }
+
     const groqMessages = [
-      { role: "system", content: SYSTEM_PROMPT + memoryBlock },
+      { role: "system", content: SYSTEM_PROMPT + memoryBlock + attachmentNote },
       ...messages,
     ];
 
@@ -136,11 +162,12 @@ export default async function handler(req, res) {
       completion.choices?.[0]?.message?.content ||
       "I had trouble generating a reply.";
 
+    // Background memory + logging
     (async () => {
       try {
         await Promise.all([
-          saveMessage(safeUserId, "user", lastUserMessage),
-          saveMessage(safeUserId, "assistant", reply),
+          saveMessage(memoryKey, "user", lastUserMessage),
+          saveMessage(memoryKey, "assistant", reply),
         ]);
 
         const extraction = await groq.chat.completions.create({
@@ -163,7 +190,7 @@ Return JSON only: { "upsert": [...], "delete": [...] }`,
             extraction.choices[0].message.content
           );
           if (upsert.length > 0 || del.length > 0) {
-            await upsertMemoryFacts(safeUserId, upsert, del);
+            await upsertMemoryFacts(memoryKey, upsert, del);
           }
         } catch (e) {
           console.error("Memory JSON parse failed:", e);

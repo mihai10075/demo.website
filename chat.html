@@ -616,6 +616,7 @@
       chats[id] = {
         title: "New chat",
         messages: [],
+        attachments: [], // attachments per chat
       };
       currentChatId = id;
       saveChats();
@@ -720,7 +721,7 @@
       };
     }
 
-    // File upload → send to /api/upload and add system message
+    // File upload → /api/upload + attach to chat
     if (fileInput) {
       fileInput.addEventListener("change", async () => {
         const file = fileInput.files[0];
@@ -741,6 +742,17 @@
           }
 
           const f = data.file;
+
+          if (!chats[currentChatId].attachments) {
+            chats[currentChatId].attachments = [];
+          }
+
+          chats[currentChatId].attachments.push({
+            name: f.name,
+            type: f.type,
+            size: f.size,
+          });
+
           chats[currentChatId].messages.push({
             role: "system",
             content:
@@ -749,7 +761,7 @@
               `so ask them to describe or paste relevant parts if needed.`,
           });
           saveChats();
-          alert("File uploaded. MihAI will see details in this chat.");
+          alert("File uploaded and attached to this chat.");
         } catch (e) {
           console.error("Upload error", e);
           alert("Could not upload that file.");
@@ -759,7 +771,7 @@
       });
     }
 
-    // Image upload → send to /api/upload and add system message
+    // Image upload → /api/upload + attach to chat
     if (imageInput) {
       imageInput.addEventListener("change", async () => {
         const file = imageInput.files[0];
@@ -780,6 +792,17 @@
           }
 
           const f = data.file;
+
+          if (!chats[currentChatId].attachments) {
+            chats[currentChatId].attachments = [];
+          }
+
+          chats[currentChatId].attachments.push({
+            name: f.name,
+            type: f.type,
+            size: f.size,
+          });
+
           chats[currentChatId].messages.push({
             role: "system",
             content:
@@ -787,7 +810,7 @@
               `You cannot see the pixels yet, so ask them to describe the picture or paste any text from it so you can help.`,
           });
           saveChats();
-          alert("Photo uploaded. MihAI will ask you to describe it.");
+          alert("Photo uploaded and attached to this chat.");
         } catch (e) {
           console.error("Image upload error", e);
           alert("Could not upload that image.");
@@ -892,7 +915,9 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             userId,
+            chatId: currentChatId,
             messages: [personalityMsg, ...chats[currentChatId].messages],
+            attachments: chats[currentChatId].attachments || [],
           }),
         });
 
@@ -1015,6 +1040,9 @@
     if (Object.keys(chats).length === 0) {
       createNewChat();
     } else {
+      for (const id of Object.keys(chats)) {
+        if (!chats[id].attachments) chats[id].attachments = [];
+      }
       currentChatId = Object.keys(chats)[0];
       renderChats();
       renderMessages();
@@ -1052,7 +1080,9 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             userId,
+            chatId: currentChatId,
             messages: [personalityMsg, ...chats[currentChatId].messages],
+            attachments: chats[currentChatId].attachments || [],
           }),
         });
 
@@ -1107,7 +1137,9 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             userId,
+            chatId: currentChatId,
             messages: [personalityMsg, ...chats[currentChatId].messages],
+            attachments: chats[currentChatId].attachments || [],
           }),
         });
 
@@ -1162,7 +1194,9 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             userId,
+            chatId: currentChatId,
             messages: [personalityMsg, ...chats[currentChatId].messages],
+            attachments: chats[currentChatId].attachments || [],
           }),
         });
 
