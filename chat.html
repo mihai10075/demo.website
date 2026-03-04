@@ -125,18 +125,12 @@
       font-size: 14px;
       font-weight: 600;
     }
-    .top-model {
-      font-size: 11px;
-      padding: 3px 8px;
-      border-radius: 999px;
-      border: 1px solid #1f2937;
-      color: #9ca3af;
-    }
     .top-right {
       display: flex;
       align-items: center;
       gap: 8px;
       font-size: 12px;
+      position: relative;
     }
     .top-link {
       color: #9ca3af;
@@ -308,6 +302,57 @@
       background: #b91c1c;
       border-color: #7f1d1d;
     }
+
+    /* Dropdown menus (games + settings) */
+    .menu-popover {
+      position: absolute;
+      right: 0;
+      top: 36px;
+      background: #020617;
+      border: 1px solid #1f2937;
+      border-radius: 8px;
+      padding: 6px 0;
+      font-size: 12px;
+      min-width: 220px;
+      display: none;
+      z-index: 30;
+    }
+    .menu-popover.open {
+      display: block;
+    }
+    .menu-popover button {
+      width: 100%;
+      text-align: left;
+      padding: 6px 10px;
+      background: transparent;
+      border: none;
+      color: #e5e7eb;
+      cursor: pointer;
+    }
+    .menu-popover button:hover {
+      background: #111827;
+    }
+    .settings-section {
+      padding: 6px 10px;
+      border-top: 1px solid #1f2937;
+      margin-top: 4px;
+    }
+    .settings-row {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-bottom: 6px;
+      font-size: 11px;
+      color: #9ca3af;
+    }
+    .settings-row label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .settings-row input[type="range"] {
+      width: 100%;
+    }
   </style>
 </head>
 <body>
@@ -337,14 +382,49 @@
         <div class="top-left">
           <div class="logo-dot"></div>
           <div class="logo-text">MihAI chat</div>
-          <div class="top-model">Llama 3.3 · Groq</div>
         </div>
         <div class="top-right">
           <span id="user-label"></span>
           <span id="status-label"><span class="status-dot"></span>ready</span>
+          <button id="gamesBtn" class="theme-btn">Games 🎮</button>
+          <div id="gamesMenu" class="menu-popover">
+            <button data-game="wyr">Would you rather…</button>
+            <button data-game="quiz">Quiz mode</button>
+            <button data-game="math">Quick math</button>
+          </div>
+          <button id="settingsBtn" class="theme-btn">Settings</button>
+          <div id="settingsMenu" class="menu-popover">
+            <button data-setting="theme-dark">Dark mode</button>
+            <button data-setting="theme-light">Light mode</button>
+            <div class="settings-section">
+              <div style="font-size:11px; color:#9ca3af; margin-bottom:4px;">
+                Personality
+              </div>
+              <div class="settings-row">
+                <label>
+                  <span>Chaos</span>
+                  <span id="chaosValue">2</span>
+                </label>
+                <input id="chaosSlider" type="range" min="0" max="4" step="1" />
+              </div>
+              <div class="settings-row">
+                <label>
+                  <span>Serious</span>
+                  <span id="seriousValue">2</span>
+                </label>
+                <input id="seriousSlider" type="range" min="0" max="4" step="1" />
+              </div>
+              <div class="settings-row">
+                <label>
+                  <span>Helpful</span>
+                  <span id="helpfulValue">2</span>
+                </label>
+                <input id="helpfulSlider" type="range" min="0" max="4" step="1" />
+              </div>
+            </div>
+          </div>
           <button id="login-github-btn" class="theme-btn">Login with GitHub</button>
           <a href="/" class="top-link">← Back to home</a>
-          <button id="themeToggle" class="theme-btn">Toggle theme</button>
         </div>
       </header>
 
@@ -358,14 +438,26 @@
             rows="1"
             placeholder="Talk to MihAI..."
           ></textarea>
+          <button id="stopBtn" class="send-btn" style="background:#ef4444;">✕</button>
           <button id="sendBtn" class="send-btn">➤</button>
         </div>
 
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; padding:0 4px;">
-          <label style="font-size:11px; color:#9ca3af; cursor:pointer;">
-            📎 Attach .txt
-            <input id="fileInput" type="file" accept=".txt" style="display:none;" />
-          </label>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; padding:0 4px; gap:10px; flex-wrap:wrap;">
+          <div style="display:flex; gap:10px;">
+            <label style="font-size:11px; color:#9ca3af; cursor:pointer;">
+              📎 Attach file
+              <input
+                id="fileInput"
+                type="file"
+                accept=".txt,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,image/*"
+                style="display:none;"
+              />
+            </label>
+            <label style="font-size:11px; color:#9ca3af; cursor:pointer;">
+              🖼 Attach photo
+              <input id="imageInput" type="file" accept="image/*" style="display:none;" />
+            </label>
+          </div>
           <div class="hint">
             MihAI is an expressive, slightly chaotic but kind AI friend. Keep it chill and it will, too.
           </div>
@@ -395,15 +487,27 @@
     const chatContainer = document.getElementById("chatContainer");
     const messageInput = document.getElementById("messageInput");
     const sendBtn = document.getElementById("sendBtn");
+    const stopBtn = document.getElementById("stopBtn");
     const newChatBtn = document.getElementById("newChatBtn");
     const deleteChatBtn = document.getElementById("deleteChatBtn");
     const chatList = document.getElementById("chatList");
-    const themeToggle = document.getElementById("themeToggle");
     const loginBtn = document.getElementById("login-github-btn");
     const userLabel = document.getElementById("user-label");
     const statusLabel = document.getElementById("status-label");
     const voiceBtn = document.getElementById("voiceBtn");
     const fileInput = document.getElementById("fileInput");
+    const imageInput = document.getElementById("imageInput");
+    const gamesBtn = document.getElementById("gamesBtn");
+    const gamesMenu = document.getElementById("gamesMenu");
+    const settingsBtn = document.getElementById("settingsBtn");
+    const settingsMenu = document.getElementById("settingsMenu");
+
+    const chaosSlider = document.getElementById("chaosSlider");
+    const seriousSlider = document.getElementById("seriousSlider");
+    const helpfulSlider = document.getElementById("helpfulSlider");
+    const chaosValue = document.getElementById("chaosValue");
+    const seriousValue = document.getElementById("seriousValue");
+    const helpfulValue = document.getElementById("helpfulValue");
 
     const ghLogin = localStorage.getItem("mihai_github_login");
     if (userLabel) {
@@ -419,6 +523,77 @@
     if (loginBtn) {
       loginBtn.addEventListener("click", () => {
         window.location.href = "/api/login-github";
+      });
+    }
+
+    // Init personality sliders from localStorage
+    function initSlider(slider, label, key) {
+      if (!slider || !label) return;
+      const stored = localStorage.getItem(key);
+      const value = stored !== null ? stored : "2";
+      slider.value = value;
+      label.textContent = value;
+      slider.addEventListener("input", () => {
+        localStorage.setItem(key, slider.value);
+        label.textContent = slider.value;
+      });
+    }
+
+    initSlider(chaosSlider, chaosValue, "mihai_personality_chaos");
+    initSlider(seriousSlider, seriousValue, "mihai_personality_serious");
+    initSlider(helpfulSlider, helpfulValue, "mihai_personality_helpful");
+
+    // Games dropdown
+    if (gamesBtn && gamesMenu) {
+      gamesBtn.addEventListener("click", () => {
+        gamesMenu.classList.toggle("open");
+      });
+
+      document.addEventListener("click", (e) => {
+        if (!gamesMenu.contains(e.target) && e.target !== gamesBtn) {
+          gamesMenu.classList.remove("open");
+        }
+      });
+
+      gamesMenu.addEventListener("click", (e) => {
+        const btn = e.target.closest("button");
+        if (!btn) return;
+        const game = btn.getAttribute("data-game");
+        gamesMenu.classList.remove("open");
+        if (game === "wyr") {
+          startGameWouldYouRather();
+        } else if (game === "quiz") {
+          startGameQuiz();
+        } else if (game === "math") {
+          startGameQuickMath();
+        }
+      });
+    }
+
+    // Settings dropdown (theme + personality)
+    if (settingsBtn && settingsMenu) {
+      settingsBtn.addEventListener("click", () => {
+        settingsMenu.classList.toggle("open");
+      });
+
+      document.addEventListener("click", (e) => {
+        if (!settingsMenu.contains(e.target) && e.target !== settingsBtn) {
+          settingsMenu.classList.remove("open");
+        }
+      });
+
+      settingsMenu.addEventListener("click", (e) => {
+        const btn = e.target.closest("button");
+        if (!btn) return;
+        const setting = btn.getAttribute("data-setting");
+
+        if (setting === "theme-dark") {
+          document.body.classList.remove("light");
+          localStorage.setItem("mihai_theme", "dark");
+        } else if (setting === "theme-light") {
+          document.body.classList.add("light");
+          localStorage.setItem("mihai_theme", "light");
+        }
       });
     }
 
@@ -478,7 +653,52 @@
       if (isError && role === "assistant") {
         div.classList.add("error");
       }
-      div.textContent = content;
+
+      if (role === "assistant") {
+        const textSpan = document.createElement("span");
+        textSpan.textContent = content;
+
+        const speakBtn = document.createElement("button");
+        speakBtn.textContent = "🔊";
+        speakBtn.style.marginLeft = "6px";
+        speakBtn.style.border = "none";
+        speakBtn.style.background = "transparent";
+        speakBtn.style.cursor = "pointer";
+        speakBtn.style.color = "inherit";
+        speakBtn.onclick = () => speak(content);
+
+        div.appendChild(textSpan);
+        div.appendChild(speakBtn);
+      } else {
+        const textSpan = document.createElement("span");
+        textSpan.textContent = content;
+
+        const delBtn = document.createElement("button");
+        delBtn.textContent = "🗑";
+        delBtn.style.marginLeft = "6px";
+        delBtn.style.border = "none";
+        delBtn.style.background = "transparent";
+        delBtn.style.cursor = "pointer";
+        delBtn.style.color = "inherit";
+        delBtn.title = "Delete this message";
+
+        delBtn.onclick = () => {
+          if (!currentChatId) return;
+          const chat = chats[currentChatId];
+          const idx = chat.messages.findIndex(
+            (m) => m.role === role && m.content === content
+          );
+          if (idx !== -1) {
+            chat.messages.splice(idx, 1);
+            saveChats();
+            renderMessages();
+          }
+        };
+
+        div.appendChild(textSpan);
+        div.appendChild(delBtn);
+      }
+
       chatContainer.appendChild(div);
     }
 
@@ -486,26 +706,93 @@
       chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
-    // File upload → system document
+    function buildPersonalityMessage() {
+      const chaos = localStorage.getItem("mihai_personality_chaos") || "2";
+      const seriousness = localStorage.getItem("mihai_personality_serious") || "2";
+      const helpful = localStorage.getItem("mihai_personality_helpful") || "2";
+
+      return {
+        role: "system",
+        content:
+          `Personality settings for this chat -> chaos: ${chaos}/4, ` +
+          `seriousness: ${seriousness}/4, helpfulness: ${helpful}/4. ` +
+          `Adjust your tone and style to match these numbers.`,
+      };
+    }
+
+    // File upload → send to /api/upload and add system message
     if (fileInput) {
       fileInput.addEventListener("change", async () => {
         const file = fileInput.files[0];
         if (!file || !currentChatId) return;
 
         try {
-          const text = await file.text();
-          const snippet = text.slice(0, 12000);
+          const formData = new FormData();
+          formData.append("file", file);
+
+          const res = await fetch("/api/upload", {
+            method: "POST",
+            body: formData,
+          });
+
+          const data = await res.json();
+          if (!data.ok) {
+            throw new Error(data.error || "Upload failed");
+          }
+
+          const f = data.file;
           chats[currentChatId].messages.push({
             role: "system",
-            content: "Document:\n" + snippet,
+            content:
+              `User uploaded a file named "${f.name}" (type: ${f.type}, size: ${f.size} bytes). ` +
+              `Ask them what they want to do with it and guide them. You cannot directly open it, ` +
+              `so ask them to describe or paste relevant parts if needed.`,
           });
           saveChats();
-          alert("Document loaded into context for this chat.");
+          alert("File uploaded. MihAI will see details in this chat.");
         } catch (e) {
-          console.error("File read error", e);
-          alert("Could not read that file.");
+          console.error("Upload error", e);
+          alert("Could not upload that file.");
         } finally {
           fileInput.value = "";
+        }
+      });
+    }
+
+    // Image upload → send to /api/upload and add system message
+    if (imageInput) {
+      imageInput.addEventListener("change", async () => {
+        const file = imageInput.files[0];
+        if (!file || !currentChatId) return;
+
+        try {
+          const formData = new FormData();
+          formData.append("file", file);
+
+          const res = await fetch("/api/upload", {
+            method: "POST",
+            body: formData,
+          });
+
+          const data = await res.json();
+          if (!data.ok) {
+            throw new Error(data.error || "Upload failed");
+          }
+
+          const f = data.file;
+          chats[currentChatId].messages.push({
+            role: "system",
+            content:
+              `User uploaded an image file named "${f.name}" (type: ${f.type}, size: ${f.size} bytes). ` +
+              `You cannot see the pixels yet, so ask them to describe the picture or paste any text from it so you can help.`,
+          });
+          saveChats();
+          alert("Photo uploaded. MihAI will ask you to describe it.");
+        } catch (e) {
+          console.error("Image upload error", e);
+          alert("Could not upload that image.");
+        } finally {
+          imageInput.value = "";
         }
       });
     }
@@ -534,15 +821,45 @@
       });
     }
 
-    // TTS
+    // TTS (toggle)
+    let currentUtterance = null;
+
     function speak(text) {
       try {
         if (!window.speechSynthesis) return;
+
+        if (currentUtterance && speechSynthesis.speaking) {
+          speechSynthesis.cancel();
+          currentUtterance = null;
+          return;
+        }
+
         const utter = new SpeechSynthesisUtterance(text);
         utter.rate = 1;
         utter.pitch = 1;
+        utter.onend = () => {
+          currentUtterance = null;
+        };
+        currentUtterance = utter;
         speechSynthesis.speak(utter);
       } catch (_) {}
+    }
+
+    // Stop button: cancel typing + voice
+    let currentTypingInterval = null;
+
+    if (stopBtn) {
+      stopBtn.addEventListener("click", () => {
+        if (currentTypingInterval) {
+          clearInterval(currentTypingInterval);
+          currentTypingInterval = null;
+        }
+        if (window.speechSynthesis && speechSynthesis.speaking) {
+          speechSynthesis.cancel();
+          currentUtterance = null;
+        }
+        setStatus("ready", false);
+      });
     }
 
     async function sendMessage() {
@@ -569,12 +886,13 @@
       setStatus("thinking…", true);
 
       try {
+        const personalityMsg = buildPersonalityMessage();
         const response = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             userId,
-            messages: chats[currentChatId].messages,
+            messages: [personalityMsg, ...chats[currentChatId].messages],
           }),
         });
 
@@ -585,16 +903,20 @@
         let i = 0;
         const speed = 18;
 
-        const interval = setInterval(() => {
+        if (currentTypingInterval) {
+          clearInterval(currentTypingInterval);
+        }
+
+        currentTypingInterval = setInterval(() => {
+          if (i >= fullText.length) {
+            clearInterval(currentTypingInterval);
+            currentTypingInterval = null;
+            return;
+          }
           assistantDiv.textContent += fullText[i] || "";
           i++;
           scrollBottom();
-          if (i >= fullText.length) {
-            clearInterval(interval);
-          }
         }, speed);
-
-        speak(fullText);
 
         chats[currentChatId].messages.push({
           role: "assistant",
@@ -685,17 +1007,10 @@
       deleteChatBtn.addEventListener("click", showDeleteModal);
     }
 
+    // Initial theme
     if (localStorage.getItem("mihai_theme") === "light") {
       document.body.classList.add("light");
     }
-
-    themeToggle.onclick = () => {
-      document.body.classList.toggle("light");
-      localStorage.setItem(
-        "mihai_theme",
-        document.body.classList.contains("light") ? "light" : "dark"
-      );
-    };
 
     if (Object.keys(chats).length === 0) {
       createNewChat();
@@ -706,6 +1021,171 @@
     }
 
     setStatus("ready", false);
+
+    // Start "Would you rather" game
+    async function startGameWouldYouRather() {
+      if (!currentChatId) {
+        createNewChat();
+      }
+
+      const systemMsg =
+        "Start a 'Would you rather' game with me. Ask one fun question at a time and wait for my answer each time. Keep it light and playful.";
+      chats[currentChatId].messages.push({
+        role: "user",
+        content: systemMsg,
+      });
+      saveChats();
+
+      addMessageToUI("user", "(Game) " + systemMsg);
+
+      const assistantDiv = document.createElement("div");
+      assistantDiv.className = "message assistant";
+      assistantDiv.textContent = "Starting game...";
+      chatContainer.appendChild(assistantDiv);
+      scrollBottom();
+      setStatus("thinking…", true);
+
+      try {
+        const personalityMsg = buildPersonalityMessage();
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId,
+            messages: [personalityMsg, ...chats[currentChatId].messages],
+          }),
+        });
+
+        const data = await response.json();
+        const fullText = data.reply || "No reply from MihAI.";
+
+        assistantDiv.textContent = fullText;
+
+        chats[currentChatId].messages.push({
+          role: "assistant",
+          content: fullText,
+        });
+
+        saveChats();
+        renderChats();
+        setStatus("ready", false);
+      } catch (err) {
+        console.error(err);
+        assistantDiv.textContent = "Error starting game.";
+        assistantDiv.classList.add("error");
+        setStatus("ready", false);
+      }
+    }
+
+    // Start Quiz mode
+    async function startGameQuiz() {
+      if (!currentChatId) {
+        createNewChat();
+      }
+
+      const systemMsg =
+        "Start a quiz game with me. Ask one question at a time. Mix topics like gaming, tech, school facts, and general knowledge. After 10 questions, tell me my score. Wait for my answer after each question.";
+      chats[currentChatId].messages.push({
+        role: "user",
+        content: systemMsg,
+      });
+      saveChats();
+
+      addMessageToUI("user", "(Game) " + systemMsg);
+
+      const assistantDiv = document.createElement("div");
+      assistantDiv.className = "message assistant";
+      assistantDiv.textContent = "Starting quiz...";
+      chatContainer.appendChild(assistantDiv);
+      scrollBottom();
+      setStatus("thinking…", true);
+
+      try {
+        const personalityMsg = buildPersonalityMessage();
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId,
+            messages: [personalityMsg, ...chats[currentChatId].messages],
+          }),
+        });
+
+        const data = await response.json();
+        const fullText = data.reply || "No reply from MihAI.";
+
+        assistantDiv.textContent = fullText;
+
+        chats[currentChatId].messages.push({
+          role: "assistant",
+          content: fullText,
+        });
+
+        saveChats();
+        renderChats();
+        setStatus("ready", false);
+      } catch (err) {
+        console.error(err);
+        assistantDiv.textContent = "Error starting quiz.";
+        assistantDiv.classList.add("error");
+        setStatus("ready", false);
+      }
+    }
+
+    // Start Quick math game
+    async function startGameQuickMath() {
+      if (!currentChatId) {
+        createNewChat();
+      }
+
+      const systemMsg =
+        "Start a quick math challenge with me. Ask one math problem at a time (start easy with addition and subtraction, then get harder with multiplication and maybe fractions). After each answer, tell me if I'm right and keep a small score.";
+      chats[currentChatId].messages.push({
+        role: "user",
+        content: systemMsg,
+      });
+      saveChats();
+
+      addMessageToUI("user", "(Game) " + systemMsg);
+
+      const assistantDiv = document.createElement("div");
+      assistantDiv.className = "message assistant";
+      assistantDiv.textContent = "Starting quick math...";
+      chatContainer.appendChild(assistantDiv);
+      scrollBottom();
+      setStatus("thinking…", true);
+
+      try {
+        const personalityMsg = buildPersonalityMessage();
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId,
+            messages: [personalityMsg, ...chats[currentChatId].messages],
+          }),
+        });
+
+        const data = await response.json();
+        const fullText = data.reply || "No reply from MihAI.";
+
+        assistantDiv.textContent = fullText;
+
+        chats[currentChatId].messages.push({
+          role: "assistant",
+          content: fullText,
+        });
+
+        saveChats();
+        renderChats();
+        setStatus("ready", false);
+      } catch (err) {
+        console.error(err);
+        assistantDiv.textContent = "Error starting quick math.";
+        assistantDiv.classList.add("error");
+        setStatus("ready", false);
+      }
+    }
   </script>
 </body>
 </html>
