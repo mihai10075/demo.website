@@ -4,356 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MihAI Chat</title>
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: system-ui, -apple-system, sans-serif;
-    }
-    body {
-      background: #020617;
-      color: #e5e7eb;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-    .layout {
-      flex: 1;
-      display: grid;
-      grid-template-columns: 260px minmax(0, 1fr);
-      height: 100%;
-    }
-    @media (max-width: 768px) {
-      .layout {
-        grid-template-columns: minmax(0, 1fr);
-      }
-      .sidebar {
-        display: none;
-      }
-    }
-    .sidebar {
-      background: #020617;
-      border-right: 1px solid #111827;
-      padding: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .sidebar-title {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-    .sidebar-sub {
-      font-size: 11px;
-      color: #9ca3af;
-      margin-bottom: 10px;
-    }
-    .btn-primary {
-      border: none;
-      border-radius: 999px;
-      padding: 8px 14px;
-      font-size: 13px;
-      cursor: pointer;
-      background: linear-gradient(135deg, #22c55e, #16a34a);
-      color: #022c22;
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-    }
-    .btn-primary span.icon {
-      font-size: 15px;
-    }
-    .chat-list {
-      flex: 1;
-      margin-top: 10px;
-      overflow-y: auto;
-      padding-right: 4px;
-    }
-    .chat-item {
-      padding: 7px 9px;
-      border-radius: 8px;
-      font-size: 13px;
-      cursor: pointer;
-      margin-bottom: 6px;
-      color: #e5e7eb;
-      border: 1px solid transparent;
-    }
-    .chat-item:hover {
-      background: #020617;
-      border-color: #1e293b;
-    }
-    .chat-item.active {
-      background: #020617;
-      border-color: #22c55e;
-    }
-    .sidebar-footer {
-      font-size: 11px;
-      color: #6b7280;
-      margin-top: 4px;
-    }
-    .main {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-    }
-    .topbar {
-      height: 52px;
-      border-bottom: 1px solid #111827;
-      padding: 0 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: #020617;
-    }
-    .top-left {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .logo-dot {
-      width: 9px;
-      height: 9px;
-      border-radius: 999px;
-      background: #22c55e;
-      box-shadow: 0 0 10px rgba(34, 197, 94, 0.8);
-    }
-    .logo-text {
-      font-size: 14px;
-      font-weight: 600;
-    }
-    .top-right {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 12px;
-      position: relative;
-    }
-    .top-link {
-      color: #9ca3af;
-      text-decoration: none;
-      padding: 4px 9px;
-      border-radius: 999px;
-      border: 1px solid #1f2937;
-    }
-    .theme-btn {
-      border-radius: 999px;
-      border: 1px solid #1f2937;
-      background: transparent;
-      color: #e5e7eb;
-      font-size: 12px;
-      padding: 4px 9px;
-      cursor: pointer;
-    }
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: #22c55e;
-      margin-right: 4px;
-    }
-    .chat-container {
-      flex: 1;
-      padding: 16px 16px 10px;
-      overflow-y: auto;
-      background: radial-gradient(circle at top, rgba(37, 99, 235, 0.15), transparent 55%),
-                  radial-gradient(circle at bottom, rgba(16, 185, 129, 0.12), transparent 55%),
-                  #020617;
-    }
-    .message {
-      max-width: 70%;
-      padding: 9px 12px;
-      border-radius: 10px;
-      margin-bottom: 10px;
-      white-space: pre-wrap;
-      font-size: 14px;
-    }
-    .message.user {
-      margin-left: auto;
-      background: #1d4ed8;
-    }
-    .message.assistant {
-      background: #020617;
-      border: 1px solid #1f2937;
-    }
-    .input-wrap {
-      border-top: 1px solid #111827;
-      padding: 10px 14px 14px;
-      background: #020617;
-    }
-    .input-shell {
-      display: flex;
-      align-items: flex-end;
-      gap: 8px;
-      background: #020617;
-      border-radius: 16px;
-      border: 1px solid #1f2937;
-      padding: 6px 8px 6px 10px;
-    }
-    textarea {
-      border: none;
-      outline: none;
-      resize: none;
-      flex: 1;
-      background: transparent;
-      color: #e5e7eb;
-      font-size: 14px;
-      max-height: 120px;
-      min-height: 28px;
-    }
-    .send-btn {
-      border-radius: 999px;
-      border: none;
-      background: #22c55e;
-      color: #022c22;
-      width: 30px;
-      height: 30px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 16px;
-    }
-    .hint {
-      font-size: 11px;
-      color: #6b7280;
-    }
-    body.light {
-      background: #f9fafb;
-      color: #020617;
-    }
-    body.light .sidebar {
-      background: #f9fafb;
-      border-right-color: #e5e7eb;
-    }
-    body.light .topbar {
-      background: #f9fafb;
-      border-bottom-color: #e5e7eb;
-    }
-    body.light .chat-container {
-      background: #f3f4f6;
-    }
-    body.light .message.assistant {
-      background: #ffffff;
-      border-color: #e5e7eb;
-    }
-    body.light .message.user {
-      background: #2563eb;
-    }
-    body.light .input-shell {
-      background: #ffffff;
-      border-color: #e5e7eb;
-    }
-    body.light .theme-btn {
-      border-color: #e5e7eb;
-      color: #111827;
-    }
-    body.light .top-link {
-      border-color: #e5e7eb;
-      color: #111827;
-    }
-    body.light .chat-item:hover {
-      background: #f9fafb;
-      border-color: #e5e7eb;
-    }
-    .assistant.error {
-      border-color: #b91c1c;
-      color: #fecaca;
-    }
-
-    /* delete modal */
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(15,23,42,0.75);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 40;
-    }
-    .modal {
-      background: #020617;
-      border-radius: 12px;
-      border: 1px solid #1f2937;
-      padding: 16px 18px;
-      max-width: 320px;
-      width: 100%;
-      font-size: 14px;
-    }
-    .modal-buttons {
-      margin-top: 12px;
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-    }
-    .modal-btn {
-      border-radius: 999px;
-      padding: 6px 12px;
-      border: 1px solid #1f2937;
-      background: #020617;
-      color: #e5e7eb;
-      cursor: pointer;
-      font-size: 13px;
-    }
-    .modal-btn-danger {
-      background: #b91c1c;
-      border-color: #7f1d1d;
-    }
-
-    /* Dropdown menus (games + settings) */
-    .menu-popover {
-      position: absolute;
-      right: 0;
-      top: 36px;
-      background: #020617;
-      border: 1px solid #1f2937;
-      border-radius: 8px;
-      padding: 6px 0;
-      font-size: 12px;
-      min-width: 220px;
-      display: none;
-      z-index: 30;
-    }
-    .menu-popover.open {
-      display: block;
-    }
-    .menu-popover button {
-      width: 100%;
-      text-align: left;
-      padding: 6px 10px;
-      background: transparent;
-      border: none;
-      color: #e5e7eb;
-      cursor: pointer;
-    }
-    .menu-popover button:hover {
-      background: #111827;
-    }
-    .settings-section {
-      padding: 6px 10px;
-      border-top: 1px solid #1f2937;
-      margin-top: 4px;
-    }
-    .settings-row {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      margin-bottom: 6px;
-      font-size: 11px;
-      color: #9ca3af;
-    }
-    .settings-row label {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .settings-row input[type="range"] {
-      width: 100%;
-    }
-  </style>
+  <link rel="stylesheet" href="/chat.css" />
 </head>
 <body>
   <div class="layout">
@@ -371,6 +22,17 @@
           </button>
         </div>
       </div>
+
+      <!-- Sidebar stats panel -->
+      <div id="statsPanel" class="sidebar-stats">
+        <div class="sidebar-stats-title">Session stats</div>
+        <div class="sidebar-stats-row"><span>Chats</span><span id="statChatCount">0</span></div>
+        <div class="sidebar-stats-row"><span>Messages</span><span id="statMessageCount">0</span></div>
+        <div class="sidebar-stats-row"><span>Top mode</span><span id="statTopMode">chat</span></div>
+        <div class="sidebar-stats-row"><span>Web chats</span><span id="statWebChats">0</span></div>
+        <div class="sidebar-stats-row"><span>Depth</span><span id="statDepthLabel">Normal</span></div>
+      </div>
+
       <div id="chatList" class="chat-list"></div>
       <div class="sidebar-footer">
         Tip: Press Enter to send, Shift+Enter for a new line.
@@ -385,13 +47,34 @@
         </div>
         <div class="top-right">
           <span id="user-label"></span>
+          <span id="mood-badge" style="font-size:11px; padding:3px 7px; border-radius:999px; border:1px solid #1f2937; margin-right:6px;">
+            Mood: Balanced
+          </span>
           <span id="status-label"><span class="status-dot"></span>ready</span>
+
+          <!-- Depth slider -->
+          <div class="depth-wrap">
+            <label for="depthSlider" style="font-size:11px; color:#9ca3af; margin-right:4px;">Depth</label>
+            <input id="depthSlider" type="range" min="0" max="2" step="1" />
+            <span id="depthLabel" style="font-size:11px; margin-left:4px;">Normal</span>
+          </div>
+
+          <!-- Research toggle -->
+          <label id="researchToggle" class="theme-btn" style="margin-left:8px; font-size:11px; display:flex; align-items:center; gap:4px; cursor:pointer;">
+            <input type="checkbox" id="researchCheckbox" style="accent-color:#22c55e;"/>
+            <span>Research mode</span>
+          </label>
+
           <button id="gamesBtn" class="theme-btn">Games 🎮</button>
           <div id="gamesMenu" class="menu-popover">
             <button data-game="wyr">Would you rather…</button>
             <button data-game="quiz">Quiz mode</button>
             <button data-game="math">Quick math</button>
           </div>
+
+          <!-- Notebook button -->
+          <button id="notebookBtn" class="theme-btn">Notebook</button>
+
           <button id="settingsBtn" class="theme-btn">Settings</button>
           <div id="settingsMenu" class="menu-popover">
             <button data-setting="theme-dark">Dark mode</button>
@@ -422,16 +105,32 @@
                 <input id="helpfulSlider" type="range" min="0" max="4" step="1" />
               </div>
             </div>
+            <button id="memoryBtn" data-setting="memory-open">Memory</button>
           </div>
+
+          <div id="modeButtons" class="mode-buttons">
+            <button data-mode="chat" class="mode-btn mode-active">Chat</button>
+            <button data-mode="coder" class="mode-btn">Coder</button>
+            <button data-mode="study" class="mode-btn">Study</button>
+          </div>
+
           <button id="login-github-btn" class="theme-btn">Login with GitHub</button>
           <a href="/" class="top-link">← Back to home</a>
         </div>
       </header>
 
+      <!-- Sources bar -->
+      <section id="sourcesBar" class="sources-bar" style="display:none;">
+        <div class="sources-header">
+          <span>Context & sources</span>
+          <button id="toggleSourcesBtn" class="tiny-btn">Hide</button>
+        </div>
+        <div id="sourcesInner" class="sources-inner"></div>
+      </section>
+
       <section id="chatContainer" class="chat-container"></section>
 
       <section class="input-wrap">
-        <!-- attachment preview bar -->
         <div id="attachmentBar" style="
           display:none;
           margin-bottom:6px;
@@ -458,15 +157,23 @@
           <textarea
             id="messageInput"
             rows="1"
-            placeholder="Talk to MihAI..."
+            placeholder="Talk to MihAI... (try /short, /story, /code, /stats)"
           ></textarea>
           <button id="stopBtn" class="send-btn" style="background:#ef4444;">✕</button>
           <button id="sendBtn" class="send-btn">➤</button>
         </div>
 
+        <!-- Prompt chips -->
+        <div id="promptChips" class="prompt-chips">
+          <button data-chip="/explain">Explain this step by step</button>
+          <button data-chip="/code">Fix this code</button>
+          <button data-chip="/short">Summarize</button>
+          <button data-chip="/story">Turn into a story</button>
+        </div>
+
         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; padding:0 4px; gap:10px; flex-wrap:wrap;">
           <div style="display:flex; gap:10px;">
-            <label style="font-size:11px; color:#9ca3af; cursor:pointer;">
+            <label id="attachFileLabel" style="font-size:11px; color:#9ca3af; cursor:pointer;">
               📎 Attach file
               <input
                 id="fileInput"
@@ -475,7 +182,7 @@
                 style="display:none;"
               />
             </label>
-            <label style="font-size:11px; color:#9ca3af; cursor:pointer;">
+            <label id="attachImageLabel" style="font-size:11px; color:#9ca3af; cursor:pointer;">
               🖼 Attach photo
               <input id="imageInput" type="file" accept="image/*" style="display:none;" />
             </label>
@@ -485,6 +192,50 @@
           </div>
         </div>
       </section>
+
+      <!-- Command palette -->
+      <div id="commandPalette" class="cmd-palette" style="display:none;">
+        <div class="cmd-palette-inner">
+          <input id="cmdInput" type="text" placeholder="Type a command… (e.g. /stats, switch coder, depth deep)" />
+          <ul id="cmdList">
+            <li data-action="new-chat">New chat</li>
+            <li data-action="focus-input">Focus input</li>
+            <li data-action="mode-chat">Switch to Chat mode</li>
+            <li data-action="mode-coder">Switch to Coder mode</li>
+            <li data-action="mode-study">Switch to Study mode</li>
+            <li data-action="depth-shallow">Depth: Shallow</li>
+            <li data-action="depth-normal">Depth: Normal</li>
+            <li data-action="depth-deep">Depth: Deep</li>
+            <li data-action="stats">Show stats</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Notebook modal -->
+      <div id="notebookModal" class="modal-backdrop" style="display:none;">
+        <div class="modal notebook-modal">
+          <div style="font-size:14px; margin-bottom:6px;">Chat notebook</div>
+          <textarea id="notebookTextarea" rows="8" style="width:100%; resize:vertical; font-size:12px;"></textarea>
+          <div class="modal-buttons" style="margin-top:8px;">
+            <button class="modal-btn" id="notebookCancel">Close</button>
+            <button class="modal-btn" id="notebookSave">Save</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Memory modal -->
+      <div id="memoryModal" class="modal-backdrop" style="display:none;">
+        <div class="modal memory-modal">
+          <div style="font-size:14px; margin-bottom:6px;">MihAI memory</div>
+          <div style="font-size:11px; color:#9ca3af; margin-bottom:6px;">
+            These are things MihAI remembers about you and this chat. You can delete them if they’re wrong.
+          </div>
+          <div id="memoryList" style="max-height:260px; overflow:auto; font-size:12px;"></div>
+          <div class="modal-buttons" style="margin-top:8px;">
+            <button class="modal-btn" id="memoryClose">Close</button>
+          </div>
+        </div>
+      </div>
     </main>
   </div>
 
@@ -492,10 +243,8 @@
     function getUserId() {
       const ghId = localStorage.getItem("mihai_github_id");
       if (ghId) return "github-" + ghId;
-
       const stored = localStorage.getItem("mihai_user_id");
       if (stored) return stored;
-
       const anon = "anon-" + crypto.randomUUID();
       localStorage.setItem("mihai_user_id", anon);
       return anon;
@@ -506,6 +255,9 @@
     let chats = JSON.parse(localStorage.getItem("mihai_chats") || "{}");
     let currentChatId = null;
 
+    const sourcesBar = document.getElementById("sourcesBar");
+    const sourcesInner = document.getElementById("sourcesInner");
+    const toggleSourcesBtn = document.getElementById("toggleSourcesBtn");
     const chatContainer = document.getElementById("chatContainer");
     const messageInput = document.getElementById("messageInput");
     const sendBtn = document.getElementById("sendBtn");
@@ -516,6 +268,8 @@
     const loginBtn = document.getElementById("login-github-btn");
     const userLabel = document.getElementById("user-label");
     const statusLabel = document.getElementById("status-label");
+    const moodBadge = document.getElementById("mood-badge");
+    const modeButtonsWrap = document.getElementById("modeButtons");
     const voiceBtn = document.getElementById("voiceBtn");
     const fileInput = document.getElementById("fileInput");
     const imageInput = document.getElementById("imageInput");
@@ -523,6 +277,9 @@
     const gamesMenu = document.getElementById("gamesMenu");
     const settingsBtn = document.getElementById("settingsBtn");
     const settingsMenu = document.getElementById("settingsMenu");
+    const attachFileLabel = document.getElementById("attachFileLabel");
+    const attachImageLabel = document.getElementById("attachImageLabel");
+    const promptChips = document.getElementById("promptChips");
 
     const chaosSlider = document.getElementById("chaosSlider");
     const seriousSlider = document.getElementById("seriousSlider");
@@ -531,24 +288,566 @@
     const seriousValue = document.getElementById("seriousValue");
     const helpfulValue = document.getElementById("helpfulValue");
 
-    // attachment preview elements/state
     const attachmentBar = document.getElementById("attachmentBar");
     const attachmentLabel = document.getElementById("attachmentLabel");
     const attachmentEditBtn = document.getElementById("attachmentEditBtn");
     const attachmentClearBtn = document.getElementById("attachmentClearBtn");
+
+    const statsPanel = document.getElementById("statsPanel");
+    const statChatCount = document.getElementById("statChatCount");
+    const statMessageCount = document.getElementById("statMessageCount");
+    const statTopMode = document.getElementById("statTopMode");
+    const statWebChats = document.getElementById("statWebChats");
+    const statDepthLabel = document.getElementById("statDepthLabel");
+
+    const depthSlider = document.getElementById("depthSlider");
+    const depthLabel = document.getElementById("depthLabel");
+
+    const researchToggle = document.getElementById("researchToggle");
+    const researchCheckbox = document.getElementById("researchCheckbox");
+
+    const commandPalette = document.getElementById("commandPalette");
+    const cmdInput = document.getElementById("cmdInput");
+    const cmdList = document.getElementById("cmdList");
+
+    const notebookBtn = document.getElementById("notebookBtn");
+    const notebookModal = document.getElementById("notebookModal");
+    const notebookTextarea = document.getElementById("notebookTextarea");
+    const notebookCancel = document.getElementById("notebookCancel");
+    const notebookSave = document.getElementById("notebookSave");
+
+    const memoryBtn = document.getElementById("memoryBtn");
+    const memoryModal = document.getElementById("memoryModal");
+    const memoryList = document.getElementById("memoryList");
+    const memoryClose = document.getElementById("memoryClose");
+
     let currentAttachmentPreview = null;
+    let queuedAttachments = [];
+
+    let recognition = null;
+    let currentUtterance = null;
+    let currentTypingInterval = null;
+    let typingIndicatorDiv = null;
+
+    let currentMode = localStorage.getItem("mihai_chat_mode") || "chat";
+    let currentDepth = parseInt(localStorage.getItem("mihai_depth") || "1", 10);
+    let researchMode = localStorage.getItem("mihai_research") === "true";
+
+    const ghLogin = localStorage.getItem("mihai_github_login");
+    if (userLabel) {
+      if (ghLogin) {
+        userLabel.textContent = `Logged in as @${ghLogin}`;
+      } else if (userId.startsWith("anon-")) {
+        userLabel.textContent = "Guest session";
+      } else {
+        userLabel.textContent = `User: ${userId}`;
+      }
+    }
+
+    if (loginBtn) {
+      if (ghLogin) {
+        loginBtn.textContent = "Logged in with GitHub";
+        loginBtn.disabled = true;
+      } else {
+        loginBtn.textContent = "Login with GitHub";
+        loginBtn.disabled = false;
+        loginBtn.addEventListener("click", () => {
+          window.location.href = "/api/login-github";
+        });
+      }
+    }
+
+    function updateDepthUI() {
+      if (!depthSlider || !depthLabel) return;
+      depthSlider.value = String(currentDepth);
+      let label = "Normal";
+      if (currentDepth === 0) label = "Shallow";
+      if (currentDepth === 2) label = "Deep";
+      depthLabel.textContent = label;
+      if (statDepthLabel) statDepthLabel.textContent = label;
+    }
+
+    function updateResearchUI() {
+      if (!researchCheckbox || !researchToggle) return;
+      researchCheckbox.checked = researchMode;
+      researchToggle.style.opacity = researchMode ? "1" : "0.6";
+    }
+
+    if (depthSlider) {
+      depthSlider.addEventListener("input", () => {
+        currentDepth = parseInt(depthSlider.value, 10);
+        localStorage.setItem("mihai_depth", String(currentDepth));
+        updateDepthUI();
+      });
+    }
+    updateDepthUI();
+
+    if (researchCheckbox) {
+      researchCheckbox.addEventListener("change", () => {
+        researchMode = researchCheckbox.checked;
+        localStorage.setItem("mihai_research", researchMode ? "true" : "false");
+        updateResearchUI();
+      });
+    }
+    updateResearchUI();
+
+    (function initLastPickerHighlight() {
+      const last = localStorage.getItem("mihai_last_attach_kind");
+      if (last === "image" && attachImageLabel) {
+        attachImageLabel.style.textDecoration = "underline";
+      } else if (attachFileLabel) {
+        attachFileLabel.style.textDecoration = "underline";
+      }
+    })();
+
+    function markLastPicker(kind) {
+      localStorage.setItem("mihai_last_attach_kind", kind);
+      if (attachFileLabel) attachFileLabel.style.textDecoration = "";
+      if (attachImageLabel) attachImageLabel.style.textDecoration = "";
+      if (kind === "image" && attachImageLabel) {
+        attachImageLabel.style.textDecoration = "underline";
+      }
+      if (kind === "file" && attachFileLabel) {
+        attachFileLabel.style.textDecoration = "underline";
+      }
+    }
+
+    function initSlider(slider, label, key) {
+      if (!slider || !label) return;
+      const stored = localStorage.getItem(key);
+      const value = stored !== null ? stored : "2";
+      slider.value = value;
+      label.textContent = value;
+      slider.addEventListener("input", () => {
+        localStorage.setItem(key, slider.value);
+        label.textContent = slider.value;
+        updateMoodBadge();
+      });
+    }
+
+    initSlider(chaosSlider, chaosValue, "mihai_personality_chaos");
+    initSlider(seriousSlider, seriousValue, "mihai_personality_serious");
+    initSlider(helpfulSlider, helpfulValue, "mihai_personality_helpful");
+
+    function updateMoodBadge() {
+      if (!moodBadge) return;
+      const c = parseInt(localStorage.getItem("mihai_personality_chaos") || "2", 10);
+      const s = parseInt(localStorage.getItem("mihai_personality_serious") || "2", 10);
+      const h = parseInt(localStorage.getItem("mihai_personality_helpful") || "2", 10);
+
+      let mood = "Balanced";
+      if (c >= 3 && s <= 2) mood = "Hyper";
+      else if (c <= 1 && s >= 3) mood = "Serious";
+      else if (h >= 3 && s >= 2) mood = "Tutor";
+      else if (c >= 3 && h >= 3) mood = "Gremlin";
+
+      moodBadge.textContent = "Mood: " + mood;
+    }
+    updateMoodBadge();
+
+    if (gamesBtn && gamesMenu) {
+      gamesBtn.addEventListener("click", () => {
+        gamesMenu.classList.toggle("open");
+      });
+
+      document.addEventListener("click", (e) => {
+        if (!gamesMenu.contains(e.target) && e.target !== gamesBtn) {
+          gamesMenu.classList.remove("open");
+        }
+      });
+
+      gamesMenu.addEventListener("click", (e) => {
+        const btn = e.target.closest("button");
+        if (!btn) return;
+        const game = btn.getAttribute("data-game");
+        gamesMenu.classList.remove("open");
+        if (game === "wyr") {
+          startGameWouldYouRather();
+        } else if (game === "quiz") {
+          startGameQuiz();
+        } else if (game === "math") {
+          startGameQuickMath();
+        }
+      });
+    }
+
+    if (settingsBtn && settingsMenu) {
+      settingsBtn.addEventListener("click", () => {
+        settingsMenu.classList.toggle("open");
+      });
+
+      document.addEventListener("click", (e) => {
+        if (!settingsMenu.contains(e.target) && e.target !== settingsBtn) {
+          settingsMenu.classList.remove("open");
+        }
+      });
+
+      settingsMenu.addEventListener("click", (e) => {
+        const btn = e.target.closest("button");
+        if (!btn) return;
+        const setting = btn.getAttribute("data-setting");
+
+        if (setting === "theme-dark") {
+          document.body.classList.remove("light");
+          localStorage.setItem("mihai_theme", "dark");
+        } else if (setting === "theme-light") {
+          document.body.classList.add("light");
+          localStorage.setItem("mihai_theme", "light");
+        } else if (setting === "memory-open") {
+          openMemoryModal();
+        }
+      });
+    }
+
+    function updateModeButtonsUI() {
+      if (!modeButtonsWrap) return;
+      const btns = modeButtonsWrap.querySelectorAll(".mode-btn");
+      btns.forEach((b) => {
+        const m = b.getAttribute("data-mode");
+        if (m === currentMode) b.classList.add("mode-active");
+        else b.classList.remove("mode-active");
+      });
+    }
+
+    if (modeButtonsWrap) {
+      modeButtonsWrap.addEventListener("click", (e) => {
+        const btn = e.target.closest(".mode-btn");
+        if (!btn) return;
+        const m = btn.getAttribute("data-mode");
+        if (!m) return;
+        currentMode = m;
+        localStorage.setItem("mihai_chat_mode", currentMode);
+        updateModeButtonsUI();
+      });
+    }
+    updateModeButtonsUI();
+
+    function setStatus(text, isThinking) {
+      if (!statusLabel) return;
+      statusLabel.textContent = "";
+      const dot = document.createElement("span");
+      dot.className = "status-dot";
+      dot.style.background = isThinking ? "#facc15" : "#22c55e";
+      statusLabel.appendChild(dot);
+      statusLabel.appendChild(document.createTextNode(isThinking ? "thinking…" : text));
+    }
+
+    function saveChats() {
+      localStorage.setItem("mihai_chats", JSON.stringify(chats));
+      updateStatsPanel();
+    }
+
+    function createNewChat() {
+      const id = "chat-" + crypto.randomUUID();
+      const ghLogin = localStorage.getItem("mihai_github_login");
+      const displayName = ghLogin
+        ? `@${ghLogin}`
+        : (userId.startsWith("anon-") ? "a guest user" : userId);
+
+      chats[id] = {
+        title: "New chat",
+        messages: [
+          {
+            role: "system",
+            content:
+              `This is a returning conversation with ${displayName}. ` +
+              `Remember things they've mentioned in previous chats when helpful.`,
+          },
+        ],
+        attachments: [],
+        meta: {
+          webHits: 0,
+          createdAt: Date.now(),
+        },
+      };
+      currentChatId = id;
+      saveChats();
+      renderChats();
+      renderMessages();
+    }
+
+    function renderChats() {
+      chatList.innerHTML = "";
+      Object.entries(chats).forEach(([id, chat]) => {
+        const div = document.createElement("div");
+        div.className = "chat-item" + (id === currentChatId ? " active" : "");
+        div.textContent = chat.title;
+        div.onclick = () => {
+          currentChatId = id;
+          renderChats();
+          renderMessages();
+        };
+        chatList.appendChild(div);
+      });
+    }
+
+    function renderMessages() {
+      chatContainer.innerHTML = "";
+      if (!currentChatId) return;
+      const chat = chats[currentChatId];
+
+      const msgs = chat.messages || [];
+      const start = Math.max(0, msgs.length - 120);
+      const slice = msgs.slice(start);
+
+      slice.forEach((msg) => {
+        addMessageToUI(msg.role, msg.content, msg.attachments || [], false, msg);
+      });
+      scrollBottom();
+    }
+
+    function addAttachmentChips(container, attachments) {
+      if (!attachments || attachments.length === 0) return;
+      const row = document.createElement("div");
+      row.className = "attachments-row";
+      attachments.forEach((att) => {
+        const chip = document.createElement("div");
+        chip.className = "attachment-chip";
+        const icon = document.createElement("span");
+        icon.textContent = att.type && att.type.startsWith("image/") ? "🖼" : "📎";
+        chip.appendChild(icon);
+
+        if (att.type && att.type.startsWith("image/") && att.url) {
+          const img = document.createElement("img");
+          img.src = att.url;
+          img.alt = att.name;
+          img.className = "attachment-thumb";
+          chip.appendChild(img);
+        }
+
+        const textSpan = document.createElement("span");
+        if (att.url) {
+          const link = document.createElement("a");
+          link.href = att.url;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          link.textContent = att.name || "attachment";
+          textSpan.appendChild(link);
+        } else {
+          textSpan.textContent = att.name || "attachment";
+        }
+        chip.appendChild(textSpan);
+
+        row.appendChild(chip);
+      });
+      container.appendChild(row);
+    }
+
+    function copyToClipboard(text) {
+      try {
+        navigator.clipboard.writeText(text);
+      } catch (_) {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      }
+    }
+
+    function renderMarkdown(text) {
+      const div = document.createElement("div");
+      let html = text
+        .replace(/```([\s\S]*?)```/g, (m, code) => {
+          return `<pre class="code-block"><code>${code.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code></pre>`;
+        })
+        .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+        .replace(/`([^`]+)`/g, "<code>$1</code>")
+        .replace(/\n\n/g, "<br/><br/>");
+      div.innerHTML = html;
+      return div;
+    }
+
+    function updateMessageFromUI(div, msgObj) {
+      div.__mihaiMsgRef = msgObj;
+    }
+
+    function addMessageActionBar(div, role, content, msgObj) {
+      const bar = document.createElement("div");
+      bar.className = "message-actions";
+
+      const copyBtn = document.createElement("button");
+      copyBtn.textContent = "Copy";
+      copyBtn.onclick = () => copyToClipboard(content);
+      bar.appendChild(copyBtn);
+
+      if (role === "assistant") {
+        const regenBtn = document.createElement("button");
+        regenBtn.textContent = "Regenerate";
+        regenBtn.onclick = () => {
+          if (!currentChatId) return;
+          const chat = chats[currentChatId];
+          for (let i = chat.messages.length - 1; i >= 0; i--) {
+            if (chat.messages[i].role === "assistant") {
+              chat.messages.splice(i, 1);
+              break;
+            }
+          }
+          saveChats();
+          renderMessages();
+
+          const lastUser = [...chat.messages].reverse().find(m => m.role === "user");
+          if (lastUser) {
+            messageInput.value = lastUser.content;
+            sendMessage();
+          }
+        };
+        bar.appendChild(regenBtn);
+      }
+
+      const followBtn = document.createElement("button");
+      followBtn.textContent = "Follow-up";
+      followBtn.onclick = () => {
+        messageInput.value = `Can you go deeper on: "${content.slice(0, 80)}" ?`;
+        messageInput.focus();
+      };
+      bar.appendChild(followBtn);
+
+      const delBtn = document.createElement("button");
+      delBtn.textContent = "Delete";
+      delBtn.onclick = () => {
+        if (!currentChatId) return;
+        const chat = chats[currentChatId];
+        const idx = chat.messages.indexOf(msgObj);
+        if (idx !== -1) {
+          chat.messages.splice(idx, 1);
+          saveChats();
+          renderMessages();
+        }
+      };
+      bar.appendChild(delBtn);
+
+      div.appendChild(bar);
+    }
+
+    function addMessageToUI(role, content, attachmentsForMessage = [], isError = false, msgObj = null) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "message-wrap";
+
+      const div = document.createElement("div");
+      div.className = "message " + role;
+      if (isError && role === "assistant") {
+        div.classList.add("error");
+      }
+
+      const body = document.createElement("div");
+      body.className = "message-body";
+
+      if (role === "assistant") {
+        const rendered = renderMarkdown(content);
+        body.appendChild(rendered);
+      } else {
+        const textSpan = document.createElement("span");
+        textSpan.textContent = content;
+        body.appendChild(textSpan);
+      }
+
+      div.appendChild(body);
+
+      if (role === "assistant") {
+        const toolbar = document.createElement("div");
+        toolbar.className = "message-toolbar";
+
+        const speakBtn = document.createElement("button");
+        speakBtn.textContent = "🔊";
+        speakBtn.title = "Read aloud";
+        speakBtn.onclick = () => speak(content);
+        toolbar.appendChild(speakBtn);
+
+        const copyBtn = document.createElement("button");
+        copyBtn.textContent = "📋";
+        copyBtn.title = "Copy";
+        copyBtn.onclick = () => copyToClipboard(content);
+        toolbar.appendChild(copyBtn);
+
+        toolbar.style.marginTop = "4px";
+        div.appendChild(toolbar);
+      }
+
+      if (role === "user" && attachmentsForMessage && attachmentsForMessage.length > 0) {
+        addAttachmentChips(div, attachmentsForMessage);
+      }
+
+      wrapper.appendChild(div);
+
+      if (msgObj) {
+        addMessageActionBar(wrapper, role, content, msgObj);
+        updateMessageFromUI(wrapper, msgObj);
+      }
+
+      chatContainer.appendChild(wrapper);
+    }
+
+    function scrollBottom() {
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    function buildPersonalityMessage() {
+      const chaos = parseInt(localStorage.getItem("mihai_personality_chaos") || "2", 10);
+      const seriousness = parseInt(localStorage.getItem("mihai_personality_serious") || "2", 10);
+      const helpful = parseInt(localStorage.getItem("mihai_personality_helpful") || "2", 10);
+
+      function describeChaos(v) {
+        if (v <= 0) return "be very calm, literal, and avoid jokes or randomness";
+        if (v === 1) return "keep responses mostly calm with only occasional light humor";
+        if (v === 2) return "allow a natural amount of humor and personality";
+        if (v === 3) return "be playful and a bit chaotic with jokes and casual language";
+        return "be very playful, high-energy, and chaotic, using memes or slang sometimes";
+      }
+
+      function describeSerious(v) {
+        if (v <= 0) return "be extremely casual and not formal at all";
+        if (v === 1) return "lean casual while still staying understandable";
+        if (v === 2) return "balance casual and serious tone";
+        if (v === 3) return "lean more serious and focused, with fewer jokes";
+        return "be very serious, concise, and focused on clear information";
+      }
+
+      function describeHelpful(v) {
+        if (v <= 0) return "give only short answers, do not over-explain";
+        if (v === 1) return "keep answers brief with only essential details";
+        if (v === 2) return "give reasonably detailed answers when needed";
+        if (v === 3) return "be very proactive and detailed in helping the user";
+        return "go above and beyond to help, anticipate follow-up questions, and explain clearly";
+      }
+
+      const styleLines = [
+        describeChaos(chaos),
+        describeSerious(seriousness),
+        describeHelpful(helpful),
+      ];
+
+      let depthNote = "";
+      if (currentDepth === 0) depthNote = "Use a shallow context window; focus mainly on the last few messages.";
+      if (currentDepth === 2) depthNote = "Use a deep context window; consider more of the previous conversation and memory facts.";
+
+      return {
+        role: "system",
+        content:
+          "You are MihAI, a friendly AI chat companion. " +
+          "Adjust your behavior using these personality instructions: " +
+          styleLines.join(". ") +
+          ". Always stay kind and respectful, and adapt to the user's vibe. " +
+          depthNote,
+      };
+    }
 
     function showAttachmentPreview(info) {
-      currentAttachmentPreview = info; // { kind, name, type, size }
+      currentAttachmentPreview = info;
+      queuedAttachments.push(info);
       if (!attachmentBar || !attachmentLabel) return;
-      attachmentLabel.textContent =
-        (info.kind === "image" ? "📷 " : "📄 ") +
-        `${info.name} (${info.type}, ${info.size} bytes)`;
+      const count = queuedAttachments.length;
+      const labelText = count === 1
+        ? ((info.kind === "image" ? "📷 " : "📄 ") + `${info.name} (${info.type}, ${info.size} bytes)`)
+        : `${count} attachments ready`;
+      attachmentLabel.textContent = labelText;
       attachmentBar.style.display = "flex";
     }
 
     function hideAttachmentPreview() {
       currentAttachmentPreview = null;
+      queuedAttachments = [];
       if (!attachmentBar) return;
       attachmentBar.style.display = "none";
     }
@@ -563,7 +862,6 @@
       });
     }
 
-    // UPDATED: X removes last attachment + related system messages
     if (attachmentClearBtn) {
       attachmentClearBtn.addEventListener("click", () => {
         if (!currentChatId) {
@@ -596,198 +894,12 @@
       });
     }
 
-    const ghLogin = localStorage.getItem("mihai_github_login");
-    if (userLabel) {
-      if (ghLogin) {
-        userLabel.textContent = `Logged in as @${ghLogin}`;
-      } else if (userId.startsWith("anon-")) {
-        userLabel.textContent = "Guest session";
-      } else {
-        userLabel.textContent = `User: ${userId}`;
-      }
-    }
-
-    if (loginBtn) {
-      loginBtn.addEventListener("click", () => {
-        window.location.href = "/api/login-github";
-      });
-    }
-
-    function initSlider(slider, label, key) {
-      if (!slider || !label) return;
-      const stored = localStorage.getItem(key);
-      const value = stored !== null ? stored : "2";
-      slider.value = value;
-      label.textContent = value;
-      slider.addEventListener("input", () => {
-        localStorage.setItem(key, slider.value);
-        label.textContent = slider.value;
-      });
-    }
-
-    initSlider(chaosSlider, chaosValue, "mihai_personality_chaos");
-    initSlider(seriousSlider, seriousValue, "mihai_personality_serious");
-    initSlider(helpfulSlider, helpfulValue, "mihai_personality_helpful");
-
-    // Games dropdown
-    if (gamesBtn && gamesMenu) {
-      gamesBtn.addEventListener("click", () => {
-        gamesMenu.classList.toggle("open");
-      });
-
-      document.addEventListener("click", (e) => {
-        if (!gamesMenu.contains(e.target) && e.target !== gamesBtn) {
-          gamesMenu.classList.remove("open");
-        }
-      });
-
-      gamesMenu.addEventListener("click", (e) => {
-        const btn = e.target.closest("button");
-        if (!btn) return;
-        const game = btn.getAttribute("data-game");
-        gamesMenu.classList.remove("open");
-        if (game === "wyr") {
-          startGameWouldYouRather();
-        } else if (game === "quiz") {
-          startGameQuiz();
-        } else if (game === "math") {
-          startGameQuickMath();
-        }
-      });
-    }
-
-    // Settings dropdown (theme + personality)
-    if (settingsBtn && settingsMenu) {
-      settingsBtn.addEventListener("click", () => {
-        settingsMenu.classList.toggle("open");
-      });
-
-      document.addEventListener("click", (e) => {
-        if (!settingsMenu.contains(e.target) && e.target !== settingsBtn) {
-          settingsMenu.classList.remove("open");
-        }
-      });
-
-      settingsMenu.addEventListener("click", (e) => {
-        const btn = e.target.closest("button");
-        if (!btn) return;
-        const setting = btn.getAttribute("data-setting");
-
-        if (setting === "theme-dark") {
-          document.body.classList.remove("light");
-          localStorage.setItem("mihai_theme", "dark");
-        } else if (setting === "theme-light") {
-          document.body.classList.add("light");
-          localStorage.setItem("mihai_theme", "light");
-        }
-      });
-    }
-
-    function setStatus(text, isThinking) {
-      if (!statusLabel) return;
-      statusLabel.textContent = "";
-      const dot = document.createElement("span");
-      dot.className = "status-dot";
-      dot.style.background = isThinking ? "#facc15" : "#22c55e";
-      statusLabel.appendChild(dot);
-      statusLabel.appendChild(document.createTextNode(isThinking ? "thinking…" : text));
-    }
-
-    function saveChats() {
-      localStorage.setItem("mihai_chats", JSON.stringify(chats));
-    }
-
-    function createNewChat() {
-      const id = "chat-" + crypto.randomUUID();
-      chats[id] = {
-        title: "New chat",
-        messages: [],
-        attachments: [],
-      };
-      currentChatId = id;
-      saveChats();
-      renderChats();
-      renderMessages();
-    }
-
-    function renderChats() {
-      chatList.innerHTML = "";
-      Object.entries(chats).forEach(([id, chat]) => {
-        const div = document.createElement("div");
-        div.className = "chat-item" + (id === currentChatId ? " active" : "");
-        div.textContent = chat.title;
-        div.onclick = () => {
-          currentChatId = id;
-          renderChats();
-          renderMessages();
-        };
-        chatList.appendChild(div);
-      });
-    }
-
-    function renderMessages() {
-      chatContainer.innerHTML = "";
-      if (!currentChatId) return;
-      chats[currentChatId].messages.forEach((msg) => {
-        addMessageToUI(msg.role, msg.content);
-      });
-      scrollBottom();
-    }
-
-    function addMessageToUI(role, content, isError = false) {
-      const div = document.createElement("div");
-      div.className = "message " + role;
-      if (isError && role === "assistant") {
-        div.classList.add("error");
-      }
-
-      if (role === "assistant") {
-        const textSpan = document.createElement("span");
-        textSpan.textContent = content;
-
-        const speakBtn = document.createElement("button");
-        speakBtn.textContent = "🔊";
-        speakBtn.style.marginLeft = "6px";
-        speakBtn.style.border = "none";
-        speakBtn.style.background = "transparent";
-        speakBtn.style.cursor = "pointer";
-        speakBtn.style.color = "inherit";
-        speakBtn.onclick = () => speak(content);
-
-        div.appendChild(textSpan);
-        div.appendChild(speakBtn);
-      } else {
-        const textSpan = document.createElement("span");
-        textSpan.textContent = content;
-        div.appendChild(textSpan);
-      }
-
-      chatContainer.appendChild(div);
-    }
-
-    function scrollBottom() {
-      chatContainer.scrollTop = chatContainer.scrollHeight;
-    }
-
-    function buildPersonalityMessage() {
-      const chaos = localStorage.getItem("mihai_personality_chaos") || "2";
-      const seriousness = localStorage.getItem("mihai_personality_serious") || "2";
-      const helpful = localStorage.getItem("mihai_personality_helpful") || "2";
-
-      return {
-        role: "system",
-        content:
-          `Personality settings for this chat -> chaos: ${chaos}/4, ` +
-          `seriousness: ${seriousness}/4, helpfulness: ${helpful}/4. ` +
-          `Adjust your tone and style to match these numbers.`,
-      };
-    }
-
-    // File upload → /api/upload + attach to chat
     if (fileInput) {
       fileInput.addEventListener("change", async () => {
         const file = fileInput.files[0];
         if (!file || !currentChatId) return;
+
+        markLastPicker("file");
 
         try {
           const formData = new FormData();
@@ -803,17 +915,25 @@
             throw new Error(data.error || "Upload failed");
           }
 
-          const f = data.file;
+          const f = data.file || {
+            name: file.name,
+            type: file.type,
+            size: file.size,
+          };
 
           if (!chats[currentChatId].attachments) {
             chats[currentChatId].attachments = [];
           }
 
-          chats[currentChatId].attachments.push({
+          const attachmentObj = {
             name: f.name,
             type: f.type,
             size: f.size,
-          });
+            url: f.url || null,
+            kind: "file",
+          };
+
+          chats[currentChatId].attachments.push(attachmentObj);
 
           chats[currentChatId].messages.push({
             role: "system",
@@ -824,12 +944,7 @@
           });
           saveChats();
 
-          showAttachmentPreview({
-            kind: "file",
-            name: f.name,
-            type: f.type,
-            size: f.size,
-          });
+          showAttachmentPreview(attachmentObj);
 
           alert("File uploaded and attached to this chat.");
         } catch (e) {
@@ -841,11 +956,12 @@
       });
     }
 
-    // Image upload → /api/vision + attach to chat with vision description
     if (imageInput) {
       imageInput.addEventListener("change", async () => {
         const file = imageInput.files[0];
         if (!file || !currentChatId) return;
+
+        markLastPicker("image");
 
         try {
           const formData = new FormData();
@@ -865,17 +981,22 @@
             name: file.name,
             type: file.type,
             size: file.size,
+            url: null,
           };
 
           if (!chats[currentChatId].attachments) {
             chats[currentChatId].attachments = [];
           }
 
-          chats[currentChatId].attachments.push({
+          const attachmentObj = {
             name: f.name,
             type: f.type,
             size: f.size,
-          });
+            url: f.url || null,
+            kind: "image",
+          };
+
+          chats[currentChatId].attachments.push(attachmentObj);
 
           chats[currentChatId].messages.push({
             role: "system",
@@ -894,12 +1015,7 @@
 
           saveChats();
 
-          showAttachmentPreview({
-            kind: "image",
-            name: f.name,
-            type: f.type,
-            size: f.size,
-          });
+          showAttachmentPreview(attachmentObj);
 
           alert("Photo analyzed and attached to this chat.");
         } catch (e) {
@@ -911,8 +1027,6 @@
       });
     }
 
-    // Voice input
-    let recognition = null;
     if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
       const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
       recognition = new SR();
@@ -935,9 +1049,6 @@
       });
     }
 
-    // TTS (toggle)
-    let currentUtterance = null;
-
     function speak(text) {
       try {
         if (!window.speechSynthesis) return;
@@ -959,9 +1070,6 @@
       } catch (_) {}
     }
 
-    // Stop button: cancel typing + voice
-    let currentTypingInterval = null;
-
     if (stopBtn) {
       stopBtn.addEventListener("click", () => {
         if (currentTypingInterval) {
@@ -973,49 +1081,298 @@
           currentUtterance = null;
         }
         setStatus("ready", false);
+        removeTypingIndicator();
       });
     }
 
+    function showTypingIndicator() {
+      if (typingIndicatorDiv) return;
+      typingIndicatorDiv = document.createElement("div");
+      typingIndicatorDiv.className = "message assistant";
+      typingIndicatorDiv.innerHTML = "<span>MihAI is typing</span><span style='margin-left:6px;'>⋯</span>";
+      chatContainer.appendChild(typingIndicatorDiv);
+      scrollBottom();
+    }
+
+    function removeTypingIndicator() {
+      if (!typingIndicatorDiv) return;
+      chatContainer.removeChild(typingIndicatorDiv);
+      typingIndicatorDiv = null;
+    }
+
+    function extractSlashCommand(text) {
+      const trimmed = text.trim();
+      if (!trimmed.startsWith("/")) return { cleaned: text, command: null };
+
+      const [cmd, ...rest] = trimmed.split(" ");
+      const lower = cmd.toLowerCase();
+      const payload = rest.join(" ").trim();
+
+      const known = ["/short", "/long", "/explain", "/code", "/story", "/translate", "/stats"];
+      if (!known.includes(lower)) return { cleaned: text, command: null };
+
+      const cleaned = payload || "";
+      return { cleaned, command: lower };
+    }
+
+    function slashCommandSystemMessage(cmd) {
+      if (!cmd) return null;
+      switch (cmd) {
+        case "/short":
+          return {
+            role: "system",
+            content: "For this next reply, answer in at most 2 short sentences.",
+          };
+        case "/long":
+          return {
+            role: "system",
+            content: "For this next reply, answer in a detailed, step-by-step way.",
+          };
+        case "/explain":
+          return {
+            role: "system",
+            content: "Explain the user message like you're teaching a friend, with simple language.",
+          };
+        case "/code":
+          return {
+            role: "system",
+            content: "Focus on code examples in the reply. Use clear, commented code.",
+          };
+        case "/story":
+          return {
+            role: "system",
+            content: "Answer in the form of a short, fun story that still solves the user's request.",
+          };
+        case "/translate":
+          return {
+            role: "system",
+            content: "Translate the user message into clear English and nothing else.",
+          };
+        case "/stats":
+          return null;
+        default:
+          return null;
+      }
+    }
+
+    function renderSourcesBar(sources) {
+      if (!sourcesBar || !sourcesInner) return;
+      sourcesInner.innerHTML = "";
+      if (!sources || sources.length === 0) {
+        sourcesBar.style.display = "none";
+        return;
+      }
+      sourcesBar.style.display = "flex";
+
+      sources.forEach((s) => {
+        const pill = document.createElement("div");
+        pill.className = "source-pill";
+        pill.onclick = () => {
+          if (s.url) window.open(s.url, "_blank", "noopener,noreferrer");
+        };
+
+        const meta = document.createElement("div");
+        meta.className = "source-pill-meta";
+        if (s.favicon) {
+          const img = document.createElement("img");
+          img.src = s.favicon;
+          img.className = "source-favicon";
+          img.alt = "";
+          meta.appendChild(img);
+        }
+        const hostSpan = document.createElement("span");
+        try {
+          hostSpan.textContent = new URL(s.url).hostname.replace(/^www\./, "");
+        } catch {
+          hostSpan.textContent = "source";
+        }
+        meta.appendChild(hostSpan);
+        pill.appendChild(meta);
+
+        const titleDiv = document.createElement("div");
+        titleDiv.className = "source-pill-title";
+        titleDiv.textContent = s.title || s.url || "Source";
+        pill.appendChild(titleDiv);
+
+        if (s.snippet) {
+          const snipDiv = document.createElement("div");
+          snipDiv.className = "source-pill-snippet";
+          snipDiv.textContent = s.snippet.slice(0, 120);
+          pill.appendChild(snipDiv);
+        }
+
+        sourcesInner.appendChild(pill);
+      });
+    }
+
+    if (toggleSourcesBtn) {
+      toggleSourcesBtn.addEventListener("click", () => {
+        if (!sourcesBar) return;
+        if (sourcesBar.style.display === "none") {
+          sourcesBar.style.display = "flex";
+          toggleSourcesBtn.textContent = "Hide";
+        } else {
+          sourcesBar.style.display = "none";
+          toggleSourcesBtn.textContent = "Show";
+        }
+      });
+    }
+
+    function computeStats() {
+      const chatIds = Object.keys(chats);
+      let totalMessages = 0;
+      const modeCounts = { chat: 0, coder: 0, study: 0 };
+      let chatsWithWeb = 0;
+
+      chatIds.forEach((id) => {
+        const c = chats[id];
+        if (!c || !c.messages) return;
+        totalMessages += c.messages.length;
+
+        (c.messages || []).forEach((m) => {
+          if (typeof m.content !== "string") return;
+          if (m.content.includes("MODE: CODER")) modeCounts.coder++;
+          else if (m.content.includes("MODE: STUDY")) modeCounts.study++;
+          else if (m.content.includes("MODE: CHAT")) modeCounts.chat++;
+        });
+
+        if (c.meta && c.meta.webHits && c.meta.webHits > 0) {
+          chatsWithWeb++;
+        }
+      });
+
+      let mostUsedMode = "chat";
+      let max = modeCounts.chat;
+      if (modeCounts.coder > max) {
+        mostUsedMode = "coder";
+        max = modeCounts.coder;
+      }
+      if (modeCounts.study > max) {
+        mostUsedMode = "study";
+        max = modeCounts.study;
+      }
+
+      return {
+        chatCount: chatIds.length,
+        totalMessages,
+        mostUsedMode,
+        modeCounts,
+        chatsWithWeb,
+      };
+    }
+
+    function updateStatsPanel() {
+      if (!statsPanel) return;
+      const stats = computeStats();
+      if (statChatCount) statChatCount.textContent = stats.chatCount;
+      if (statMessageCount) statMessageCount.textContent = stats.totalMessages;
+      if (statTopMode) statTopMode.textContent = stats.mostUsedMode;
+      if (statWebChats) statWebChats.textContent = stats.chatsWithWeb;
+    }
+
+    function renderFollowUpSuggestions(fullText) {
+      if (!promptChips) return;
+      if (!fullText || fullText.length < 80) return;
+      // keep existing chips for now; you can expand this later
+    }
+
     async function sendMessage() {
-      const text = messageInput.value.trim();
-      if (!text) return;
+      let text = messageInput.value.trim();
+      if (!text && queuedAttachments.length === 0) return;
       if (!currentChatId) {
         createNewChat();
+      }
+
+      const { cleaned, command } = extractSlashCommand(text);
+      text = cleaned || text;
+      const slashSystem = slashCommandSystemMessage(command);
+
+      if (command === "/stats") {
+        messageInput.value = "";
+        messageInput.style.height = "auto";
+        const stats = computeStats();
+        const summary =
+          `Stats for this browser:\n` +
+          `• Chats: ${stats.chatCount}\n` +
+          `• Total messages: ${stats.totalMessages}\n` +
+          `• Most used mode (approx): ${stats.mostUsedMode}\n` +
+          `• Mode usage: chat=${stats.modeCounts.chat}, coder=${stats.modeCounts.coder}, study=${stats.modeCounts.study}\n` +
+          (stats.chatsWithWeb > 0
+            ? `• Chats that used web search (approx): ${stats.chatsWithWeb}\n`
+            : "");
+
+        const userMsgObj = { role: "user", content: "/stats", attachments: [] };
+        addMessageToUI("user", "/stats", [], false, userMsgObj);
+        const aiMsgObj = { role: "assistant", content: summary };
+        addMessageToUI("assistant", summary, [], false, aiMsgObj);
+        scrollBottom();
+        setStatus("ready", false);
+        return;
       }
 
       messageInput.value = "";
       messageInput.style.height = "auto";
 
-      chats[currentChatId].messages.push({
-        role: "user",
-        content: text,
-      });
-      addMessageToUI("user", text);
+      const attachmentsForThisMessage = queuedAttachments.slice();
+      queuedAttachments = [];
+      if (attachmentBar) attachmentBar.style.display = "none";
 
-      const assistantDiv = document.createElement("div");
-      assistantDiv.className = "message assistant";
-      assistantDiv.textContent = "Thinking...";
-      chatContainer.appendChild(assistantDiv);
-      scrollBottom();
+      const userMsgObj = {
+        role: "user",
+        content: text || "(sent attachments)",
+        attachments: attachmentsForThisMessage,
+      };
+      chats[currentChatId].messages.push(userMsgObj);
+      addMessageToUI("user", text || "(sent attachments)", attachmentsForThisMessage, false, userMsgObj);
+
+      removeTypingIndicator();
+      showTypingIndicator();
       setStatus("thinking…", true);
 
       try {
         const personalityMsg = buildPersonalityMessage();
+        const messagesToSend = [personalityMsg];
+        if (slashSystem) messagesToSend.push(slashSystem);
+
+        const fullMessages = chats[currentChatId].messages;
+        let sliceStart = 0;
+        if (currentDepth === 0) {
+          sliceStart = Math.max(0, fullMessages.length - 10);
+        } else if (currentDepth === 1) {
+          sliceStart = Math.max(0, fullMessages.length - 30);
+        } else {
+          sliceStart = 0;
+        }
+        const contextSlice = fullMessages.slice(sliceStart);
+
+        messagesToSend.push(...contextSlice);
+
         const response = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             userId,
             chatId: currentChatId,
-            messages: [personalityMsg, ...chats[currentChatId].messages],
+            mode: currentMode,
+            depth: currentDepth,
+            research: researchMode,
+            messages: messagesToSend,
             attachments: chats[currentChatId].attachments || [],
           }),
         });
 
         const data = await response.json();
         const fullText = data.reply || "No reply from MihAI.";
+        renderSourcesBar(data.sources || []);
 
+        removeTypingIndicator();
+
+        const assistantDiv = document.createElement("div");
+        assistantDiv.className = "message assistant";
         assistantDiv.textContent = "";
+        chatContainer.appendChild(assistantDiv);
+        scrollBottom();
+
         let i = 0;
         const speed = 18;
 
@@ -1034,25 +1391,31 @@
           scrollBottom();
         }, speed);
 
-        chats[currentChatId].messages.push({
+        const aiMsgObj = {
           role: "assistant",
           content: fullText,
-        });
+        };
+        chats[currentChatId].messages.push(aiMsgObj);
 
         if (
           chats[currentChatId].title === "New chat" &&
-          text.trim().length > 0
+          (text || "").trim().length > 0
         ) {
-          chats[currentChatId].title = text.slice(0, 24);
+          chats[currentChatId].title = (text || "").slice(0, 24);
         }
 
         saveChats();
         renderChats();
         setStatus("ready", false);
+
+        renderFollowUpSuggestions(fullText);
       } catch (err) {
         console.error(err);
+        removeTypingIndicator();
+        const assistantDiv = document.createElement("div");
+        assistantDiv.className = "message assistant error";
         assistantDiv.textContent = "Error talking to MihAI.";
-        assistantDiv.classList.add("error");
+        chatContainer.appendChild(assistantDiv);
         setStatus("ready", false);
       }
     }
@@ -1071,7 +1434,20 @@
       messageInput.style.height = messageInput.scrollHeight + "px";
     });
 
-    newChatBtn.onclick = createNewChat;
+    if (promptChips) {
+      promptChips.addEventListener("click", (e) => {
+        const btn = e.target.closest("button");
+        if (!btn) return;
+        const chip = btn.getAttribute("data-chip");
+        if (!chip) return;
+        if (!messageInput.value.trim()) {
+          messageInput.value = chip + " ";
+        } else {
+          messageInput.value = chip + " " + messageInput.value;
+        }
+        messageInput.focus();
+      });
+    }
 
     function showDeleteModal() {
       if (!currentChatId) return;
@@ -1132,10 +1508,12 @@
     } else {
       for (const id of Object.keys(chats)) {
         if (!chats[id].attachments) chats[id].attachments = [];
+        if (!chats[id].meta) chats[id].meta = { webHits: 0, createdAt: Date.now() };
       }
       currentChatId = Object.keys(chats)[0];
       renderChats();
       renderMessages();
+      updateStatsPanel();
     }
 
     setStatus("ready", false);
@@ -1147,13 +1525,14 @@
 
       const systemMsg =
         "Start a 'Would you rather' game with me. Ask one fun question at a time and wait for my answer each time. Keep it light and playful.";
-      chats[currentChatId].messages.push({
+      const userMsgObj = {
         role: "user",
         content: systemMsg,
-      });
+      };
+      chats[currentChatId].messages.push(userMsgObj);
       saveChats();
 
-      addMessageToUI("user", "(Game) " + systemMsg);
+      addMessageToUI("user", "(Game) " + systemMsg, [], false, userMsgObj);
 
       const assistantDiv = document.createElement("div");
       assistantDiv.className = "message assistant";
@@ -1170,6 +1549,9 @@
           body: JSON.stringify({
             userId,
             chatId: currentChatId,
+            mode: currentMode,
+            depth: currentDepth,
+            research: researchMode,
             messages: [personalityMsg, ...chats[currentChatId].messages],
             attachments: chats[currentChatId].attachments || [],
           }),
@@ -1177,13 +1559,15 @@
 
         const data = await response.json();
         const fullText = data.reply || "No reply from MihAI.";
+        renderSourcesBar(data.sources || []);
 
         assistantDiv.textContent = fullText;
 
-        chats[currentChatId].messages.push({
+        const aiMsgObj = {
           role: "assistant",
           content: fullText,
-        });
+        };
+        chats[currentChatId].messages.push(aiMsgObj);
 
         saveChats();
         renderChats();
@@ -1203,13 +1587,14 @@
 
       const systemMsg =
         "Start a quiz game with me. Ask one question at a time. Mix topics like gaming, tech, school facts, and general knowledge. After 10 questions, tell me my score. Wait for my answer after each question.";
-      chats[currentChatId].messages.push({
+      const userMsgObj = {
         role: "user",
         content: systemMsg,
-      });
+      };
+      chats[currentChatId].messages.push(userMsgObj);
       saveChats();
 
-      addMessageToUI("user", "(Game) " + systemMsg);
+      addMessageToUI("user", "(Game) " + systemMsg, [], false, userMsgObj);
 
       const assistantDiv = document.createElement("div");
       assistantDiv.className = "message assistant";
@@ -1226,6 +1611,9 @@
           body: JSON.stringify({
             userId,
             chatId: currentChatId,
+            mode: currentMode,
+            depth: currentDepth,
+            research: researchMode,
             messages: [personalityMsg, ...chats[currentChatId].messages],
             attachments: chats[currentChatId].attachments || [],
           }),
@@ -1233,13 +1621,15 @@
 
         const data = await response.json();
         const fullText = data.reply || "No reply from MihAI.";
+        renderSourcesBar(data.sources || []);
 
         assistantDiv.textContent = fullText;
 
-        chats[currentChatId].messages.push({
+        const aiMsgObj = {
           role: "assistant",
           content: fullText,
-        });
+        };
+        chats[currentChatId].messages.push(aiMsgObj);
 
         saveChats();
         renderChats();
@@ -1259,13 +1649,14 @@
 
       const systemMsg =
         "Start a quick math challenge with me. Ask one math problem at a time (start easy with addition and subtraction, then get harder with multiplication and maybe fractions). After each answer, tell me if I'm right and keep a small score.";
-      chats[currentChatId].messages.push({
+      const userMsgObj = {
         role: "user",
         content: systemMsg,
-      });
+      };
+      chats[currentChatId].messages.push(userMsgObj);
       saveChats();
 
-      addMessageToUI("user", "(Game) " + systemMsg);
+      addMessageToUI("user", "(Game) " + systemMsg, [], false, userMsgObj);
 
       const assistantDiv = document.createElement("div");
       assistantDiv.className = "message assistant";
@@ -1282,6 +1673,9 @@
           body: JSON.stringify({
             userId,
             chatId: currentChatId,
+            mode: currentMode,
+            depth: currentDepth,
+            research: researchMode,
             messages: [personalityMsg, ...chats[currentChatId].messages],
             attachments: chats[currentChatId].attachments || [],
           }),
@@ -1289,13 +1683,15 @@
 
         const data = await response.json();
         const fullText = data.reply || "No reply from MihAI.";
+        renderSourcesBar(data.sources || []);
 
         assistantDiv.textContent = fullText;
 
-        chats[currentChatId].messages.push({
+        const aiMsgObj = {
           role: "assistant",
           content: fullText,
-        });
+        };
+        chats[currentChatId].messages.push(aiMsgObj);
 
         saveChats();
         renderChats();
@@ -1306,6 +1702,278 @@
         assistantDiv.classList.add("error");
         setStatus("ready", false);
       }
+    }
+
+    function openCommandPalette() {
+      if (!commandPalette) return;
+      commandPalette.style.display = "block";
+      if (cmdInput) {
+        cmdInput.value = "";
+        cmdInput.focus();
+      }
+    }
+
+    function closeCommandPalette() {
+      if (!commandPalette) return;
+      commandPalette.style.display = "none";
+    }
+
+    function runCommandPaletteAction(action) {
+      switch (action) {
+        case "new-chat":
+          createNewChat();
+          break;
+        case "focus-input":
+          if (messageInput) {
+            messageInput.focus();
+            const len = messageInput.value.length;
+            messageInput.selectionStart = len;
+            messageInput.selectionEnd = len;
+          }
+          break;
+        case "mode-chat":
+          currentMode = "chat";
+          localStorage.setItem("mihai_chat_mode", currentMode);
+          updateModeButtonsUI();
+          break;
+        case "mode-coder":
+          currentMode = "coder";
+          localStorage.setItem("mihai_chat_mode", currentMode);
+          updateModeButtonsUI();
+          break;
+        case "mode-study":
+          currentMode = "study";
+          localStorage.setItem("mihai_chat_mode", currentMode);
+          updateModeButtonsUI();
+          break;
+        case "depth-shallow":
+          currentDepth = 0;
+          localStorage.setItem("mihai_depth", "0");
+          updateDepthUI();
+          break;
+        case "depth-normal":
+          currentDepth = 1;
+          localStorage.setItem("mihai_depth", "1");
+          updateDepthUI();
+          break;
+        case "depth-deep":
+          currentDepth = 2;
+          localStorage.setItem("mihai_depth", "2");
+          updateDepthUI();
+          break;
+        case "stats":
+          const stats = computeStats();
+          const summary =
+            `Stats for this browser:\n` +
+            `• Chats: ${stats.chatCount}\n` +
+            `• Total messages: ${stats.totalMessages}\n` +
+            `• Most used mode: ${stats.mostUsedMode}\n`;
+          alert(summary);
+          break;
+      }
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        if (commandPalette && commandPalette.style.display === "block") {
+          closeCommandPalette();
+        } else {
+          openCommandPalette();
+        }
+      } else if (e.key === "Escape") {
+        closeCommandPalette();
+      }
+    });
+
+    if (cmdList) {
+      cmdList.addEventListener("click", (e) => {
+        const li = e.target.closest("li");
+        if (!li) return;
+        const action = li.getAttribute("data-action");
+        if (!action) return;
+        runCommandPaletteAction(action);
+        closeCommandPalette();
+      });
+    }
+
+    if (cmdInput) {
+      cmdInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          const value = cmdInput.value.trim().toLowerCase();
+          if (value === "new" || value === "new chat") runCommandPaletteAction("new-chat");
+          else if (value.includes("focus")) runCommandPaletteAction("focus-input");
+          else if (value.includes("coder")) runCommandPaletteAction("mode-coder");
+          else if (value.includes("study")) runCommandPaletteAction("mode-study");
+          else if (value.includes("chat")) runCommandPaletteAction("mode-chat");
+          else if (value.includes("shallow")) runCommandPaletteAction("depth-shallow");
+          else if (value.includes("normal")) runCommandPaletteAction("depth-normal");
+          else if (value.includes("deep")) runCommandPaletteAction("depth-deep");
+          else if (value.includes("stats")) runCommandPaletteAction("stats");
+          closeCommandPalette();
+        }
+      });
+    }
+
+    function renderMemoryFacts(profile = [], history = []) {
+      if (!memoryList) return;
+      memoryList.innerHTML = "";
+
+      function renderSection(title, items, categoryKey) {
+        const section = document.createElement("div");
+        const header = document.createElement("div");
+        header.textContent = title;
+        header.style.fontWeight = "600";
+        header.style.margin = "6px 0 4px";
+        section.appendChild(header);
+
+        if (!items.length) {
+          const empty = document.createElement("div");
+          empty.textContent = "None.";
+          empty.style.fontSize = "11px";
+          empty.style.color = "#6b7280";
+          section.appendChild(empty);
+        } else {
+          items.forEach((f) => {
+            const row = document.createElement("div");
+            row.style.display = "flex";
+            row.style.justifyContent = "space-between";
+            row.style.alignItems = "center";
+            row.style.gap = "6px";
+            row.style.marginBottom = "4px";
+
+            const text = document.createElement("div");
+            text.textContent = `${f.key}: ${f.value}`;
+            text.style.flex = "1 1 auto";
+            text.style.fontSize = "12px";
+
+            const del = document.createElement("button");
+            del.textContent = "Delete";
+            del.className = "tiny-btn";
+            del.style.fontSize = "11px";
+            del.onclick = () => {
+              const payload = {
+                profile: { upsert: [], delete: [] },
+                history: { upsert: [], delete: [] },
+              };
+              if (categoryKey === "profile") {
+                payload.profile.delete.push({ key: f.key });
+              } else {
+                payload.history.delete.push({ key: f.key });
+              }
+              const url = `/api/memory?userId=${encodeURIComponent(userId)}&chatId=${encodeURIComponent(currentChatId || "")}`;
+              fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+              })
+                .then((r) => r.json())
+                .then(() => {
+                  row.remove();
+                })
+                .catch((e) => console.error("delete memory failed", e));
+            };
+
+            row.appendChild(text);
+            row.appendChild(del);
+            section.appendChild(row);
+          });
+        }
+
+        memoryList.appendChild(section);
+      }
+
+      renderSection("Profile", profile, "profile");
+      renderSection("This chat", history, "history");
+    }
+
+    function openMemoryModal() {
+      if (!memoryModal) return;
+      memoryModal.style.display = "flex";
+
+      const url = `/api/memory?userId=${encodeURIComponent(userId)}&chatId=${encodeURIComponent(currentChatId || "")}`;
+      fetch(url)
+        .then((r) => r.json())
+        .then((data) => {
+          if (!data || !data.ok) return;
+          renderMemoryFacts(data.profile || [], data.history || []);
+        })
+        .catch((e) => console.error("load memory failed", e));
+    }
+
+    function closeMemoryModal() {
+      if (!memoryModal) return;
+      memoryModal.style.display = "none";
+    }
+
+    if (memoryBtn) {
+      memoryBtn.addEventListener("click", () => {
+        openMemoryModal();
+      });
+    }
+    if (memoryClose) {
+      memoryClose.addEventListener("click", closeMemoryModal);
+    }
+    if (memoryModal) {
+      memoryModal.addEventListener("click", (e) => {
+        if (e.target === memoryModal) closeMemoryModal();
+      });
+    }
+
+    function openNotebookModal() {
+      if (!notebookModal) return;
+      notebookModal.style.display = "flex";
+
+      if (!currentChatId) return;
+      const url = `/api/notebook?userId=${encodeURIComponent(userId)}&chatId=${encodeURIComponent(currentChatId)}`;
+      fetch(url)
+        .then((r) => r.json())
+        .then((data) => {
+          if (notebookTextarea && data && data.ok) {
+            notebookTextarea.value = data.content || "";
+          }
+        })
+        .catch((e) => console.error("load notebook failed", e));
+    }
+
+    function closeNotebookModal() {
+      if (!notebookModal) return;
+      notebookModal.style.display = "none";
+    }
+
+    if (notebookBtn) {
+      notebookBtn.addEventListener("click", openNotebookModal);
+    }
+    if (notebookCancel) {
+      notebookCancel.addEventListener("click", closeNotebookModal);
+    }
+    if (notebookModal) {
+      notebookModal.addEventListener("click", (e) => {
+        if (e.target === notebookModal) closeNotebookModal();
+      });
+    }
+    if (notebookSave) {
+      notebookSave.addEventListener("click", () => {
+        if (!currentChatId || !notebookTextarea) {
+          closeNotebookModal();
+          return;
+        }
+        const url = `/api/notebook?userId=${encodeURIComponent(userId)}&chatId=${encodeURIComponent(currentChatId)}`;
+        fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ content: notebookTextarea.value || "" }),
+        })
+          .then((r) => r.json())
+          .then(() => {
+            closeNotebookModal();
+          })
+          .catch((e) => {
+            console.error("save notebook failed", e);
+            closeNotebookModal();
+          });
+      });
     }
   </script>
 </body>
