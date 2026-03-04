@@ -80,8 +80,6 @@
         </div>
       </div>
 
-      <!-- (stats panel removed, moved into Settings) -->
-
       <div id="chatList" class="chat-list"></div>
       <div class="sidebar-footer">
         Tip: Press Enter to send, Shift+Enter for a new line.
@@ -101,7 +99,6 @@
           </span>
           <span id="status-label"><span class="status-dot"></span>ready</span>
 
-          <!-- Research toggle -->
           <label id="researchToggle" class="theme-btn" style="margin-left:8px; font-size:11px; display:flex; align-items:center; gap:4px; cursor:pointer;">
             <input type="checkbox" id="researchCheckbox" style="accent-color:#22c55e;"/>
             <span>Research mode</span>
@@ -114,7 +111,6 @@
             <button data-game="math">Quick math</button>
           </div>
 
-          <!-- Notebook button -->
           <button id="notebookBtn" class="theme-btn">Notebook</button>
 
           <button id="settingsBtn" class="theme-btn">Settings</button>
@@ -122,7 +118,6 @@
             <button data-setting="theme-dark">Dark mode</button>
             <button data-setting="theme-light">Light mode</button>
 
-            <!-- Depth in settings -->
             <div class="settings-section">
               <div style="font-size:11px; color:#9ca3af; margin-bottom:4px;">
                 Depth
@@ -137,7 +132,6 @@
               </div>
             </div>
 
-            <!-- Personality -->
             <div class="settings-section">
               <div style="font-size:11px; color:#9ca3af; margin-bottom:4px;">
                 Personality
@@ -165,7 +159,6 @@
               </div>
             </div>
 
-            <!-- Session stats moved here -->
             <div class="settings-section">
               <div style="font-size:11px; color:#9ca3af; margin-bottom:4px;">
                 Session stats
@@ -208,7 +201,6 @@
         </div>
       </header>
 
-      <!-- Sources bar -->
       <section id="sourcesBar" class="sources-bar" style="display:none;">
         <div class="sources-header">
           <span>Context & sources</span>
@@ -252,7 +244,6 @@
           <button id="sendBtn" class="send-btn">➤</button>
         </div>
 
-        <!-- Prompt chips -->
         <div id="promptChips" class="prompt-chips">
           <button data-chip="/explain">Explain this step by step</button>
           <button data-chip="/code">Fix this code</button>
@@ -282,7 +273,6 @@
         </div>
       </section>
 
-      <!-- Command palette -->
       <div id="commandPalette" class="cmd-palette" style="display:none;">
         <div class="cmd-palette-inner">
           <input id="cmdInput" type="text" placeholder="Type a command… (e.g. /stats, switch coder, depth deep)" />
@@ -300,7 +290,6 @@
         </div>
       </div>
 
-      <!-- Notebook modal -->
       <div id="notebookModal" class="modal-backdrop" style="display:none;">
         <div class="modal notebook-modal">
           <div style="font-size:14px; margin-bottom:6px;">Chat notebook</div>
@@ -312,7 +301,6 @@
         </div>
       </div>
 
-      <!-- Memory modal -->
       <div id="memoryModal" class="modal-backdrop" style="display:none;">
         <div class="modal memory-modal">
           <div style="font-size:14px; margin-bottom:6px;">MihAI memory</div>
@@ -592,25 +580,6 @@
 
     if (modeButtonsWrap) {
       modeButtonsWrap.addEventListener("click", (e) => {
-        const btn = e.target.closest("mode-btn");
-        if (!btn) return;
-      });
-    }
-
-    // NORMALIZE CONTENT HELPER
-    function normalizeContent(raw) {
-      if (typeof raw !== "string") return raw;
-      try {
-        const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed.reply === "string") {
-          return parsed.reply;
-        }
-      } catch (e) {}
-      return raw;
-    }
-
-    if (modeButtonsWrap) {
-      modeButtonsWrap.addEventListener("click", (e) => {
         const btn = e.target.closest(".mode-btn");
         if (!btn) return;
         const m = btn.getAttribute("data-mode");
@@ -820,6 +789,17 @@
       bar.appendChild(delBtn);
 
       div.appendChild(bar);
+    }
+
+    function normalizeContent(raw) {
+      if (typeof raw !== "string") return raw;
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed.reply === "string") {
+          return parsed.reply;
+        }
+      } catch (e) {}
+      return raw;
     }
 
     function addMessageToUI(role, content, attachmentsForMessage = [], isError = false, msgObj = null) {
@@ -1488,41 +1468,21 @@
           signal: currentController.signal,
         });
 
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let fullText = "";
-
-        const tempAssistantDiv = document.createElement("div");
-        tempAssistantDiv.className = "message assistant";
-        chatContainer.appendChild(tempAssistantDiv);
-        scrollBottom();
-
-        try {
-          while (true) {
-            const { value, done } = await reader.read();
-            if (done) break;
-            const chunk = decoder.decode(value, { stream: true });
-            fullText += chunk;
-            if (fullText.includes("[DONE]")) {
-              fullText = fullText.replace("[DONE]", "");
-              break;
-            }
-            if (window.marked) {
-              tempAssistantDiv.innerHTML = marked.parse(fullText);
-            } else {
-              tempAssistantDiv.textContent = fullText;
-            }
-            scrollBottom();
-          }
-        } catch (streamErr) {
-          if (streamErr.name !== "AbortError") {
-            console.error("Stream error", streamErr);
-          }
+        if (!response.ok) {
+          throw new Error("HTTP " + response.status);
         }
 
-        if (tempAssistantDiv.parentNode) {
-          tempAssistantDiv.remove();
+        const data = await response.json();
+        const fullText = typeof data.reply === "string"
+          ? data.reply
+          : "MihAI had trouble generating a reply.";
+
+        renderSourcesBar(data.sources || []);
+
+        if (typingIndicatorDiv) {
+          removeTypingIndicator();
         }
+
         const aiMsgObj = { role: "assistant", content: fullText };
         chats[currentChatId].messages.push(aiMsgObj);
         if (
@@ -1533,6 +1493,8 @@
         }
         saveChats();
         renderChats();
+        addMessageToUI("assistant", fullText, [], false, aiMsgObj);
+        scrollBottom();
         setStatus("ready", false);
         renderFollowUpSuggestions(fullText);
         currentController = null;
