@@ -101,8 +101,6 @@
           </span>
           <span id="status-label"><span class="status-dot"></span>ready</span>
 
-          <!-- Depth slider removed; depth now in Settings -->
-
           <!-- Research toggle -->
           <label id="researchToggle" class="theme-btn" style="margin-left:8px; font-size:11px; display:flex; align-items:center; gap:4px; cursor:pointer;">
             <input type="checkbox" id="researchCheckbox" style="accent-color:#22c55e;"/>
@@ -594,6 +592,25 @@
 
     if (modeButtonsWrap) {
       modeButtonsWrap.addEventListener("click", (e) => {
+        const btn = e.target.closest("mode-btn");
+        if (!btn) return;
+      });
+    }
+
+    // NORMALIZE CONTENT HELPER
+    function normalizeContent(raw) {
+      if (typeof raw !== "string") return raw;
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed.reply === "string") {
+          return parsed.reply;
+        }
+      } catch (e) {}
+      return raw;
+    }
+
+    if (modeButtonsWrap) {
+      modeButtonsWrap.addEventListener("click", (e) => {
         const btn = e.target.closest(".mode-btn");
         if (!btn) return;
         const m = btn.getAttribute("data-mode");
@@ -818,12 +835,14 @@
       const body = document.createElement("div");
       body.className = "message-body";
 
+      const displayContent = normalizeContent(content);
+
       if (role === "assistant") {
-        const rendered = renderMarkdown(content);
+        const rendered = renderMarkdown(displayContent);
         body.appendChild(rendered);
       } else {
         const textSpan = document.createElement("span");
-        textSpan.textContent = content;
+        textSpan.textContent = displayContent;
         body.appendChild(textSpan);
       }
 
@@ -836,13 +855,13 @@
         const speakBtn = document.createElement("button");
         speakBtn.textContent = "🔊";
         speakBtn.title = "Read aloud";
-        speakBtn.onclick = () => speak(content);
+        speakBtn.onclick = () => speak(displayContent);
         toolbar.appendChild(speakBtn);
 
         const copyBtn = document.createElement("button");
         copyBtn.textContent = "📋";
         copyBtn.title = "Copy";
-        copyBtn.onclick = () => copyToClipboard(content);
+        copyBtn.onclick = () => copyToClipboard(displayContent);
         toolbar.appendChild(copyBtn);
 
         toolbar.style.marginTop = "4px";
@@ -856,7 +875,7 @@
       wrapper.appendChild(div);
 
       if (msgObj) {
-        addMessageActionBar(wrapper, role, content, msgObj);
+        addMessageActionBar(wrapper, role, displayContent, msgObj);
         updateMessageFromUI(wrapper, msgObj);
       }
 
@@ -1156,7 +1175,6 @@
 
     if (stopBtn) {
       stopBtn.addEventListener("click", () => {
-        // abort streaming request if there is one
         if (currentController) {
           currentController.abort();
           currentController = null;
@@ -1169,7 +1187,6 @@
           speechSynthesis.cancel();
           currentUtterance = null;
         }
-        // allow next message immediately
         isSending = false;
         hideStopButton();
         setStatus("ready", false);
@@ -1367,15 +1384,11 @@
     function renderFollowUpSuggestions(fullText) {
       if (!promptChips) return;
       if (!fullText || fullText.length < 80) return;
-      // you can extend later
     }
 
-    // prevent overlapping requests
     let isSending = false;
-    // controller used for streaming / cancel
     let currentController = null;
 
-    // stop button helpers
     function showStopButton() {
       if (stopBtn) stopBtn.style.display = "inline-block";
     }
@@ -1384,7 +1397,7 @@
     }
 
     async function sendMessage() {
-      if (isSending) return; // guard against concurrent sends
+      if (isSending) return;
       isSending = true;
       try {
         let text = messageInput.value.trim();
@@ -1459,7 +1472,6 @@
 
         messagesToSend.push(...contextSlice);
 
-        // set up abort controller for stop button
         currentController = new AbortController();
         const response = await fetch("/api/chat", {
           method: "POST",
@@ -1476,12 +1488,10 @@
           signal: currentController.signal,
         });
 
-        // streaming reader
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let fullText = "";
 
-        // single DOM element for streaming content
         const tempAssistantDiv = document.createElement("div");
         tempAssistantDiv.className = "message assistant";
         chatContainer.appendChild(tempAssistantDiv);
@@ -1493,12 +1503,10 @@
             if (done) break;
             const chunk = decoder.decode(value, { stream: true });
             fullText += chunk;
-            // strip any end marker if backend sends one
             if (fullText.includes("[DONE]")) {
               fullText = fullText.replace("[DONE]", "");
               break;
             }
-            // render markdown incrementally (assumes marked or similar is available)
             if (window.marked) {
               tempAssistantDiv.innerHTML = marked.parse(fullText);
             } else {
@@ -1507,13 +1515,11 @@
             scrollBottom();
           }
         } catch (streamErr) {
-          // fetch was aborted or other stream error; treat partial text as final
           if (streamErr.name !== "AbortError") {
             console.error("Stream error", streamErr);
           }
         }
 
-        // once done (normal or aborted), finalize
         if (tempAssistantDiv.parentNode) {
           tempAssistantDiv.remove();
         }
