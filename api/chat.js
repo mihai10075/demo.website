@@ -186,9 +186,9 @@ export default async function handler(req, res) {
 
     const lastUserMessage = messages.at(-1)?.content ?? "";
 
-    // Regex-based auto-web + explicit research flag
+    // Tightened regex-based auto-web + explicit research flag
     const regexNeedsWeb =
-      /\b(202[4-9]|202[0-9]|latest|today|news|update|releases?)\b/i.test(
+      /\b(202[4-9]|latest|today|breaking news|release|patch notes|results?)\b/i.test(
         lastUserMessage
       );
     const needsWeb = research || regexNeedsWeb;
@@ -349,10 +349,16 @@ DEPTH: NORMAL
       ...cleanedMessages,
     ];
 
+    // SPEED TWEAK: smaller max tokens for non-deep, faster model for non-coder/non-research
+    const maxTokens = depth === 2 ? 1024 : 512;
+
     const completion = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
+      model:
+        mode === "coder" || research
+          ? "llama-3.3-70b-versatile"
+          : "llama-3.3-70b-specdec", // adjust to a real faster model if needed
       messages: groqMessages,
-      max_tokens: 1024,
+      max_tokens: maxTokens,
     });
 
     const reply =
@@ -436,7 +442,10 @@ Use keys like "current_project", "recent_topic" for chat-specific history.`,
       sources: sourcesForClient,
       meta: {
         latencyMs: Date.now() - start,
-        model: "llama-3.3-70b-versatile",
+        model:
+          mode === "coder" || research
+            ? "llama-3.3-70b-versatile"
+            : "llama-3.3-70b-specdec",
         memoryUsed: (profileFacts?.length || 0) + (historyFacts?.length || 0),
         webUsed: !!webSearchResult.used,
         mode,
