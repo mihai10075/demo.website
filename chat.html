@@ -431,6 +431,28 @@
       <section id="chatContainer" class="chat-container"></section>
 
       <section class="input-wrap">
+        <!-- attachment preview bar -->
+        <div id="attachmentBar" style="
+          display:none;
+          margin-bottom:6px;
+          padding:6px 8px;
+          border-radius:10px;
+          border:1px solid #1f2937;
+          background:#020617;
+          font-size:11px;
+          display:flex;
+          align-items:center;
+          gap:8px;
+        ">
+          <span id="attachmentLabel"></span>
+          <button id="attachmentEditBtn"
+            style="border:none;background:transparent;color:#e5e7eb;
+            cursor:pointer;font-size:12px;">✏️</button>
+          <button id="attachmentClearBtn"
+            style="border:none;background:transparent;color:#f97373;
+            cursor:pointer;font-size:12px;">✕</button>
+        </div>
+
         <div class="input-shell">
           <button id="voiceBtn" class="send-btn" style="background:#0f172a;color:#e5e7eb;font-size:14px;">🎙</button>
           <textarea
@@ -509,6 +531,71 @@
     const seriousValue = document.getElementById("seriousValue");
     const helpfulValue = document.getElementById("helpfulValue");
 
+    // attachment preview elements/state
+    const attachmentBar = document.getElementById("attachmentBar");
+    const attachmentLabel = document.getElementById("attachmentLabel");
+    const attachmentEditBtn = document.getElementById("attachmentEditBtn");
+    const attachmentClearBtn = document.getElementById("attachmentClearBtn");
+    let currentAttachmentPreview = null;
+
+    function showAttachmentPreview(info) {
+      currentAttachmentPreview = info; // { kind, name, type, size }
+      if (!attachmentBar || !attachmentLabel) return;
+      attachmentLabel.textContent =
+        (info.kind === "image" ? "📷 " : "📄 ") +
+        `${info.name} (${info.type}, ${info.size} bytes)`;
+      attachmentBar.style.display = "flex";
+    }
+
+    function hideAttachmentPreview() {
+      currentAttachmentPreview = null;
+      if (!attachmentBar) return;
+      attachmentBar.style.display = "none";
+    }
+
+    if (attachmentEditBtn) {
+      attachmentEditBtn.addEventListener("click", () => {
+        if (currentAttachmentPreview?.kind === "image") {
+          if (imageInput) imageInput.click();
+        } else {
+          if (fileInput) fileInput.click();
+        }
+      });
+    }
+
+    // UPDATED: X removes last attachment + related system messages
+    if (attachmentClearBtn) {
+      attachmentClearBtn.addEventListener("click", () => {
+        if (!currentChatId) {
+          hideAttachmentPreview();
+          if (fileInput) fileInput.value = "";
+          if (imageInput) imageInput.value = "";
+          return;
+        }
+
+        const chat = chats[currentChatId];
+        if (!chat.attachments || chat.attachments.length === 0) {
+          hideAttachmentPreview();
+          if (fileInput) fileInput.value = "";
+          if (imageInput) imageInput.value = "";
+          return;
+        }
+
+        const removed = chat.attachments.pop();
+
+        chat.messages = chat.messages.filter((m) => {
+          if (m.role !== "system") return true;
+          if (typeof m.content !== "string") return true;
+          return !m.content.includes(removed.name);
+        });
+
+        saveChats();
+        hideAttachmentPreview();
+        if (fileInput) fileInput.value = "";
+        if (imageInput) imageInput.value = "";
+      });
+    }
+
     const ghLogin = localStorage.getItem("mihai_github_login");
     if (userLabel) {
       if (ghLogin) {
@@ -526,7 +613,6 @@
       });
     }
 
-    // Init personality sliders from localStorage
     function initSlider(slider, label, key) {
       if (!slider || !label) return;
       const stored = localStorage.getItem(key);
@@ -616,7 +702,7 @@
       chats[id] = {
         title: "New chat",
         messages: [],
-        attachments: [], // attachments per chat
+        attachments: [],
       };
       currentChatId = id;
       saveChats();
@@ -737,6 +823,14 @@
               `so ask them to describe or paste relevant parts if needed.`,
           });
           saveChats();
+
+          showAttachmentPreview({
+            kind: "file",
+            name: f.name,
+            type: f.type,
+            size: f.size,
+          });
+
           alert("File uploaded and attached to this chat.");
         } catch (e) {
           console.error("Upload error", e);
@@ -757,7 +851,6 @@
           const formData = new FormData();
           formData.append("file", file);
 
-          // Call vision endpoint
           const res = await fetch("/api/vision", {
             method: "POST",
             body: formData,
@@ -778,21 +871,18 @@
             chats[currentChatId].attachments = [];
           }
 
-          // Track the image as an attachment
           chats[currentChatId].attachments.push({
             name: f.name,
             type: f.type,
             size: f.size,
           });
 
-          // System message: basic info about the uploaded image
           chats[currentChatId].messages.push({
             role: "system",
             content:
               `User uploaded an image file named "${f.name}" (type: ${f.type}, size: ${f.size} bytes).`,
           });
 
-          // System message: vision description text
           if (data.description) {
             chats[currentChatId].messages.push({
               role: "system",
@@ -803,6 +893,14 @@
           }
 
           saveChats();
+
+          showAttachmentPreview({
+            kind: "image",
+            name: f.name,
+            type: f.type,
+            size: f.size,
+          });
+
           alert("Photo analyzed and attached to this chat.");
         } catch (e) {
           console.error("Image upload / vision error", e);
@@ -1025,7 +1123,6 @@
       deleteChatBtn.addEventListener("click", showDeleteModal);
     }
 
-    // Initial theme
     if (localStorage.getItem("mihai_theme") === "light") {
       document.body.classList.add("light");
     }
@@ -1043,7 +1140,6 @@
 
     setStatus("ready", false);
 
-    // Start "Would you rather" game
     async function startGameWouldYouRather() {
       if (!currentChatId) {
         createNewChat();
@@ -1100,7 +1196,6 @@
       }
     }
 
-    // Start Quiz mode
     async function startGameQuiz() {
       if (!currentChatId) {
         createNewChat();
@@ -1157,7 +1252,6 @@
       }
     }
 
-    // Start Quick math game
     async function startGameQuickMath() {
       if (!currentChatId) {
         createNewChat();
