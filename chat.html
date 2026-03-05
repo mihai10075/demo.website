@@ -883,6 +883,57 @@
       }
     }
 
+    // Helper: get last assistant message text from your in‑memory messages array
+    function getLastAssistantMessage(messages) {
+      for (let i = messages.length - 1; i >= 0; i--) {
+        if (messages[i].role === "assistant") {
+          return messages[i].content;
+        }
+      }
+      return null;
+    }
+
+    // Call this when the user clicks "Regenerate"
+    async function handleRegenerate() {
+      const lastAssistant = getLastAssistantMessage(window.chatMessages || []);
+      if (!lastAssistant) return;
+
+      const rewritePrompt =
+        "Rewrite the following answer in a different way (wording and tone), " +
+        "but keep the same meaning and level of detail. " +
+        "Do NOT ask the user to repeat their question. Just reply with the new version:\n\n" +
+        lastAssistant;
+
+      const body = {
+        userId: window.currentUserId || "anon-default",
+        chatId: window.currentChatId || "default",
+        messages: [
+          ...((window.chatMessages || [])),
+          { role: "user", content: rewritePrompt },
+        ],
+        mode: window.currentMode || "chat",
+        depth: 1,
+        research: false,
+      };
+
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json();
+      const reply = data.reply || "";
+
+      // Push new assistant reply to your in‑memory messages + render it
+      (window.chatMessages = window.chatMessages || []).push(
+        { role: "user", content: rewritePrompt },
+        { role: "assistant", content: reply },
+      );
+
+      // TODO: update your DOM rendering here, e.g. appendMessage("assistant", reply)
+    }
+
     function renderMarkdown(text) {
       const div = document.createElement("div");
       let html = text
