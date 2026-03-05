@@ -81,6 +81,104 @@
     @keyframes blink {
       50% { opacity: 0; }
     }
+
+    /* message actions bar – MihAI themed buttons */
+    .message-actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 6px;
+      gap: 6px;
+    }
+    .message-actions .button {
+      flex: 1;
+      height: 30px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      padding: 0 10px;
+      background: #020617;
+      color: #e5e7eb;
+      transition: background-color 0.15s ease, transform 0.05s ease, box-shadow 0.15s ease;
+      box-shadow: 0 0 0 1px #1f2937;
+      white-space: nowrap;
+    }
+    .message-actions .button:active {
+      transform: scale(0.97);
+    }
+    .message-actions .button1 {
+      background: #1d283a;
+      box-shadow: 0 0 0 1px #4f46e5;
+      color: #e5e7eb;
+    }
+    .message-actions .button1:hover {
+      background: #312e81;
+    }
+    .message-actions .button2 {
+      background: #1e293b;
+      box-shadow: 0 0 0 1px #f97373;
+      color: #fecaca;
+    }
+    .message-actions .button2:hover {
+      background: #7f1d1d;
+    }
+    .message-actions .button3 {
+      background: #022c22;
+      box-shadow: 0 0 0 1px #22c55e;
+      color: #bbf7d0;
+    }
+    .message-actions .button3:hover {
+      background: #064e3b;
+    }
+    .message-actions .button4 {
+      background: #451a03;
+      box-shadow: 0 0 0 1px #fbbf24;
+      color: #fef9c3;
+    }
+    .message-actions .button4:hover {
+      background: #92400e;
+    }
+
+    /* role tiles inside settings */
+    .role-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .role-tile {
+      background:#020617;
+      border-radius:10px;
+      border:1px solid #1f2937;
+      padding:6px 8px;
+      cursor:pointer;
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      transition:border-color 0.15s ease, background 0.15s ease, transform 0.05s ease;
+      font-size:11px;
+      color:#e5e7eb;
+    }
+    .role-tile:hover {
+      border-color:#4f46e5;
+      background:#020617;
+      transform:translateY(-1px);
+    }
+    .role-tile span.role-title {
+      font-weight:600;
+      display:flex;
+      align-items:center;
+      gap:4px;
+    }
+    .role-tile span.role-desc {
+      font-size:10px;
+      color:#9ca3af;
+    }
+    .role-tile.active {
+      border-color:#22c55e;
+      box-shadow:0 0 0 1px #22c55e33;
+    }
   </style>
 </head>
 <body>
@@ -176,6 +274,27 @@
                   <span id="helpfulValue">2</span>
                 </label>
                 <input id="helpfulSlider" type="range" min="0" max="4" step="1" />
+              </div>
+            </div>
+
+            <!-- Role section -->
+            <div class="settings-section">
+              <div style="font-size:11px; color:#9ca3af; margin-bottom:4px;">
+                Who should MihAI be?
+              </div>
+              <div class="role-grid" id="roleGrid">
+                <button class="role-tile" data-role="coder">
+                  <span class="role-title">👨‍💻 Coder</span>
+                  <span class="role-desc">Focus on code help, debugging and snippets.</span>
+                </button>
+                <button class="role-tile" data-role="study">
+                  <span class="role-title">📚 Study buddy</span>
+                  <span class="role-desc">Explain concepts, quiz you, make notes.</span>
+                </button>
+                <button class="role-tile" data-role="friend">
+                  <span class="role-title">💬 Friend</span>
+                  <span class="role-desc">Casual, friendly chat and ideas.</span>
+                </button>
               </div>
             </div>
 
@@ -414,6 +533,8 @@
     const memoryList = document.getElementById("memoryList");
     const memoryClose = document.getElementById("memoryClose");
 
+    const roleGrid = document.getElementById("roleGrid");
+
     let currentAttachmentPreview = null;
     let queuedAttachments = [];
 
@@ -425,6 +546,9 @@
     let currentMode = localStorage.getItem("mihai_chat_mode") || "chat";
     let currentDepth = parseInt(localStorage.getItem("mihai_depth") || "1", 10);
     let researchMode = localStorage.getItem("mihai_research") === "true";
+
+    /* high-level role: coder, study, friend */
+    let currentRole = localStorage.getItem("mihai_role") || "friend";
 
     const ghLogin = localStorage.getItem("mihai_github_login");
     if (userLabel) {
@@ -533,6 +657,29 @@
       moodBadge.textContent = "Mood: " + mood;
     }
     updateMoodBadge();
+
+    function updateRoleTilesUI() {
+      if (!roleGrid) return;
+      const tiles = roleGrid.querySelectorAll(".role-tile");
+      tiles.forEach((tile) => {
+        const role = tile.getAttribute("data-role");
+        if (role === currentRole) tile.classList.add("active");
+        else tile.classList.remove("active");
+      });
+    }
+
+    if (roleGrid) {
+      roleGrid.addEventListener("click", (e) => {
+        const tile = e.target.closest(".role-tile");
+        if (!tile) return;
+        const role = tile.getAttribute("data-role");
+        if (!role) return;
+        currentRole = role;
+        localStorage.setItem("mihai_role", currentRole);
+        updateRoleTilesUI();
+      });
+      updateRoleTilesUI();
+    }
 
     if (gamesBtn && gamesMenu) {
       gamesBtn.addEventListener("click", () => {
@@ -758,15 +905,17 @@
       bar.className = "message-actions";
 
       const copyBtn = document.createElement("button");
+      copyBtn.className = "button button1";
       copyBtn.textContent = "Copy text";
-      copyBtn.title = "Copy this message to clipboard";
+      copyBtn.title = "Copy this message to your clipboard";
       copyBtn.onclick = () => copyToClipboard(content);
       bar.appendChild(copyBtn);
 
       if (role === "assistant") {
         const regenBtn = document.createElement("button");
+        regenBtn.className = "button button2";
         regenBtn.textContent = "Regenerate";
-        regenBtn.title = "Ask MihAI to answer again differently";
+        regenBtn.title = "Ask MihAI to answer this again differently";
         regenBtn.onclick = () => {
           if (!currentChatId) return;
           const chat = chats[currentChatId];
@@ -789,6 +938,7 @@
       }
 
       const followBtn = document.createElement("button");
+      followBtn.className = "button button3";
       followBtn.textContent = "Follow-up";
       followBtn.title = "Start a follow-up question based on this message";
       followBtn.onclick = () => {
@@ -798,9 +948,13 @@
       bar.appendChild(followBtn);
 
       const delBtn = document.createElement("button");
+      delBtn.className = "button button4";
       delBtn.textContent = "Delete";
-      delBtn.title = "Remove this message from the chat history";
+      delBtn.title = "Delete this message from the chat";
       delBtn.onclick = () => {
+        const ok = window.confirm("Are you sure you want to delete this text?");
+        if (!ok) return;
+
         if (!currentChatId) return;
         const chat = chats[currentChatId];
         const idx = chat.messages.indexOf(msgObj);
@@ -929,6 +1083,15 @@
       if (currentDepth === 0) depthNote = "Use a shallow context window; focus mainly on the last few messages.";
       if (currentDepth === 2) depthNote = "Use a deep context window; consider more of the previous conversation and memory facts.";
 
+      let roleNote = "";
+      if (currentRole === "coder") {
+        roleNote = "For this conversation, primarily act as a coding assistant: focus on code help, debugging, and examples.";
+      } else if (currentRole === "study") {
+        roleNote = "For this conversation, primarily act as a study buddy: explain concepts, quiz the user, and help with learning.";
+      } else {
+        roleNote = "For this conversation, primarily act as a friendly companion: casual chat, ideas, and light help.";
+      }
+
       return {
         role: "system",
         content:
@@ -936,7 +1099,7 @@
           "Adjust your behavior using these personality instructions: " +
           styleLines.join(". ") +
           ". Always stay kind and respectful, and adapt to the user's vibe. " +
-          depthNote,
+          depthNote + " " + roleNote,
       };
     }
 
@@ -1105,20 +1268,25 @@
 
           chats[currentChatId].attachments.push(attachmentObj);
 
+          // vision description with confirmation request
+          let visionSystemContent =
+            `User uploaded an image file named "${f.name}" (type: ${f.type}, size: ${f.size} bytes).`;
+          if (data.description || data.text) {
+            const guess = data.text || data.description;
+            visionSystemContent +=
+              ` The vision tool thinks the text in the image might be: "${guess}". ` +
+              `You are not 100% sure this is correct. Always show this guess to the user and ask: ` +
+              `"Is this text correct? If not, please type the correct text or upload a clearer photo."`;
+          } else {
+            visionSystemContent +=
+              ` The vision tool could not confidently read the text. Ask the user to ` +
+              `either type the text manually or upload a clearer photo.`;
+          }
+
           chats[currentChatId].messages.push({
             role: "system",
-            content:
-              `User uploaded an image file named "${f.name}" (type: ${f.type}, size: ${f.size} bytes).`,
+            content: visionSystemContent,
           });
-
-          if (data.description) {
-            chats[currentChatId].messages.push({
-              role: "system",
-              content:
-                `Vision tool says about the uploaded image: "${data.description}". ` +
-                `Use this as if you actually saw the photo when answering questions about it.`,
-            });
-          }
 
           saveChats();
 
@@ -1175,6 +1343,16 @@
         currentUtterance = utter;
         speechSynthesis.speak(utter);
       } catch (_) {}
+    }
+
+    let isSending = false;
+    let currentController = null;
+
+    function showStopButton() {
+      if (stopBtn) stopBtn.style.display = "inline-block";
+    }
+    function hideStopButton() {
+      if (stopBtn) stopBtn.style.display = "none";
     }
 
     if (stopBtn) {
@@ -1388,16 +1566,6 @@
     function renderFollowUpSuggestions(fullText) {
       if (!promptChips) return;
       if (!fullText || fullText.length < 80) return;
-    }
-
-    let isSending = false;
-    let currentController = null;
-
-    function showStopButton() {
-      if (stopBtn) stopBtn.style.display = "inline-block";
-    }
-    function hideStopButton() {
-      if (stopBtn) stopBtn.style.display = "none";
     }
 
     function addAssistantMessageTyped(fullText, msgObj) {
@@ -2176,3 +2344,4 @@
   </script>
 </body>
 </html>
+```
