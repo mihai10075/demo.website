@@ -222,6 +222,16 @@
             <span>Research mode</span>
           </label>
 
+          <!-- Answer length selector -->
+          <div class="length-control" style="margin-left:8px; font-size:11px; display:flex; align-items:center; gap:4px;">
+            <label for="lengthSelect">Length:</label>
+            <select id="lengthSelect" style="background:#020617; border:1px solid #1f2937; border-radius:6px; color:#e5e7eb; font-size:11px; padding:2px 4px;">
+              <option value="short">Short</option>
+              <option value="normal" selected>Normal</option>
+              <option value="detailed">Detailed</option>
+            </select>
+          </div>
+
           <button id="gamesBtn" class="theme-btn">Games 🎮</button>
           <div id="gamesMenu" class="menu-popover">
             <button data-game="wyr">Would you rather…</button>
@@ -294,6 +304,22 @@
                 <button class="role-tile" data-role="friend">
                   <span class="role-title">💬 Friend</span>
                   <span class="role-desc">Casual, friendly chat and ideas.</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Voice selector -->
+            <div class="settings-section">
+              <div style="font-size:11px; color:#9ca3af; margin-bottom:4px;">
+                Voice (text‑to‑speech)
+              </div>
+              <div class="settings-row">
+                <label style="font-size:11px; color:#e5e7eb;">Browser voice</label>
+                <select id="voiceSelect" style="width:100%; background:#020617; border:1px solid #1f2937; border-radius:6px; color:#e5e7eb; font-size:12px; padding:2px 6px;">
+                  <option value="0">Default browser voice</option>
+                </select>
+                <button id="testVoiceBtn" class="modal-btn" style="margin-top:4px; font-size:11px;">
+                  Test voice
                 </button>
               </div>
             </div>
@@ -455,7 +481,7 @@
     </main>
   </div>
 
-  <script>
+<script>
     function getUserId() {
       const ghId = localStorage.getItem("mihai_github_id");
       if (ghId) return "github-" + ghId;
@@ -535,6 +561,10 @@
 
     const roleGrid = document.getElementById("roleGrid");
 
+    const lengthSelect = document.getElementById("lengthSelect");
+    const voiceSelect = document.getElementById("voiceSelect");
+    const testVoiceBtn = document.getElementById("testVoiceBtn");
+
     let currentAttachmentPreview = null;
     let queuedAttachments = [];
 
@@ -549,6 +579,17 @@
 
     /* high-level role: coder, study, friend */
     let currentRole = localStorage.getItem("mihai_role") || "friend";
+
+    // Answer length: "short" | "normal" | "detailed"
+    let currentLengthMode =
+      localStorage.getItem("mihai_length_mode") || "normal";
+
+    // Speech synthesis voices
+    let availableVoices = [];
+    let currentVoiceIndex = parseInt(
+      localStorage.getItem("mihai_voice_index") || "0",
+      10
+    );
 
     const ghLogin = localStorage.getItem("mihai_github_login");
     if (userLabel) {
@@ -766,7 +807,9 @@
       dot.className = "status-dot";
       dot.style.background = isThinking ? "#facc15" : "#22c55e";
       statusLabel.appendChild(dot);
-      statusLabel.appendChild(document.createTextNode(isThinking ? "thinking…" : text));
+      statusLabel.appendChild(
+        document.createTextNode(isThinking ? "thinking…" : text)
+      );
     }
 
     function saveChats() {
@@ -779,7 +822,9 @@
       const ghLogin = localStorage.getItem("mihai_github_login");
       const displayName = ghLogin
         ? `@${ghLogin}`
-        : (userId.startsWith("anon-") ? "a guest user" : userId);
+        : userId.startsWith("anon-")
+        ? "a guest user"
+        : userId;
 
       chats[id] = {
         title: "New chat",
@@ -842,7 +887,8 @@
         const chip = document.createElement("div");
         chip.className = "attachment-chip";
         const icon = document.createElement("span");
-        icon.textContent = att.type && att.type.startsWith("image/") ? "🖼" : "📎";
+        icon.textContent =
+          att.type && att.type.startsWith("image/") ? "🖼" : "📎";
         chip.appendChild(icon);
 
         if (att.type && att.type.startsWith("image/") && att.url) {
@@ -883,62 +929,87 @@
       }
     }
 
-    // Helper: get last assistant message text from your in‑memory messages array
-    function getLastAssistantMessage(messages) {
-      for (let i = messages.length - 1; i >= 0; i--) {
-        if (messages[i].role === "assistant") {
-          return messages[i].content;
+    // Helper: get last assistant message text from current chat
+    function getLastAssistantMessageFromChat() {
+      if (!currentChatId) return null;
+      const chat = chats[currentChatId];
+      if (!chat || !Array.isArray(chat.messages)) return null;
+      for (let i = chat.messages.length - 1; i >= 0; i--) {
+        if (chat.messages[i].role === "assistant") {
+          return { index: i, content: chat.messages[i].content };
         }
       }
       return null;
     }
 
-    // Call this when the user clicks "Regenerate"
+    // Regenerate: rewrite last assistant answer without re-sending user text
     async function handleRegenerate() {
-      const lastAssistant = getLastAssistantMessage(window.chatMessages || []);
-      if (!lastAssistant) return;
+      const last = getLastAssistantMessageFromChat();
+      if (!last) return;
+
+      const lastAssistantText =
+        typeof last.content === "string" ? last.content : "";
 
       const rewritePrompt =
         "Rewrite the following answer in a different way (wording and tone), " +
         "but keep the same meaning and level of detail. " +
         "Do NOT ask the user to repeat their question. Just reply with the new version:\n\n" +
-        lastAssistant;
+        lastAssistantText;
 
-      const body = {
-        userId: window.currentUserId || "anon-default",
-        chatId: window.currentChatId || "default",
-        messages: [
-          ...((window.chatMessages || [])),
+      try {
+        setStatus("thinking…", true);
+
+        const personalityMsg = buildPersonalityMessage();
+        const baseMessages = chats[currentChatId].messages || [];
+        const messagesToSend = [
+          personalityMsg,
+          ...baseMessages,
           { role: "user", content: rewritePrompt },
-        ],
-        mode: window.currentMode || "chat",
-        depth: 1,
-        research: false,
-      };
+        ];
 
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId,
+            chatId: currentChatId,
+            mode: currentMode,
+            depth: currentDepth,
+            research: false,
+            messages: messagesToSend,
+            attachments: chats[currentChatId].attachments || [],
+          }),
+        });
 
-      const data = await res.json();
-      const reply = data.reply || "";
+        const data = await response.json();
+        const reply =
+          typeof data.reply === "string"
+            ? data.reply
+            : "MihAI had trouble regenerating that answer.";
 
-      // Push new assistant reply to your in‑memory messages + render it
-      (window.chatMessages = window.chatMessages || []).push(
-        { role: "user", content: rewritePrompt },
-        { role: "assistant", content: reply },
-      );
+        const chat = chats[currentChatId];
+        if (chat && Array.isArray(chat.messages)) {
+          chat.messages.push({ role: "assistant", content: reply });
+          saveChats();
+          renderChats();
+          renderMessages();
+        }
 
-      // TODO: update your DOM rendering here, e.g. appendMessage("assistant", reply)
+        renderSourcesBar(data.sources || []);
+        setStatus("ready", false);
+      } catch (e) {
+        console.error("Regenerate failed", e);
+        setStatus("ready", false);
+      }
     }
 
     function renderMarkdown(text) {
       const div = document.createElement("div");
       let html = text
         .replace(/```([\s\S]*?)```/g, (m, code) => {
-          return `<pre class="code-block"><code>${code.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code></pre>`;
+          return `<pre class="code-block"><code>${code
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")}</code></pre>`;
         })
         .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
         .replace(/`([^`]+)`/g, "<code>$1</code>")
@@ -966,24 +1037,9 @@
         const regenBtn = document.createElement("button");
         regenBtn.className = "button button2";
         regenBtn.textContent = "Regenerate";
-        regenBtn.title = "Ask MihAI to answer this again differently";
+        regenBtn.title = "Ask MihAI to rewrite this answer differently";
         regenBtn.onclick = () => {
-          if (!currentChatId) return;
-          const chat = chats[currentChatId];
-          for (let i = chat.messages.length - 1; i >= 0; i--) {
-            if (chat.messages[i].role === "assistant") {
-              chat.messages.splice(i, 1);
-              break;
-            }
-          }
-          saveChats();
-          renderMessages();
-
-          const lastUser = [...chat.messages].reverse().find(m => m.role === "user");
-          if (lastUser) {
-            messageInput.value = lastUser.content;
-            sendMessage();
-          }
+          handleRegenerate();
         };
         bar.appendChild(regenBtn);
       }
@@ -1031,7 +1087,13 @@
       return raw;
     }
 
-    function addMessageToUI(role, content, attachmentsForMessage = [], isError = false, msgObj = null) {
+    function addMessageToUI(
+      role,
+      content,
+      attachmentsForMessage = [],
+      isError = false,
+      msgObj = null
+    ) {
       const wrapper = document.createElement("div");
       wrapper.className = "message-wrap";
 
@@ -1073,6 +1135,24 @@
         copyBtn.onclick = () => copyToClipboard(displayContent);
         toolbar.appendChild(copyBtn);
 
+        const clarifyBtn = document.createElement("button");
+        clarifyBtn.textContent = "Clarify";
+        clarifyBtn.title = "Rewrite this answer to be clearer";
+        clarifyBtn.onclick = () => askFollowup("clarify", displayContent);
+        toolbar.appendChild(clarifyBtn);
+
+        const moreBtn = document.createElement("button");
+        moreBtn.textContent = "More detail";
+        moreBtn.title = "Expand this answer with more detail";
+        moreBtn.onclick = () => askFollowup("more", displayContent);
+        toolbar.appendChild(moreBtn);
+
+        const shorterBtn = document.createElement("button");
+        shorterBtn.textContent = "Shorter";
+        shorterBtn.title = "Summarize this answer briefly";
+        shorterBtn.onclick = () => askFollowup("shorter", displayContent);
+        toolbar.appendChild(shorterBtn);
+
         toolbar.style.marginTop = "4px";
         div.appendChild(toolbar);
       }
@@ -1096,9 +1176,18 @@
     }
 
     function buildPersonalityMessage() {
-      const chaos = parseInt(localStorage.getItem("mihai_personality_chaos") || "2", 10);
-      const seriousness = parseInt(localStorage.getItem("mihai_personality_serious") || "2", 10);
-      const helpful = parseInt(localStorage.getItem("mihai_personality_helpful") || "2", 10);
+      const chaos = parseInt(
+        localStorage.getItem("mihai_personality_chaos") || "2",
+        10
+      );
+      const seriousness = parseInt(
+        localStorage.getItem("mihai_personality_serious") || "2",
+        10
+      );
+      const helpful = parseInt(
+        localStorage.getItem("mihai_personality_helpful") || "2",
+        10
+      );
 
       function describeChaos(v) {
         if (v <= 0) return "be very calm, literal, and avoid jokes or randomness";
@@ -1131,16 +1220,23 @@
       ];
 
       let depthNote = "";
-      if (currentDepth === 0) depthNote = "Use a shallow context window; focus mainly on the last few messages.";
-      if (currentDepth === 2) depthNote = "Use a deep context window; consider more of the previous conversation and memory facts.";
+      if (currentDepth === 0)
+        depthNote =
+          "Use a shallow context window; focus mainly on the last few messages.";
+      if (currentDepth === 2)
+        depthNote =
+          "Use a deep context window; consider more of the previous conversation and memory facts.";
 
       let roleNote = "";
       if (currentRole === "coder") {
-        roleNote = "For this conversation, primarily act as a coding assistant: focus on code help, debugging, and examples.";
+        roleNote =
+          "For this conversation, primarily act as a coding assistant: focus on code help, debugging, and examples.";
       } else if (currentRole === "study") {
-        roleNote = "For this conversation, primarily act as a study buddy: explain concepts, quiz the user, and help with learning.";
+        roleNote =
+          "For this conversation, primarily act as a study buddy: explain concepts, quiz the user, and help with learning.";
       } else {
-        roleNote = "For this conversation, primarily act as a friendly companion: casual chat, ideas, and light help.";
+        roleNote =
+          "For this conversation, primarily act as a friendly companion: casual chat, ideas, and light help.";
       }
 
       return {
@@ -1150,7 +1246,9 @@
           "Adjust your behavior using these personality instructions: " +
           styleLines.join(". ") +
           ". Always stay kind and respectful, and adapt to the user's vibe. " +
-          depthNote + " " + roleNote,
+          depthNote +
+          " " +
+          roleNote,
       };
     }
 
@@ -1159,9 +1257,11 @@
       queuedAttachments.push(info);
       if (!attachmentBar || !attachmentLabel) return;
       const count = queuedAttachments.length;
-      const labelText = count === 1
-        ? ((info.kind === "image" ? "📷 " : "📄 ") + `${info.name} (${info.type}, ${info.size} bytes)`)
-        : `${count} attachments ready`;
+      const labelText =
+        count === 1
+          ? (info.kind === "image" ? "📷 " : "📄 ") +
+            `${info.name} (${info.type}, ${info.size} bytes)`
+          : `${count} attachments ready`;
       attachmentLabel.textContent = labelText;
       attachmentBar.style.display = "flex";
     }
@@ -1319,7 +1419,6 @@
 
           chats[currentChatId].attachments.push(attachmentObj);
 
-          // vision description with confirmation request
           let visionSystemContent =
             `User uploaded an image file named "${f.name}" (type: ${f.type}, size: ${f.size} bytes).`;
           if (data.description || data.text) {
@@ -1375,6 +1474,189 @@
       });
     }
 
+    // Answer length helpers
+    function setLengthMode(mode) {
+      if (!["short", "normal", "detailed"].includes(mode)) return;
+      currentLengthMode = mode;
+      localStorage.setItem("mihai_length_mode", currentLengthMode);
+      if (lengthSelect) lengthSelect.value = currentLengthMode;
+    }
+
+    function lengthModeSystemMessage() {
+      if (currentLengthMode === "short") {
+        return {
+          role: "system",
+          content:
+            "For this next reply, answer in at most 2 short sentences. Focus only on the key points.",
+        };
+      }
+      if (currentLengthMode === "detailed") {
+        return {
+          role: "system",
+          content:
+            "For this next reply, answer in a detailed, step-by-step way with clear explanations.",
+        };
+      }
+      return null;
+    }
+
+    if (lengthSelect) {
+      const storedLen = localStorage.getItem("mihai_length_mode");
+      if (storedLen && ["short", "normal", "detailed"].includes(storedLen)) {
+        currentLengthMode = storedLen;
+        lengthSelect.value = storedLen;
+      }
+      lengthSelect.addEventListener("change", () => {
+        setLengthMode(lengthSelect.value);
+      });
+    }
+
+    // Speech synthesis voice helpers
+    function populateVoiceSelect() {
+      if (!voiceSelect) return;
+      voiceSelect.innerHTML = "";
+      if (!availableVoices.length) {
+        const opt = document.createElement("option");
+        opt.value = "0";
+        opt.textContent = "Default browser voice";
+        voiceSelect.appendChild(opt);
+        return;
+      }
+      availableVoices.forEach((v, i) => {
+        const opt = document.createElement("option");
+        opt.value = String(i);
+        opt.textContent = `${v.name} (${v.lang})${v.default ? " *" : ""}`;
+        voiceSelect.appendChild(opt);
+      });
+      if (currentVoiceIndex < 0 || currentVoiceIndex >= availableVoices.length) {
+        currentVoiceIndex = 0;
+      }
+      voiceSelect.value = String(currentVoiceIndex);
+    }
+
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.onvoiceschanged = () => {
+        availableVoices = window.speechSynthesis.getVoices();
+        populateVoiceSelect();
+      };
+    }
+
+    function setCurrentVoiceIndex(idx) {
+      if (!availableVoices.length) return;
+      if (idx < 0 || idx >= availableVoices.length) return;
+      currentVoiceIndex = idx;
+      localStorage.setItem("mihai_voice_index", String(currentVoiceIndex));
+      if (voiceSelect) voiceSelect.value = String(currentVoiceIndex);
+    }
+
+    if (voiceSelect) {
+      const storedIdx = parseInt(
+        localStorage.getItem("mihai_voice_index") || "0",
+        10
+      );
+      currentVoiceIndex = Number.isFinite(storedIdx) ? storedIdx : 0;
+      voiceSelect.addEventListener("change", () => {
+        const idx = parseInt(voiceSelect.value || "0", 10);
+        setCurrentVoiceIndex(idx);
+      });
+    }
+
+    if (testVoiceBtn) {
+      testVoiceBtn.addEventListener("click", () => {
+        speak(
+          "Hi, I am MihAI reading this with your selected voice. If this sounds good, keep this voice."
+        );
+      });
+    }
+
+    // Follow-up helper
+    async function askFollowup(kind, baseText) {
+      if (!currentChatId) return;
+
+      let instruction = "";
+      if (kind === "clarify") {
+        instruction =
+          "Clarify the following answer. Rewrite it more clearly, fix any confusing parts, and keep the same level of detail.";
+      } else if (kind === "more") {
+        instruction =
+          "Expand the following answer with more detail, examples, and step-by-step explanation.";
+      } else if (kind === "shorter") {
+        instruction =
+          "Shorten the following answer into a concise summary with only the key points.";
+      } else {
+        return;
+      }
+
+      const prompt =
+        instruction + "\n\nHere is the answer to transform:\n\n" + baseText;
+
+      const userMsgObj = { role: "user", content: prompt, attachments: [] };
+      chats[currentChatId].messages.push(userMsgObj);
+      saveChats();
+      addMessageToUI("user", prompt, [], false, userMsgObj);
+
+      removeTypingIndicator();
+      showTypingIndicator();
+      setStatus("thinking…", true);
+      showStopButton();
+
+      const personalityMsg = buildPersonalityMessage();
+      const fullMessages = chats[currentChatId].messages;
+      const contextSlice = fullMessages.slice(
+        Math.max(0, fullMessages.length - 30)
+      );
+
+      const messagesToSend = [personalityMsg, ...contextSlice];
+
+      currentController = new AbortController();
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId,
+            chatId: currentChatId,
+            mode: currentMode,
+            depth: currentDepth,
+            research: researchMode,
+            messages: messagesToSend,
+            attachments: chats[currentChatId].attachments || [],
+          }),
+          signal: currentController.signal,
+        });
+
+        if (!response.ok) throw new Error("HTTP " + response.status);
+
+        const data = await response.json();
+        const fullText =
+          typeof data.reply === "string"
+            ? data.reply
+            : "MihAI had trouble generating a follow-up.";
+
+        renderSourcesBar(data.sources || []);
+        removeTypingIndicator();
+
+        const aiMsgObj = { role: "assistant", content: fullText };
+        chats[currentChatId].messages.push(aiMsgObj);
+        saveChats();
+        renderChats();
+        addAssistantMessageTyped(fullText, aiMsgObj);
+        scrollBottom();
+        setStatus("ready", false);
+      } catch (err) {
+        console.error(err);
+        removeTypingIndicator();
+        const assistantDiv = document.createElement("div");
+        assistantDiv.className = "message assistant error";
+        assistantDiv.textContent = "Error generating follow-up.";
+        chatContainer.appendChild(assistantDiv);
+        setStatus("ready", false);
+      } finally {
+        hideStopButton();
+        currentController = null;
+      }
+    }
+
     function speak(text) {
       try {
         if (!window.speechSynthesis) return;
@@ -1386,6 +1668,19 @@
         }
 
         const utter = new SpeechSynthesisUtterance(text);
+
+        let voices =
+          availableVoices.length > 0
+            ? availableVoices
+            : window.speechSynthesis.getVoices();
+
+        if (voices && voices.length) {
+          let idx = currentVoiceIndex;
+          if (idx < 0 || idx >= voices.length) idx = 0;
+          utter.voice = voices[idx];
+          utter.lang = voices[idx].lang;
+        }
+
         utter.rate = 1;
         utter.pitch = 1;
         utter.onend = () => {
@@ -1431,7 +1726,8 @@
       if (typingIndicatorDiv) return;
       typingIndicatorDiv = document.createElement("div");
       typingIndicatorDiv.className = "message assistant";
-      typingIndicatorDiv.innerHTML = "<span>MihAI is typing</span><span style='margin-left:6px;'>⋯</span>";
+      typingIndicatorDiv.innerHTML =
+        "<span>MihAI is typing</span><span style='margin-left:6px;'>⋯</span>";
       chatContainer.appendChild(typingIndicatorDiv);
       scrollBottom();
     }
@@ -1450,7 +1746,15 @@
       const lower = cmd.toLowerCase();
       const payload = rest.join(" ").trim();
 
-      const known = ["/short", "/long", "/explain", "/code", "/story", "/translate", "/stats"];
+      const known = [
+        "/short",
+        "/long",
+        "/explain",
+        "/code",
+        "/story",
+        "/translate",
+        "/stats",
+      ];
       if (!known.includes(lower)) return { cleaned: text, command: null };
 
       const cleaned = payload || "";
@@ -1468,12 +1772,14 @@
         case "/long":
           return {
             role: "system",
-            content: "For this next reply, answer in a detailed, step-by-step way.",
+            content:
+              "For this next reply, answer in a detailed, step-by-step way.",
           };
         case "/explain":
           return {
             role: "system",
-            content: "Explain the user message like you're teaching a friend, with simple language.",
+            content:
+              "Explain the user message like you're teaching a friend, with simple language.",
           };
         case "/code":
           return {
@@ -1483,7 +1789,8 @@
         case "/story":
           return {
             role: "system",
-            content: "Answer in the form of a short, fun story that still solves the user's request.",
+            content:
+              "Answer in the form of a short, fun story that still solves the user's request.",
           };
         case "/translate":
           return {
@@ -1655,6 +1962,24 @@
       copyBtn.onclick = () => copyToClipboard(fullText);
       toolbar.appendChild(copyBtn);
 
+      const clarifyBtn = document.createElement("button");
+      clarifyBtn.textContent = "Clarify";
+      clarifyBtn.title = "Rewrite this answer to be clearer";
+      clarifyBtn.onclick = () => askFollowup("clarify", fullText);
+      toolbar.appendChild(clarifyBtn);
+
+      const moreBtn = document.createElement("button");
+      moreBtn.textContent = "More detail";
+      moreBtn.title = "Expand this answer with more detail";
+      moreBtn.onclick = () => askFollowup("more", fullText);
+      toolbar.appendChild(moreBtn);
+
+      const shorterBtn = document.createElement("button");
+      shorterBtn.textContent = "Shorter";
+      shorterBtn.title = "Summarize this answer briefly";
+      shorterBtn.onclick = () => askFollowup("shorter", fullText);
+      toolbar.appendChild(shorterBtn);
+
       div.appendChild(toolbar);
 
       wrapper.appendChild(div);
@@ -1732,7 +2057,13 @@
           attachments: attachmentsForThisMessage,
         };
         chats[currentChatId].messages.push(userMsgObj);
-        addMessageToUI("user", text || "(sent attachments)", attachmentsForThisMessage, false, userMsgObj);
+        addMessageToUI(
+          "user",
+          text || "(sent attachments)",
+          attachmentsForThisMessage,
+          false,
+          userMsgObj
+        );
 
         removeTypingIndicator();
         showTypingIndicator();
@@ -1742,6 +2073,9 @@
         const personalityMsg = buildPersonalityMessage();
         const messagesToSend = [personalityMsg];
         if (slashSystem) messagesToSend.push(slashSystem);
+
+        const lengthMsg = lengthModeSystemMessage();
+        if (lengthMsg) messagesToSend.push(lengthMsg);
 
         const fullMessages = chats[currentChatId].messages;
         let sliceStart = 0;
@@ -1777,9 +2111,10 @@
         }
 
         const data = await response.json();
-        const fullText = typeof data.reply === "string"
-          ? data.reply
-          : "MihAI had trouble generating a reply.";
+        const fullText =
+          typeof data.reply === "string"
+            ? data.reply
+            : "MihAI had trouble generating a reply.";
 
         renderSourcesBar(data.sources || []);
 
@@ -1916,7 +2251,8 @@
     } else {
       for (const id of Object.keys(chats)) {
         if (!chats[id].attachments) chats[id].attachments = [];
-        if (!chats[id].meta) chats[id].meta = { webHits: 0, createdAt: Date.now() };
+        if (!chats[id].meta)
+          chats[id].meta = { webHits: 0, createdAt: Date.now() };
       }
       currentChatId = Object.keys(chats)[0];
       renderChats();
@@ -1966,9 +2302,10 @@
         });
 
         const data = await response.json();
-        const fullText = typeof data.reply === "string"
-          ? data.reply
-          : "MihAI had trouble generating a reply.";
+        const fullText =
+          typeof data.reply === "string"
+            ? data.reply
+            : "MihAI had trouble generating a reply.";
         renderSourcesBar(data.sources || []);
 
         assistantDiv.textContent = fullText;
@@ -2030,9 +2367,10 @@
         });
 
         const data = await response.json();
-        const fullText = typeof data.reply === "string"
-          ? data.reply
-          : "MihAI had trouble generating a reply.";
+        const fullText =
+          typeof data.reply === "string"
+            ? data.reply
+            : "MihAI had trouble generating a reply.";
         renderSourcesBar(data.sources || []);
 
         assistantDiv.textContent = fullText;
@@ -2094,9 +2432,10 @@
         });
 
         const data = await response.json();
-        const fullText = typeof data.reply === "string"
-          ? data.reply
-          : "MihAI had trouble generating a reply.";
+        const fullText =
+          typeof data.reply === "string"
+            ? data.reply
+            : "MihAI had trouble generating a reply.";
         renderSourcesBar(data.sources || []);
 
         assistantDiv.textContent = fullText;
@@ -2219,15 +2558,24 @@
         if (e.key === "Enter") {
           e.preventDefault();
           const value = cmdInput.value.trim().toLowerCase();
-          if (value === "new" || value === "new chat") runCommandPaletteAction("new-chat");
-          else if (value.includes("focus")) runCommandPaletteAction("focus-input");
-          else if (value.includes("coder")) runCommandPaletteAction("mode-coder");
-          else if (value.includes("study")) runCommandPaletteAction("mode-study");
-          else if (value.includes("chat")) runCommandPaletteAction("mode-chat");
-          else if (value.includes("shallow")) runCommandPaletteAction("depth-shallow");
-          else if (value.includes("normal")) runCommandPaletteAction("depth-normal");
-          else if (value.includes("deep")) runCommandPaletteAction("depth-deep");
-          else if (value.includes("stats")) runCommandPaletteAction("stats");
+          if (value === "new" || value === "new chat")
+            runCommandPaletteAction("new-chat");
+          else if (value.includes("focus"))
+            runCommandPaletteAction("focus-input");
+          else if (value.includes("coder"))
+            runCommandPaletteAction("mode-coder");
+          else if (value.includes("study"))
+            runCommandPaletteAction("mode-study");
+          else if (value.includes("chat"))
+            runCommandPaletteAction("mode-chat");
+          else if (value.includes("shallow"))
+            runCommandPaletteAction("depth-shallow");
+          else if (value.includes("normal"))
+            runCommandPaletteAction("depth-normal");
+          else if (value.includes("deep"))
+            runCommandPaletteAction("depth-deep");
+          else if (value.includes("stats"))
+            runCommandPaletteAction("stats");
           closeCommandPalette();
         }
       });
@@ -2279,7 +2627,9 @@
               } else {
                 payload.history.delete.push({ key: f.key });
               }
-              const url = `/api/memory?userId=${encodeURIComponent(userId)}&chatId=${encodeURIComponent(currentChatId || "")}`;
+              const url = `/api/memory?userId=${encodeURIComponent(
+                userId
+              )}&chatId=${encodeURIComponent(currentChatId || "")}`;
               fetch(url, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -2309,7 +2659,9 @@
       if (!memoryModal) return;
       memoryModal.style.display = "flex";
 
-      const url = `/api/memory?userId=${encodeURIComponent(userId)}&chatId=${encodeURIComponent(currentChatId || "")}`;
+      const url = `/api/memory?userId=${encodeURIComponent(
+        userId
+      )}&chatId=${encodeURIComponent(currentChatId || "")}`;
       fetch(url)
         .then((r) => r.json())
         .then((data) => {
@@ -2343,7 +2695,9 @@
       notebookModal.style.display = "flex";
 
       if (!currentChatId) return;
-      const url = `/api/notebook?userId=${encodeURIComponent(userId)}&chatId=${encodeURIComponent(currentChatId)}`;
+      const url = `/api/notebook?userId=${encodeURIComponent(
+        userId
+      )}&chatId=${encodeURIComponent(currentChatId)}`;
       fetch(url)
         .then((r) => r.json())
         .then((data) => {
@@ -2376,7 +2730,9 @@
           closeNotebookModal();
           return;
         }
-        const url = `/api/notebook?userId=${encodeURIComponent(userId)}&chatId=${encodeURIComponent(currentChatId)}`;
+        const url = `/api/notebook?userId=${encodeURIComponent(
+          userId
+        )}&chatId=${encodeURIComponent(currentChatId)}`;
         fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -2395,4 +2751,3 @@
   </script>
 </body>
 </html>
-```

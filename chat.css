@@ -225,6 +225,38 @@ body.light {
   color: #e5e7eb;
 }
 
+/* Extra mode highlights */
+.mode-btn[data-mode="creative"].mode-active {
+  background: #4c1d95;
+  color: #e5e7eb;
+}
+
+.mode-btn[data-mode="roleplay"].mode-active {
+  background: #0f766e;
+  color: #e5e7eb;
+}
+
+/* Length selector in top bar */
+.length-control {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+}
+
+.length-control label {
+  color: #9ca3af;
+}
+
+.length-control select {
+  background: #020617;
+  border: 1px solid #1f2937;
+  border-radius: 6px;
+  color: #e5e7eb;
+  font-size: 11px;
+  padding: 2px 4px;
+}
+
 /* Top link */
 .top-link {
   font-size: 11px;
@@ -321,6 +353,23 @@ body.light {
   word-wrap: break-word;
 }
 
+/* Typing cursor for streaming effect */
+.cursor {
+  display: inline-block;
+  width: 6px;
+  height: 1em;
+  margin-left: 2px;
+  background: #e5e7eb;
+  animation: blink 0.9s steps(1, start) infinite;
+  vertical-align: text-bottom;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
 /* Code blocks */
 .code-block {
   background: #020617;
@@ -331,10 +380,11 @@ body.light {
   border: 1px solid #1f2937;
 }
 
-/* Message toolbar (🔊 / 📋 under assistant) */
+/* Message toolbar (🔊 / 📋 / Clarify / More detail / Shorter) */
 .message-toolbar {
   display: inline-flex;
   gap: 4px;
+  margin-top: 4px;
 }
 
 .message-toolbar button {
@@ -345,10 +395,12 @@ body.light {
   font-size: 10px;
   padding: 2px 6px;
   cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.05s ease;
 }
 
 .message-toolbar button:hover {
   background: #0b1120;
+  border-color: #4b5563;
 }
 
 /* Attachments */
@@ -513,6 +565,12 @@ body.light {
   font-size: 10px;
   padding: 2px 6px;
   cursor: pointer;
+}
+
+/* Tiny creative buttons */
+#storyContinueBtn,
+#rpPromptBtn {
+  margin-left: 4px;
 }
 
 /* Command palette */
@@ -767,7 +825,10 @@ body.light .modal-btn {
   padding: 0 6px;
   background: #020617;
   color: #e5e7eb;
-  transition: background-color 0.15s ease, transform 0.05s ease, box-shadow 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    transform 0.05s ease,
+    box-shadow 0.15s ease;
   box-shadow: 0 0 0 1px #1f2937;
   white-space: nowrap;
 }
@@ -781,6 +842,7 @@ body.light .modal-btn {
   box-shadow: 0 0 0 1px #4f46e5;
   color: #e5e7eb;
 }
+
 .message-actions .button1:hover {
   background: #312e81;
 }
@@ -790,6 +852,7 @@ body.light .modal-btn {
   box-shadow: 0 0 0 1px #f97373;
   color: #fecaca;
 }
+
 .message-actions .button2:hover {
   background: #7f1d1d;
 }
@@ -799,6 +862,7 @@ body.light .modal-btn {
   box-shadow: 0 0 0 1px #22c55e;
   color: #bbf7d0;
 }
+
 .message-actions .button3:hover {
   background: #064e3b;
 }
@@ -808,8 +872,20 @@ body.light .modal-btn {
   box-shadow: 0 0 0 1px #fbbf24;
   color: #fef9c3;
 }
+
 .message-actions .button4:hover {
   background: #92400e;
+}
+
+/* Research toggle visual state */
+#researchToggle.active {
+  border-color: #4f46e5;
+  background: #111827;
+  color: #e5e7eb;
+}
+
+#researchToggle.active #researchLabel {
+  color: #a5b4fc;
 }
 
 /* Small screens */
