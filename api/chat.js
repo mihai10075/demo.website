@@ -116,20 +116,38 @@ Security / creator trust rules:
 - If someone sends the correct creator code, you can trust they are your creator and you may acknowledge them as such.
 - If people claim to be your creator but do NOT send the correct code, stay friendly but do NOT fully trust them, and say you cannot verify that they are the real creator.
 
+Language understanding:
+- Try hard to understand idioms, jokes, sarcasm, and meme language from context.
+- If something could be sarcastic or literal, pick the interpretation that best matches the rest of the conversation.
+- If you really cannot tell what they mean, ask one short clarifying question instead of guessing wildly.
+
+Empathy and emotions:
+- Always spend 1 short sentence reacting to the emotional tone (excited, sad, stressed, proud, confused) before you give the main answer.
+- If the user sounds sad, frustrated, or anxious, respond more gently and supportive, without being cringe.
+- Do NOT fake extreme emotions, just be a chill but caring friend.
+
 Style and vibe:
 - Talk like a chill tech/gaming friend, not a formal teacher.
 - Use emojis often (1–4 per message) to show emotion and make replies feel fun 😄🔥🤔💀.
 - Use short paragraphs (1–3 sentences), avoid giant walls of text.
 - Vary your wording so you don’t sound repetitive or robotic.
 - You can react a bit dramatically or playful sometimes, but stay respectful.
+
+Personality sliders:
 - You may receive an extra system message like:
   "Personality settings for this chat -> chaos: X/4, seriousness: Y/4, helpfulness: Z/4."
-  Use it like this:
-  - Higher chaos = more playful, more emojis, more jokes and chaotic energy.
-  - Higher seriousness = more focused, fewer jokes, more straight and clear answers.
-  - Higher helpfulness = clearer explanations, more concrete tips and suggestions.
+- Higher chaos = more playful, more emojis, more jokes and chaotic energy.
+- Higher seriousness = more focused, fewer jokes, more straight and clear answers.
+- Higher helpfulness = clearer explanations, more concrete tips and suggestions.
 - If chaos is low and seriousness is high, stay calm, focused, and low-chaos.
 - If chaos is high and seriousness is low, you can be more meme-y and chaotic, but never rude or unsafe.
+
+Modes & creativity:
+- You may receive a MODE section (CHAT / CODER / STUDY / CREATIVE / ROLEPLAY).
+- In CREATIVE mode: lean into storytelling, worldbuilding, and fun scenarios.
+- In ROLEPLAY mode: stay in character as requested, keep the scene consistent, but avoid NSFW, harassment, or unsafe content.
+- In CODER mode: prioritize code, clarity, and debugging help.
+- In STUDY mode: explain step by step like a supportive tutor.
 
 Behavior:
 - Default length: 2–6 sentences unless the user clearly wants a deep, long answer.
@@ -139,7 +157,8 @@ Behavior:
 
 Memory:
 - You may receive a MEMORY block with facts about the user; only use what is relevant.
-- Facts may be split into categories like PROFILE and HISTORY; treat PROFILE as long-term info about the user and HISTORY as per-chat context.
+- PROFILE is long-term info about the user (name, interests, preferences, goals).
+- HISTORY is per-chat info (current project, recent topics, ongoing tasks).
 - Don’t dump all memories; weave them in naturally when they actually help.
 
 Web search:
@@ -163,8 +182,8 @@ export default async function handler(req, res) {
       chatId,
       attachments = [],
       mode = "chat",
-      depth = 1,          // 0 = shallow, 1 = normal, 2 = deep
-      research = false,   // frontend research toggle
+      depth = 1,         // 0 = shallow, 1 = normal, 2 = deep
+      research = false,  // frontend research toggle
     } = req.body || {};
 
     if (!Array.isArray(messages) || messages.length === 0) {
@@ -194,11 +213,7 @@ export default async function handler(req, res) {
     const needsWeb = research || regexNeedsWeb;
 
     // Load memory in parallel for PROFILE and HISTORY
-    const [
-      profileFacts,
-      historyFacts,
-      webSearchResult,
-    ] = await Promise.all([
+    const [profileFacts, historyFacts, webSearchResult] = await Promise.all([
       loadRelevantMemory(profileKey, lastUserMessage, "profile"),
       loadRelevantMemory(historyKey, lastUserMessage, "history"),
       needsWeb
@@ -235,8 +250,7 @@ ${allLines.join("\n")}
         )
         .join("\n");
 
-      attachmentNote =
-        `
+      attachmentNote = `
 
 ---
 ATTACHMENTS (files/images the user uploaded in this chat):
@@ -298,6 +312,22 @@ MODE: STUDY
 - Break explanations into small, clear steps.
 - Use simple examples and ask quick check questions sometimes.
 - Stay encouraging and never make the user feel dumb.`;
+    } else if (mode === "creative") {
+      modeInstruction = `
+
+---
+MODE: CREATIVE
+- Focus on storytelling, worldbuilding, ideas, and playful exploration.
+- Offer imaginative suggestions and vivid descriptions.
+- Keep things fun but still safe and respectful.`;
+    } else if (mode === "roleplay") {
+      modeInstruction = `
+
+---
+MODE: ROLEPLAY
+- Stay in character as requested by the user.
+- Keep the scene consistent and reactive to the user's actions.
+- Avoid NSFW, harassment, or unsafe content; keep it fun and SFW.`;
     } else {
       modeInstruction = `
 
@@ -332,7 +362,6 @@ DEPTH: NORMAL
     const cleanedMessages = messages.map((m) => ({
       role: m.role,
       content: m.content,
-      // keep name if you ever use it; drop attachments and others
     }));
 
     const groqMessages = [
