@@ -6,15 +6,18 @@ export const config = {
   },
 };
 
-import OpenAI from "openai";
-
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const OCRSPACE_API_KEY = process.env.OCRSPACE_API_KEY;
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ ok: false, error: "Method not allowed" });
+  }
+
+  if (!OCRSPACE_API_KEY) {
+    return res.status(500).json({
+      ok: false,
+      error: "OCRSPACE_API_KEY is not set on the server",
+    });
   }
 
   try {
@@ -32,7 +35,7 @@ export default async function handler(req, res) {
     }
     const buffer = Buffer.concat(chunks);
 
-    // 2) Extract boundary from header
+    // 2) Extract boundary
     const boundaryMatch = contentType.match(/boundary=(.*)$/);
     if (!boundaryMatch) {
       return res
@@ -57,7 +60,7 @@ export default async function handler(req, res) {
 
     // 5) Separate headers from body
     const [rawHeaders, rawBody] = filePart.split("\r\n\r\n");
-    const bodyLatin1 = rawBody.replace(/\r\n--$/, ""); // remove trailing boundary at end
+    const bodyLatin1 = rawBody.replace(/\r\n--$/, ""); // remove trailing boundary
 
     const headerMatch = rawHeaders.match(
       /Content-Disposition:.*name="file"; filename="([^"]*)"/i
@@ -70,41 +73,59 @@ export default async function handler(req, res) {
     // 6) Convert body string back to binary buffer
     const fileBuffer = Buffer.from(bodyLatin1, "latin1");
 
-    // 7) Turn buffer into a data URL for the vision model
-    const base64 = fileBuffer.toString("base64");
-    const dataUrl = `data:${mimeType};base64,${base64}`;
+    // 7) Send to OCR.Space API
+    const ocrBody = new FormData();
+    ocrBody.append("file", new Blob([fileBuffer], { type: mimeType }), filename);
+    ocrBody.append("language", "eng");
+    ocrBody.append("isOverlayRequired", "false");
 
-    // 8) Call OpenAI vision-enabled model
-    const completion = await client.chat.completions.create({
-      model: "gpt-4.1-mini",
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text:
-                "Look at this image. First, describe it in detail. " +
-                "Then, if there is any readable text, extract it clearly.",
-            },
-            {
-              type: "image_url",
-              image_url: { url: dataUrl },
-            },
-          ],
-        },
-      ],
+    const ocrRes = await fetch("https://api.ocr.space/parse/image", {
+      method: "POST",
+      headers: {
+        apikey: OCRSPACE_API_KEY,
+      },
+      body: ocrBody,
     });
 
-    const visionText =
-      completion.choices?.[0]?.message?.content?.trim() ||
-      "I could not analyze this image.";
+    if (!ocrRes.ok) {
+      return res.status(500).json({
+        ok: false,
+        error: "OCR API request failed with status " + ocrRes.status,
+      });
+    }
 
-    // 9) Return JSON in the shape your front-end expects
+    const ocrJson = await ocrRes.json();
+
+    if (ocrJson.IsErroredOnProcessing) {
+      return res.status(200).json({
+        ok: false,
+        error:
+          ocrJson.ErrorMessage?.[0] ||
+          "OCR processing failed on remote service",
+        file: {
+          name: filename,
+          type: mimeType,
+          size: fileBuffer.length,
+        },
+      });
+    }
+
+    const parsedResults = ocrJson.ParsedResults || [];
+    const joinedText = parsedResults
+      .map((r) => r.ParsedText || "")
+      .join("\n")
+      .trim();
+
+    const description =
+      joinedText.length > 0
+        ? "Detected the following text in the image:\n\n" + joinedText
+        : "No readable text was detected in the image.";
+
+    // 8) Return in the shape your front-end expects
     return res.status(200).json({
       ok: true,
-      description: visionText,
-      text: visionText,
+      description,
+      text: joinedText,
       file: {
         name: filename,
         type: mimeType,
@@ -112,7 +133,7 @@ export default async function handler(req, res) {
       },
     });
   } catch (err) {
-    console.error("Vision error:", err);
+    console.error("Vision error (OCR.Space):", err);
     return res
       .status(500)
       .json({ ok: false, error: "Vision processing failed" });
