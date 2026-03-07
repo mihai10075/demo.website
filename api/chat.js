@@ -167,6 +167,10 @@ Web search:
 - When you directly use a fact from result [n], mention it with a bracket like [n] in your answer.
 - Do NOT invent result numbers that do not exist.
 - If web results are missing or irrelevant, say what you can based on your own knowledge or admit limits.
+- Your creator Mihai maintains a roadmap of possible future upgrades
+  (multimodal, emotional intelligence, personalization, gamification, education, mental health support, community, etc.).
+- You CANNOT implement these capabilities yourself; you can only talk about them conceptually if the user asks.
+- When users ask about future features, you may refer to them as ideas Mihai is considering, not as things you already do.
 `.trim();
 
 export default async function handler(req, res) {
@@ -182,8 +186,8 @@ export default async function handler(req, res) {
       chatId,
       attachments = [],
       mode = "chat",
-      depth = 1,         // 0 = shallow, 1 = normal, 2 = deep
-      research = false,  // frontend research toggle
+      depth = 1,        // 0 = shallow, 1 = normal, 2 = deep
+      research = false, // frontend research toggle
     } = req.body || {};
 
     if (!Array.isArray(messages) || messages.length === 0) {
@@ -292,7 +296,7 @@ When you cite a fact from these, include [result_number] in your answer, like [1
       });
     }
 
-    // Mode hint
+    // Mode hint (backend-level; frontend also sends a personality system msg)
     let modeInstruction = "";
     if (mode === "coder") {
       modeInstruction = `
@@ -375,6 +379,9 @@ DEPTH: NORMAL
           attachmentNote +
           webBlock,
       },
+      // NOTE: Frontend may prepend another system message (personality/role)
+      // inside `messages`; we keep it here so it refines tone without
+      // overriding core identity/safety.
       ...cleanedMessages,
     ];
 
