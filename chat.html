@@ -292,7 +292,6 @@
       30% { transform: translateY(-3px); opacity: 1; }
     }
   </style>
-  <!-- Supabase client UMD bundle -->
   <script src="https://unpkg.com/@supabase/supabase-js@2.48.0/dist/umd/supabase.js"></script>
 </head>
 <body>
@@ -336,7 +335,6 @@
             <span>Research mode</span>
           </label>
 
-          <!-- Answer length selector -->
           <div class="length-control" style="margin-left:8px; font-size:11px; display:flex; align-items:center; gap:4px;">
             <label for="lengthSelect">Length:</label>
             <select id="lengthSelect" style="background:#020617; border:1px solid #1f2937; border-radius:6px; color:#e5e7eb; font-size:11px; padding:2px 4px;">
@@ -354,7 +352,6 @@
           </div>
 
           <button id="notebookBtn" class="theme-btn">Notebook</button>
-          <!-- Roadmap button in same topbar -->
           <button id="roadmapBtn" class="theme-btn">Roadmap</button>
 
           <button id="settingsBtn" class="theme-btn">Settings</button>
@@ -403,7 +400,6 @@
               </div>
             </div>
 
-            <!-- Role section -->
             <div class="settings-section">
               <div style="font-size:11px; color:#9ca3af; margin-bottom:4px;">
                 Who should MihAI be?
@@ -424,7 +420,6 @@
               </div>
             </div>
 
-            <!-- Voice selector -->
             <div class="settings-section">
               <div style="font-size:11px; color:#9ca3af; margin-bottom:4px;">
                 Voice (text‑to‑speech)
@@ -506,7 +501,6 @@
       </section>
 
       <section id="chatContainer" class="chat-container">
-        <!-- Typing indicator hook -->
         <div id="typingIndicator" class="typing-indicator">
           <div class="typing-indicator-avatar"></div>
           <div class="typing-indicator-dots">
@@ -620,7 +614,6 @@
         </div>
       </div>
 
-      <!-- Roadmap modal, same file, after memoryModal -->
       <div id="roadmapModal" class="modal-backdrop" style="display:none;">
         <div class="modal roadmap-modal">
           <div style="font-size:14px; margin-bottom:6px;">MihAI roadmap</div>
@@ -643,7 +636,6 @@
   </div>
 
 <script>
-  // Supabase client (front-end safe key only)
   const SUPABASE_URL = "https://rhmnbnzyahasydfshhkc.supabase.co";
   const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_zxfOSKAYtecmcxpFfQ9NRQ_Q3MPxL4I";
   const supa = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
@@ -659,7 +651,6 @@
   }
 
   let userId = getUserId();
-  // TODO: later, sync this with Supabase auth user id
   let chats = JSON.parse(localStorage.getItem("mihai_chats") || "{}");
   let currentChatId = null;
 
@@ -669,7 +660,6 @@
   const chatContainer = document.getElementById("chatContainer");
   const messageInput = document.getElementById("messageInput");
 
-  // A1 – onboarding hint cards
   const onboardingHints = document.getElementById("onboardingHints");
 
   if (onboardingHints && messageInput) {
@@ -742,7 +732,6 @@
   const memoryList = document.getElementById("memoryList");
   const memoryClose = document.getElementById("memoryClose");
 
-  // Roadmap DOM refs in same script
   const roadmapBtn = document.getElementById("roadmapBtn");
   const roadmapModal = document.getElementById("roadmapModal");
   const roadmapClose = document.getElementById("roadmapClose");
@@ -766,14 +755,11 @@
   let currentDepth = parseInt(localStorage.getItem("mihai_depth") || "1", 10);
   let researchMode = localStorage.getItem("mihai_research") === "true";
 
-  /* high-level role: coder, study, friend */
   let currentRole = localStorage.getItem("mihai_role") || "friend";
 
-  // Answer length: "short" | "normal" | "detailed"
   let currentLengthMode =
     localStorage.getItem("mihai_length_mode") || "normal";
 
-  // Speech synthesis voices
   let availableVoices = [];
   let currentVoiceIndex = parseInt(
     localStorage.getItem("mihai_voice_index") || "0",
@@ -1031,10 +1017,31 @@
         createdAt: Date.now(),
       },
     };
+
     currentChatId = id;
+
+    // reset per-chat UI state
+    queuedAttachments = [];
+    hideAttachmentPreview();
+    if (currentController) {
+      currentController.abort();
+      currentController = null;
+    }
+    hideTypingIndicator();
+    hideStopButton();
+    setStatus("ready", false);
+
     saveChats();
     renderChats();
     renderMessages();
+
+    if (messageInput) {
+      messageInput.focus();
+      const len = messageInput.value.length;
+      messageInput.selectionStart = len;
+      messageInput.selectionEnd = len;
+    }
+    scrollBottom();
   }
 
   function renderChats() {
@@ -1109,7 +1116,6 @@
     container.appendChild(row);
   }
 
-  // A2 – inline rename for chat titles
   function enableInlineTitleRename() {
     const chatList = document.getElementById("chatList");
     if (!chatList) return;
@@ -1178,7 +1184,6 @@
     });
   }
 
-  // A3 – emoji reactions for messages
   const REACTION_TYPES = ["⭐", "👍", "👎"];
 
   function renderReactionsForMessage(messageId, existingReactions = {}) {
@@ -1252,7 +1257,6 @@
     }
   }
 
-  // Helper: get last assistant message text from current chat
   function getLastAssistantMessageFromChat() {
     if (!currentChatId) return null;
     const chat = chats[currentChatId];
@@ -1265,7 +1269,6 @@
     return null;
   }
 
-  // Regenerate: rewrite last assistant answer
   async function handleRegenerate() {
     const last = getLastAssistantMessageFromChat();
     if (!last) return;
@@ -1333,7 +1336,6 @@
 
     let html = text;
 
-    // 1) Fenced code blocks ```...```
     html = html.replace(/```([\s\S]*?)```/g, (match, code) => {
       const safe = code
         .replace(/&/g, "&amp;")
@@ -1342,7 +1344,6 @@
       return `<pre class="code-block"><code>${safe}</code></pre>`;
     });
 
-    // 2) Inline code `...`
     html = html.replace(/`([^`]+)`/g, (match, code) => {
       const safe = code
         .replace(/&/g, "&amp;")
@@ -1351,10 +1352,8 @@
       return `<code>${safe}</code>`;
     });
 
-    // 3) Bold **...**
     html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
 
-    // 4) Double newline -> spacing
     html = html.replace(/\n\n/g, "<br/><br/>");
 
     div.innerHTML = html;
@@ -1763,7 +1762,7 @@
 
         let visionSystemContent =
           `User uploaded an image file named "${f.name}" (type: ${f.type}, size: ${f.size} bytes).`;
-        if (data.description || data.text) {
+        if (data.text || data.description) {
           const guess = data.text || data.description;
           visionSystemContent +=
             ` The vision tool thinks the text in the image might be: "${guess}". ` +
@@ -1816,7 +1815,6 @@
     });
   }
 
-  // Answer length helpers
   function setLengthMode(mode) {
     if (!["short", "normal", "detailed"].includes(mode)) return;
     currentLengthMode = mode;
@@ -1853,7 +1851,6 @@
     });
   }
 
-  // Speech synthesis voice helpers
   function populateVoiceSelect() {
     if (!voiceSelect) return;
     voiceSelect.innerHTML = "";
@@ -1911,7 +1908,6 @@
     });
   }
 
-  // Follow-up helper
   async function askFollowup(kind, baseText) {
     if (!currentChatId) return;
 
@@ -2141,55 +2137,78 @@
     }
   }
 
-  function renderSourcesBar(sources) {
-    if (!sourcesBar || !sourcesInner) return;
-    sourcesInner.innerHTML = "";
-    if (!sources || sources.length === 0) {
-      sourcesBar.style.display = "none";
-      return;
-    }
-    sourcesBar.style.display = "flex";
+ function renderSourcesBar(sources) {
+  if (!sourcesBar || !sourcesInner) return;
+  sourcesInner.innerHTML = "";
 
-    sources.forEach((s) => {
-      const pill = document.createElement("div");
-      pill.className = "source-pill";
-      pill.onclick = () => {
-        if (s.url) window.open(s.url, "_blank", "noopener,noreferrer");
-      };
-
-      const meta = document.createElement("div");
-      meta.className = "source-pill-meta";
-      if (s.favicon) {
-        const img = document.createElement("img");
-        img.src = s.favicon;
-        img.className = "source-favicon";
-        img.alt = "";
-        meta.appendChild(img);
-      }
-      const hostSpan = document.createElement("span");
-      try {
-        hostSpan.textContent = new URL(s.url).hostname.replace(/^www\./, "");
-      } catch {
-        hostSpan.textContent = "source";
-      }
-      meta.appendChild(hostSpan);
-      pill.appendChild(meta);
-
-      const titleDiv = document.createElement("div");
-      titleDiv.className = "source-pill-title";
-      titleDiv.textContent = s.title || s.url || "Source";
-      pill.appendChild(titleDiv);
-
-      if (s.snippet) {
-        const snipDiv = document.createElement("div");
-        snipDiv.className = "source-pill-snippet";
-        snipDiv.textContent = s.snippet.slice(0, 120);
-        pill.appendChild(snipDiv);
-      }
-
-      sourcesInner.appendChild(pill);
-    });
+  if (!sources || sources.length === 0) {
+    sourcesBar.style.display = "none";
+    return;
   }
+
+  sourcesBar.style.display = "flex";
+
+  // header label
+  const header = document.createElement("div");
+  header.style.display = "flex";
+  header.style.justifyContent = "space-between";
+  header.style.alignItems = "center";
+  header.style.marginBottom = "4px";
+  header.style.fontSize = "11px";
+  header.style.color = "#9ca3af";
+
+  const label = document.createElement("span");
+  label.textContent = researchMode
+    ? `Research mode: MihAI used these ${sources.length} source(s):`
+    : `MihAI used these ${sources.length} source(s):`;
+  header.appendChild(label);
+
+  sourcesInner.appendChild(header);
+
+  // source cards
+  sources.forEach((s) => {
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "source-pill";
+    card.onclick = () => {
+      if (s.url) window.open(s.url, "_blank", "noopener,noreferrer");
+    };
+
+    const meta = document.createElement("div");
+    meta.className = "source-pill-meta";
+
+    if (s.favicon) {
+      const img = document.createElement("img");
+      img.src = s.favicon;
+      img.className = "source-favicon";
+      img.alt = "";
+      meta.appendChild(img);
+    }
+
+    const hostSpan = document.createElement("span");
+    try {
+      hostSpan.textContent = new URL(s.url).hostname.replace(/^www\./, "");
+    } catch {
+      hostSpan.textContent = "source";
+    }
+    meta.appendChild(hostSpan);
+    card.appendChild(meta);
+
+    const titleDiv = document.createElement("div");
+    titleDiv.className = "source-pill-title";
+    titleDiv.textContent = s.title || s.url || "Source";
+    card.appendChild(titleDiv);
+
+    if (s.snippet) {
+      const snipDiv = document.createElement("div");
+      snipDiv.className = "source-pill-snippet";
+      snipDiv.textContent = s.snippet.slice(0, 140);
+      card.appendChild(snipDiv);
+    }
+
+    sourcesInner.appendChild(card);
+  });
+}
 
   if (toggleSourcesBtn) {
     toggleSourcesBtn.addEventListener("click", () => {
@@ -3084,7 +3103,6 @@
     });
   }
 
-  // Roadmap modal wiring in same script
   if (roadmapBtn && roadmapModal && roadmapClose) {
     roadmapBtn.addEventListener("click", () => {
       roadmapModal.style.display = "flex";
@@ -3099,10 +3117,11 @@
     });
   }
 
-  // Call this once after your chat list is rendered:
-  enableInlineTitleRename();
+  if (newChatBtn) {
+    newChatBtn.addEventListener("click", createNewChat);
+  }
 
-  // Call this once on startup after chatContainer exists:
+  enableInlineTitleRename();
   enableMessageReactions();
 </script>
 
