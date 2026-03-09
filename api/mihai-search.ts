@@ -1,40 +1,75 @@
-// /pages/api/mihai-search.ts
-// Main API route: receives { message, userId? }, calls MihAi search engine,
-// returns JSON: { answer, sources, debug }
+// api/mihai-search.ts
+// Vercel Node function: chat-style payload -> MihAI search -> { reply, sources }
 
-import type { NextApiRequest, NextApiResponse } from "next";
-import { runMihAiSearch } from "../../lib/mihai-search";
+import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { runMihAiSearch } from "../lib/mihai-search";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   const start = Date.now();
 
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    res.status(405).json({ ok: false, error: "Method not allowed" });
+    return;
   }
 
   try {
-    const { message, userId } = req.body ?? {};
+    const {
+      userId,
+      chatId,
+      mode,
+      depth,
+      research,
+      messages,
+      attachments,
+    } = (req.body as any) ?? {};
 
-    if (!message || typeof message !== "string") {
-      return res.status(400).json({ error: "Missing or invalid message" });
+    // Frontend always sends messages[], so validate that
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      res.status(400).json({ ok: false, error: "Missing messages array" });
+      return;
     }
 
-    const result = await runMihAiSearch(message, userId);
+    // Find the last user message text
+    const lastUserMessage =
+      [...messages]
+        .reverse()
+        .find(
+          (m: any) =>
+            m &&
+            m.role === "user" &&
+            typeof m.content === "string" &&
+            m.content.trim().length > 0
+        )?.content || "";
+
+    let extraContext = "";
+    if (mode) extraContext += `\nMODE: ${String(mode).toUpperCase()}`;
+    if (typeof depth === "number") extraContext += `\nDEPTH: ${depth}`;
+    if (research) extraContext += `\nRESEARCH_MODE: ON`;
+    if (attachments && attachments.length) {
+      extraContext += `\nATTACHMENTS_COUNT: ${attachments.length}`;
+    }
+    if (chatId) extraContext += `\nCHAT_ID: ${chatId}`;
+
+    const combinedMessage = `${lastUserMessage}${extraContext}`;
+
+    // Call your existing MihAI engine from lib
+    const result = await runMihAiSearch(combinedMessage, userId);
 
     const tookMs = Date.now() - start;
 
-    return res.status(200).json({
-      answer: result.answer,
-      sources: result.sources,
+    res.status(200).json({
+      ok: true,
+      reply: result.answer,
+      sources: result.sources ?? [],
       debug: {
         subqueries: result.subqueries,
         recursiveQueries: result.recursiveQueries ?? [],
         pagesRead: result.pagesRead,
-        tookMs
-      }
+        tookMs,
+      },
     });
   } catch (err) {
     console.error("MihAi search error:", err);
-    return res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ ok: false, error: "Internal server error" });
   }
 }
