@@ -38,7 +38,7 @@ body {
 /* ===== Layout ===== */
 .layout {
   display: grid;
-  grid-template-columns: 260px minmax(0, 1fr);
+  grid-template-columns: 230px minmax(0, 1fr); /* sidebar smaller, chat wider */
   height: 100vh;
   max-width: 1400px;
   margin: 0 auto;
@@ -386,7 +386,7 @@ body {
 /* ===== Chat container & halo ===== */
 .chat-container {
   flex: 1 1 auto;
-  padding: 8px 12px;
+  padding: 8px 20px;          /* more horizontal padding */
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -398,7 +398,7 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  margin: 40px 80px;
+  margin: 20px 40px;          /* tighter halo so it doesn’t shrink area */
   background: radial-gradient(circle at top, #4f46e51f, transparent 60%);
   pointer-events: none;
   z-index: -1;
@@ -406,7 +406,7 @@ body {
 
 /* ===== Messages: left/right bubbles ===== */
 .message-wrap {
-  max-width: 680px;
+  max-width: 1100px;          /* wider message column */
   display: flex;
   flex-direction: column;
 }
