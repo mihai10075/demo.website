@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MihAI – Hello World</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    body {
+      min-height: 100vh;
+      background: radial-gradient(circle at top, rgba(59,130,246,0.18), transparent 55%),
+                  radial-gradient(circle at bottom, rgba(16,185,129,0.14), transparent 55%),
+                  #020617;
+      color: #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      max-width: 960px;
+      width: 100%;
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 18px;
+      border: 1px solid #1f2937;
+      padding: 24px 20px;
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.8);
+    }
+    .card-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .left-col {
+      max-width: 420px;
+    }
+    .logo-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 14px rgba(34, 197, 94, 0.9);
+      margin-right: 8px;
+    }
+    .logo-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .title {
+      font-size: 24px;
+      font-weight: 700;
+    }
+    .subtitle {
+      font-size: 13px;
+      color: #9ca3af;
+      margin-bottom: 8px;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: #9ca3af;
+      border-radius: 999px;
+      border: 1px solid #1f2937;
+      padding: 4px 9px;
+      margin-bottom: 12px;
+    }
+    .pill span {
+      font-size: 10px;
+      opacity: 0.8;
+    }
+    .hello-title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .hello-sub {
+      font-size: 13px;
+      color: #9ca3af;
+      margin-bottom: 10px;
+    }
+    .crew {
+      font-size: 13px;
+      color: #9ca3af;
+      margin-bottom: 8px;
+    }
+    .crew-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 7px 14px;
+      border-radius: 999px;
+      border: 1px solid #1f2937;
+      background: rgba(15,23,42,0.9);
+      color: #e5e7eb;
+      font-size: 13px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 0.12s ease, transform 0.12s ease;
+    }
+    .crew-btn:hover {
+      background: rgba(37,99,235,0.35);
+      transform: translateY(-1px);
+    }
+    .top-search {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(15, 23, 42, 0.96);
+      border-radius: 999px;
+      padding: 4px 10px 4px 12px;
+      border: 1px solid #1f2937;
+    }
+    .top-search input {
+      border: none;
+      outline: none;
+      background: transparent;
+      color: #e5e7eb;
+      font-size: 13px;
+      width: 180px;
+    }
+    .top-search input::placeholder {
+      color: #6b7280;
+    }
+    .top-search-icon {
+      width: 16px;
+      height: 16px;
+      stroke: #60a5fa;
+    }
+    .cta {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 4px;
+      margin-bottom: 4px;
+    }
+    .btn-main {
+      border: none;
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-size: 14px;
+      cursor: pointer;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #022c22;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+    .btn-main span.icon {
+      font-size: 16px;
+    }
+    .note {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+    .note a {
+      color:#a5b4fc;
+      text-decoration: underline;
+      text-decoration-style: dotted;
+    }
+    .video-section {
+      margin-top: 4px;
+    }
+    .section-title {
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #9ca3af;
+      margin-bottom: 10px;
+    }
+    .video-grid {
+      display: grid;
+      grid-template-columns: minmax(0,1fr);
+      gap: 14px;
+    }
+    @media (min-width: 800px) {
+      .video-grid {
+        grid-template-columns: repeat(3, minmax(0,1fr));
+      }
+      .card-inner {
+        gap: 22px;
+      }
+    }
+    .video-embed {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .video-container {
+      position: relative;
+      padding-top: 56.25%;
+      height: 0;
+      overflow: hidden;
+      border-radius: 12px;
+      border: 1px solid #1f2937;
+      background: #020617;
+      box-shadow: 0 14px 40px rgba(15,23,42,0.9);
+    }
+    .video-container iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .video-title {
+      font-size: 13px;
+      color: #e5e7eb;
+    }
+    .video-meta {
+      font-size: 11px;
+      color: #9ca3af;
+    }
+    .footer {
+      margin-top: 8px;
+      font-size: 11px;
+      color: #6b7280;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .footer a {
+      color: #9ca3af;
+      text-decoration: none;
+      border-bottom: 1px dotted #4b5563;
+    }
+    @media (max-width: 720px) {
+      .top-bar {
+        flex-direction: column;
+      }
+    }
+  </style>
+
+  <!-- Confetti + sound -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+<body>
+  <audio id="pop-sound" src="pop.mp3" preload="auto"></audio>
+
+  <main class="card">
+    <div class="card-inner">
+      <div class="top-bar">
+        <div class="left-col">
+          <div class="logo-row">
+            <div class="logo-dot"></div>
+            <div class="title">MihAI</div>
+          </div>
+          <div class="subtitle">
+            Your expressive, slightly chaotic but kind AI friend. Powered by Groq + Base44 memory.
+          </div>
+          <div class="pill">
+            <span>●</span> Llama 3.3 · Groq · remembers you with GitHub login
+          </div>
+
+          <!-- Hello World + grey line -->
+          <div class="hello-title">Hello World</div>
+          <div class="hello-sub">css and html language is very cool :)</div>
+
+          <!-- Crew -->
+          <div class="crew">Crew:</div>
+          <a class="crew-btn"
+             href="https://www.tiktok.com/@ma3i21?_r=1&_t=ZN-94Mjmnlb8eU"
+             target="_blank" rel="noopener noreferrer">
+            Ma3iPrO
+          </a>
+
+          <!-- Main text + buttons -->
+          <div class="cta">
+            <p class="note">
+              Chat with MihAI about code, gaming, or whatever is on your mind.
+              It can remember your preferences over time and adapt to your vibe.
+            </p>
+
+            <!-- AI PAGE BUTTON with confetti + pop -->
+            <a class="btn-main" href="/ai.html" id="ai-button">
+              <span class="icon">💬</span>
+              Open MihAI chat
+            </a>
+
+            <p class="note">
+              Or, if you’re feeling nostalgic:
+              <a href="/old-but-gold-home-page.html">
+                visit our old website! →
+              </a>
+            </p>
+
+            <p class="note">
+              Tip: Log in with GitHub inside the chat to let MihAI remember you across sessions.
+            </p>
+          </div>
+        </div>
+
+        <!-- Search bar on the right -->
+        <div class="top-search">
+          <input
+            type="text"
+            id="search-input"
+            placeholder="Search videos..."
+          />
+          <svg class="top-search-icon" viewBox="0 0 24 24" fill="none">
+            <circle cx="11" cy="11" r="6.5" stroke-width="1.5" />
+            <line x1="15.15" y1="15.15" x2="20" y2="20" stroke-width="1.5" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- Videos -->
+      <section class="video-section">
+        <p class="section-title">Videos</p>
+        <div class="video-grid" id="video-grid">
+          <!-- Shuck With Lyrics² | Jeffy's Infinite Irida |【SynthV2 Cover】 -->
+          <div class="video-embed" data-title="Shuck With Lyrics Jeffy's Infinite Irida SynthV2 Cover">
+            <div class="video-container">
+              <iframe
+                src="https://www.youtube.com/embed/wMaC3mdkudk"
+                title="Shuck With Lyrics² | Jeffy's Infinite Irida |【SynthV2 Cover】"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen
+              ></iframe>
+            </div>
+            <p class="video-title">Shuck With Lyrics² | Jeffy's Infinite Irida |【SynthV2 Cover】</p>
+            <p class="video-meta">YouTube</p>
+          </div>
+
+          <!-- 【中文字幕】Kim Jung Goon 金正控- Hyperbaiter lyrics -->
+          <div class="video-embed" data-title="Kim Jung Goon Hyperbaiter lyrics">
+            <div class="video-container">
+              <iframe
+                src="https://www.youtube.com/embed/H3ynKWEboA8"
+                title="【中文字幕】Kim Jung Goon 金正控- Hyperbaiter lyrics"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen
+              ></iframe>
+            </div>
+            <p class="video-title">【中文字幕】Kim Jung Goon 金正控- Hyperbaiter lyrics</p>
+            <p class="video-meta">YouTube</p>
+          </div>
+
+          <!-- wide eyes (feat. dltzk & juno) -->
+          <div class="video-embed" data-title="wide eyes feat dltzk juno">
+            <div class="video-container">
+              <iframe
+                src="https://www.youtube.com/embed/dNkLXkCOyLk"
+                title="wide eyes (feat. dltzk &amp; juno)"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen
+              ></iframe>
+            </div>
+            <p class="video-title">wide eyes (feat. dltzk &amp; juno)</p>
+            <p class="video-meta">YouTube</p>
+          </div>
+
+          <!-- 50 Cent - Many Men (Wish Death) (Dirty Version) -->
+          <div class="video-embed" data-title="50 Cent Many Men Wish Death Dirty Version">
+            <div class="video-container">
+              <iframe
+                src="https://www.youtube.com/embed/5D3crqpClPY"
+                title="50 Cent - Many Men (Wish Death) (Dirty Version)"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen
+              ></iframe>
+            </div>
+            <p class="video-title">50 Cent - Many Men (Wish Death) (Dirty Version)</p>
+            <p class="video-meta">YouTube</p>
+          </div>
+
+          <!-- [FNF/SML] IRIDA V1.5 - Semi-Accurate | Jeffy's Infinite Irida [CANNED] -->
+          <div class="video-embed" data-title="FNF SML IRIDA V1.5 Semi-Accurate Jeffy's Infinite Irida CANNED">
+            <div class="video-container">
+              <iframe
+                src="https://www.youtube.com/embed/K2a_lttVAgU"
+                title="[FNF/SML] IRIDA V1.5 - Semi-Accurate | Jeffy's Infinite Irida [CANNED]"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen
+              ></iframe>
+            </div>
+            <p class="video-title">[FNF/SML] IRIDA V1.5 - Semi-Accurate | Jeffy's Infinite Irida [CANNED]</p>
+            <p class="video-meta">YouTube</p>
+          </div>
+
+          <!-- DigBar- Big Dick Randy (Official Music Video) -->
+          <div class="video-embed" data-title="DigBar Big Dick Randy Official Music Video">
+            <div class="video-container">
+              <iframe
+                src="https://www.youtube.com/embed/i05IlyyS7l4"
+                title="DigBar- Big Dick Randy (Official Music Video)"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen
+              ></iframe>
+            </div>
+            <p class="video-title">DigBar- Big Dick Randy (Official Music Video)</p>
+            <p class="video-meta">YouTube</p>
+          </div>
+
+          <!-- Ding Dong Ditching in the Hood! -->
+          <div class="video-embed" data-title="Ding Dong Ditching in the Hood">
+            <div class="video-container">
+              <iframe
+                src="https://www.youtube.com/embed/QP5XR98M524"
+                title="Ding Dong Ditching in the Hood!"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen
+              ></iframe>
+            </div>
+            <p class="video-title">Ding Dong Ditching in the Hood!</p>
+            <p class="video-meta">YouTube</p>
+          </div>
+
+          <!-- EXTREME Ding Dong Ditching! -->
+          <div class="video-embed" data-title="EXTREME Ding Dong Ditching">
+            <div class="video-container">
+              <iframe
+                src="https://www.youtube.com/embed/7eTRZE1bCXU"
+                title="EXTREME Ding Dong Ditching!"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen
+              ></iframe>
+            </div>
+            <p class="video-title">EXTREME Ding Dong Ditching!</p>
+            <p class="video-meta">YouTube</p>
+          </div>
+        </div>
+      </section>
+
+      <div class="footer">
+        <span>Built by Mihai • 2026</span>
+        <a href="https://github.com/mihai10075/demo.website" target="_blank" rel="noreferrer">
+          View source on GitHub
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Confetti + pop on AI button
+    const aiBtn = document.getElementById('ai-button');
+    const popSound = document.getElementById('pop-sound');
+
+    if (aiBtn) {
+      aiBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+
+        if (popSound) {
+          popSound.currentTime = 0;
+          popSound.play().catch(() => {});
+        }
+
+        const rect = aiBtn.getBoundingClientRect();
+        const x = (rect.left + rect.width / 2) / window.innerWidth;
+        const y = (rect.top + rect.height / 2) / window.innerHeight;
+
+        if (window.confetti) {
+          window.confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { x, y }
+          });
+        }
+
+        setTimeout(() => {
+          window.location.href = aiBtn.href;
+        }, 400);
+      });
+    }
+
+    // Simple video search filter
+    const searchInput = document.getElementById('search-input');
+    const videoGrid = document.getElementById('video-grid');
+    const videoItems = videoGrid ? videoGrid.querySelectorAll('.video-embed') : [];
+
+    if (searchInput) {
+      searchInput.addEventListener('input', () => {
+        const q = searchInput.value.toLowerCase();
+        videoItems.forEach((item) => {
+          const title = item.dataset.title.toLowerCase();
+          item.style.display = title.includes(q) ? '' : 'none';
+        });
+      });
+    }
+  </script>
+</body>
+</html>
