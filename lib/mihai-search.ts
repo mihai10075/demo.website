@@ -1,5 +1,5 @@
 // /api/mihai-search.ts
-// Vercel Serverless Function: receives { message, userId? } and returns MihAi result.
+// Vercel Serverless Function: chat-style payload -> MihAI search -> { reply, sources }
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { runMihAiSearch } from "../lib/mihai-search";
@@ -8,32 +8,60 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const start = Date.now();
 
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return res.status(405).json({ ok: false, error: "Method not allowed" });
   }
 
   try {
-    const { message, userId } = req.body ?? {};
+    const {
+      userId,
+      chatId,
+      mode,
+      depth,
+      research,
+      messages,
+      attachments,
+    } = (req.body as any) ?? {};
 
-    if (!message || typeof message !== "string") {
-      return res.status(400).json({ error: "Missing or invalid message" });
+    // Basic validation
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      return res.status(400).json({ ok: false, error: "Missing messages array" });
     }
 
-    const result = await runMihAiSearch(message, userId);
+    // Build a single prompt string from the messages for the search layer
+    const lastUserMessage =
+      [...messages]
+        .reverse()
+        .find((m: any) => m && m.role === "user" && typeof m.content === "string")
+        ?.content || "";
+
+    let extraContext = "";
+    if (mode) extraContext += `\nMODE: ${mode.toUpperCase()}`;
+    if (typeof depth === "number") extraContext += `\nDEPTH: ${depth}`;
+    if (research) extraContext += `\nRESEARCH_MODE: ON`;
+    if (attachments && attachments.length) {
+      extraContext += `\nATTACHMENTS: ${attachments.length} attached file(s)/image(s).`;
+    }
+    if (chatId) extraContext += `\nCHAT_ID: ${chatId}`;
+
+    const combinedMessage = `${lastUserMessage}${extraContext}`;
+
+    const result = await runMihAiSearch(combinedMessage, userId);
 
     const tookMs = Date.now() - start;
 
     return res.status(200).json({
-      answer: result.answer,
-      sources: result.sources,
+      ok: true,
+      reply: result.answer,
+      sources: result.sources ?? [],
       debug: {
         subqueries: result.subqueries,
         recursiveQueries: result.recursiveQueries ?? [],
         pagesRead: result.pagesRead,
-        tookMs
-      }
+        tookMs,
+      },
     });
   } catch (err) {
     console.error("MihAi search error:", err);
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ ok: false, error: "Internal server error" });
   }
 }
