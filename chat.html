@@ -1,0 +1,3110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MihAI Chat</title>
+  <link rel="stylesheet" href="/chat.css" />
+  <style>
+    .settings-section {
+      border-top: 1px solid #1f2937;
+      padding-top: 6px;
+      margin-top: 6px;
+    }
+    .settings-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 6px;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+    }
+    .stat-item {
+      border: 1px solid #1f2937;
+      border-radius: 6px;
+      padding: 4px 6px;
+      background: #020617;
+    }
+    .stat-label {
+      font-size: 10px;
+      color: #9ca3af;
+    }
+    .stat-value {
+      font-size: 12px;
+      color: #e5e7eb;
+      margin-top: 2px;
+    }
+    .prompt-chips {
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      margin-top:6px;
+      padding:0 4px;
+    }
+    .prompt-chips button {
+      border:1px solid #1f2937;
+      border-radius:999px;
+      padding:3px 8px;
+      font-size:11px;
+      background:#020617;
+      color:#e5e7eb;
+      cursor:pointer;
+      transition:background 0.12s ease,border-color 0.12s ease,transform 0.05s ease;
+    }
+    .prompt-chips button:hover {
+      background:#111827;
+      border-color:#4b5563;
+    }
+    .prompt-chips button:active {
+      transform:scale(0.97);
+    }
+
+    /* typing effect for assistant */
+    .message.assistant.typing-target {
+      position: relative;
+    }
+    .message.assistant.typing-target .message-body {
+      white-space: pre-wrap;
+    }
+    .message.assistant.typing-target .cursor {
+      display: inline-block;
+      width: 6px;
+      height: 1em;
+      margin-left: 2px;
+      background: #e5e7eb;
+      animation: blink 0.9s steps(1, start) infinite;
+      vertical-align: text-bottom;
+    }
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+.code-block {
+  position: relative;
+  padding-top: 20px; /* room for button */
+}
+
+.code-copy-btn {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid #1f2937;
+  background: #020617;
+  color: #e5e7eb;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, transform 0.05s ease;
+}
+.code-copy-btn:hover {
+  background: #0b1120;
+  border-color: #4f46e5;
+}
+.code-copy-btn:active {
+  transform: scale(0.97);
+}
+
+    /* message actions bar – MihAI themed buttons */
+    .message-actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 6px;
+      gap: 6px;
+    }
+    .message-actions .button {
+      flex: 1;
+      height: 30px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      padding: 0 10px;
+      background: #020617;
+      color: #e5e7eb;
+      transition: background-color 0.15s ease, transform 0.05s ease, box-shadow 0.15s ease;
+      box-shadow: 0 0 0 1px #1f2937;
+      white-space: nowrap;
+    }
+    .message-actions .button:active {
+      transform: scale(0.97);
+    }
+    .message-actions .button1 {
+      background: #1d283a;
+      box-shadow: 0 0 0 1px #4f46e5;
+      color: #e5e7eb;
+    }
+    .message-actions .button1:hover {
+      background: #312e81;
+    }
+    .message-actions .button2 {
+      background: #1e293b;
+      box-shadow: 0 0 0 1px #f97373;
+      color: #fecaca;
+    }
+    .message-actions .button2:hover {
+      background: #7f1d1d;
+    }
+    .message-actions .button3 {
+      background: #022c22;
+      box-shadow: 0 0 0 1px #22c55e;
+      color: #bbf7d0;
+    }
+    .message-actions .button3:hover {
+      background: #064e3b;
+    }
+    .message-actions .button4 {
+      background: #451a03;
+      box-shadow: 0 0 0 1px #fbbf24;
+      color: #fef9c3;
+    }
+    .message-actions .button4:hover {
+      background: #92400e;
+    }
+
+    /* role tiles inside settings */
+    .role-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .role-tile {
+      background:#020617;
+      border-radius:10px;
+      border:1px solid #1f2937;
+      padding:6px 8px;
+      cursor:pointer;
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      transition:border-color 0.15s ease, background 0.15s ease, transform 0.05s ease;
+      font-size:11px;
+      color:#e5e7eb;
+    }
+    .role-tile:hover {
+      border-color:#4f46e5;
+      background:#020617;
+      transform:translateY(-1px);
+    }
+    .role-tile span.role-title {
+      font-weight:600;
+      display:flex;
+      align-items:center;
+      gap:4px;
+    }
+    .role-tile span.role-desc {
+      font-size:10px;
+      color:#9ca3af;
+    }
+    .role-tile.active {
+      border-color:#22c55e;
+      box-shadow:0 0 0 1px #22c55e33;
+    }
+
+    /* A1 – onboarding hint cards */
+    .hint-card {
+      flex: 1 1 160px;
+      min-width: 0;
+      border-radius: 10px;
+      border: 1px solid #1f2937;
+      padding: 6px 8px;
+      background: #020617;
+      cursor: pointer;
+      transition: background 0.12s ease, border-color 0.12s ease, transform 0.05s ease, box-shadow 0.12s ease;
+    }
+    .hint-card:hover {
+      background: #0b1120;
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 1px #4f46e533;
+      transform: translateY(-1px);
+    }
+
+    /* A3 – message reactions */
+    .message-reactions {
+      display: flex;
+      gap: 4px;
+      margin-top: 4px;
+      font-size: 13px;
+      opacity: 0.85;
+    }
+    .message-reaction-btn {
+      cursor: pointer;
+      padding: 1px 6px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      background: #020617;
+      transition: background 0.12s ease, border-color 0.12s ease, transform 0.05s ease;
+    }
+    .message-reaction-btn:hover {
+      background: #0b1120;
+      border-color: #4f46e5;
+      transform: translateY(-0.5px);
+    }
+    .message-reaction-btn.active {
+      border-color: #22c55e;
+      background: #022c22;
+    }
+
+    /* B1 – MihAI typing indicator */
+    .typing-indicator {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      margin: 4px 0 6px;
+      max-width: 260px;
+      border-radius: 12px;
+      background: #020617;
+      border: 1px solid #1f2937;
+      color: #9ca3af;
+      font-size: 13px;
+    }
+    .typing-indicator-avatar {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #4f46e5, #22c55e);
+    }
+    .typing-indicator-dots {
+      display: flex;
+      gap: 3px;
+    }
+    .typing-indicator-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 999px;
+      background: #6b7280;
+      animation: typing-bounce 1s infinite ease-in-out;
+    }
+    .typing-indicator-dot:nth-child(2) {
+      animation-delay: 0.15s;
+    }
+    .typing-indicator-dot:nth-child(3) {
+      animation-delay: 0.3s;
+    }
+    @keyframes typing-bounce {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+      30% { transform: translateY(-3px); opacity: 1; }
+    }
+  </style>
+  <!-- Supabase client UMD bundle -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2.48.0/dist/umd/supabase.js"></script>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div>
+        <div class="sidebar-title">MihAI chats</div>
+        <div class="sidebar-sub">Saved locally in your browser.</div>
+        <div style="display:flex; gap:6px; margin-top:4px;">
+          <button id="newChatBtn" class="btn-primary">
+            <span class="icon">➕</span>
+            New chat
+          </button>
+          <button id="deleteChatBtn" class="theme-btn" style="font-size:12px;">
+            🗑 Delete
+          </button>
+        </div>
+      </div>
+
+      <div id="chatList" class="chat-list"></div>
+      <div class="sidebar-footer">
+        Tip: Press Enter to send, Shift+Enter for a new line.
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="top-left">
+          <div class="logo-dot"></div>
+          <div class="logo-text">MihAI chat</div>
+        </div>
+        <div class="top-right">
+          <span id="user-label"></span>
+          <span id="mood-badge" style="font-size:11px; padding:3px 7px; border-radius:999px; border:1px solid #1f2937; margin-right:6px;">
+            Mood: Balanced
+          </span>
+          <span id="status-label"><span class="status-dot"></span>ready</span>
+
+          <label id="researchToggle" class="theme-btn" style="margin-left:8px; font-size:11px; display:flex; align-items:center; gap:4px; cursor:pointer;">
+            <input type="checkbox" id="researchCheckbox" style="accent-color:#22c55e;"/>
+            <span>Research mode</span>
+          </label>
+
+          <!-- Answer length selector -->
+          <div class="length-control" style="margin-left:8px; font-size:11px; display:flex; align-items:center; gap:4px;">
+            <label for="lengthSelect">Length:</label>
+            <select id="lengthSelect" style="background:#020617; border:1px solid #1f2937; border-radius:6px; color:#e5e7eb; font-size:11px; padding:2px 4px;">
+              <option value="short">Short</option>
+              <option value="normal" selected>Normal</option>
+              <option value="detailed">Detailed</option>
+            </select>
+          </div>
+
+          <button id="gamesBtn" class="theme-btn">Games 🎮</button>
+          <div id="gamesMenu" class="menu-popover">
+            <button data-game="wyr">Would you rather…</button>
+            <button data-game="quiz">Quiz mode</button>
+            <button data-game="math">Quick math</button>
+          </div>
+
+          <button id="notebookBtn" class="theme-btn">Notebook</button>
+          <!-- Roadmap button in same topbar -->
+          <button id="roadmapBtn" class="theme-btn">Roadmap</button>
+
+          <button id="settingsBtn" class="theme-btn">Settings</button>
+          <div id="settingsMenu" class="menu-popover">
+            <button data-setting="theme-dark">Dark mode</button>
+            <button data-setting="theme-light">Light mode</button>
+
+            <div class="settings-section">
+              <div style="font-size:11px; color:#9ca3af; margin-bottom:4px;">
+                Depth
+              </div>
+              <div class="settings-row">
+                <label style="font-size:11px; color:#e5e7eb;">Response depth</label>
+                <select id="depthSelect" style="width:100%; background:#020617; border:1px solid #1f2937; border-radius:6px; color:#e5e7eb; font-size:12px; padding:2px 6px;">
+                  <option value="0">Shallow (focus on latest)</option>
+                  <option value="1">Normal (balanced)</option>
+                  <option value="2">Deep (more context)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <div style="font-size:11px; color:#9ca3af; margin-bottom:4px;">
+                Personality
+              </div>
+              <div class="settings-row">
+                <label>
+                  <span>Chaos</span>
+                  <span id="chaosValue">2</span>
+                </label>
+                <input id="chaosSlider" type="range" min="0" max="4" step="1" />
+              </div>
+              <div class="settings-row">
+                <label>
+                  <span>Serious</span>
+                  <span id="seriousValue">2</span>
+                </label>
+                <input id="seriousSlider" type="range" min="0" max="4" step="1" />
+              </div>
+              <div class="settings-row">
+                <label>
+                  <span>Helpful</span>
+                  <span id="helpfulValue">2</span>
+                </label>
+                <input id="helpfulSlider" type="range" min="0" max="4" step="1" />
+              </div>
+            </div>
+
+            <!-- Role section -->
+            <div class="settings-section">
+              <div style="font-size:11px; color:#9ca3af; margin-bottom:4px;">
+                Who should MihAI be?
+              </div>
+              <div class="role-grid" id="roleGrid">
+                <button class="role-tile" data-role="coder">
+                  <span class="role-title">👨‍💻 Coder</span>
+                  <span class="role-desc">Focus on code help, debugging and snippets.</span>
+                </button>
+                <button class="role-tile" data-role="study">
+                  <span class="role-title">📚 Study buddy</span>
+                  <span class="role-desc">Explain concepts, quiz you, make notes.</span>
+                </button>
+                <button class="role-tile" data-role="friend">
+                  <span class="role-title">💬 Friend</span>
+                  <span class="role-desc">Casual, friendly chat and ideas.</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Voice selector -->
+            <div class="settings-section">
+              <div style="font-size:11px; color:#9ca3af; margin-bottom:4px;">
+                Voice (text‑to‑speech)
+              </div>
+              <div class="settings-row">
+                <label style="font-size:11px; color:#e5e7eb;">Browser voice</label>
+                <select id="voiceSelect" style="width:100%; background:#020617; border:1px solid #1f2937; border-radius:6px; color:#e5e7eb; font-size:12px; padding:2px 6px;">
+                  <option value="0">Default browser voice</option>
+                </select>
+                <button id="testVoiceBtn" class="modal-btn" style="margin-top:4px; font-size:11px;">
+                  Test voice
+                </button>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <div style="font-size:11px; color:#9ca3af; margin-bottom:4px;">
+                Session stats
+              </div>
+              <div class="stats-grid">
+                <div class="stat-item">
+                  <div class="stat-label">Chats</div>
+                  <div class="stat-value" id="statChats">0</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-label">Messages</div>
+                  <div class="stat-value" id="statMessages">0</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-label">Top mode</div>
+                  <div class="stat-value" id="statTopMode">chat</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-label">Web chats</div>
+                  <div class="stat-value" id="statWebChats">0</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-label">Depth</div>
+                  <div class="stat-value" id="statDepth">Normal</div>
+                </div>
+              </div>
+            </div>
+
+            <button id="memoryBtn" data-setting="memory-open">Memory</button>
+          </div>
+
+          <div id="modeButtons" class="mode-buttons">
+            <button data-mode="chat" class="mode-btn mode-active">Chat</button>
+            <button data-mode="coder" class="mode-btn">Coder</button>
+            <button data-mode="study" class="mode-btn">Study</button>
+          </div>
+
+          <button id="login-github-btn" class="theme-btn">Login with GitHub</button>
+          <a href="/" class="top-link">← Back to home</a>
+        </div>
+      </header>
+
+      <section id="sourcesBar" class="sources-bar" style="display:none;">
+        <div class="sources-header">
+          <span>Context & sources</span>
+          <button id="toggleSourcesBtn" class="tiny-btn">Hide</button>
+        </div>
+        <div id="sourcesInner" class="sources-inner"></div>
+      </section>
+
+      <section id="onboardingHints" style="margin:8px 0 4px; padding:6px 8px; display:flex; gap:6px; flex-wrap:wrap;">
+        <div class="hint-card" data-hint="/explain Explain this step by step">
+          <div style="font-size:11px; color:#9ca3af;">New here?</div>
+          <div style="font-size:12px;">Ask "Explain this code step by step"</div>
+        </div>
+        <div class="hint-card" data-hint="/code Fix this code">
+          <div style="font-size:11px; color:#9ca3af;">Stuck on bugs?</div>
+          <div style="font-size:12px;">Drop an error and say "Fix this code"</div>
+        </div>
+        <div class="hint-card" data-hint="/story Turn this into a story">
+          <div style="font-size:11px; color:#9ca3af;">Want fun?</div>
+          <div style="font-size:12px;">Say "Turn this into a story"</div>
+        </div>
+      </section>
+
+      <section id="chatContainer" class="chat-container">
+        <!-- Typing indicator hook -->
+        <div id="typingIndicator" class="typing-indicator">
+          <div class="typing-indicator-avatar"></div>
+          <div class="typing-indicator-dots">
+            <div class="typing-indicator-dot"></div>
+            <div class="typing-indicator-dot"></div>
+            <div class="typing-indicator-dot"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="input-wrap">
+        <div id="attachmentBar" style="
+          display:none;
+          margin-bottom:6px;
+          padding:6px 8px;
+          border-radius:10px;
+          border:1px solid #1f2937;
+          background:#020617;
+          font-size:11px;
+          display:flex;
+          align-items:center;
+          gap:8px;
+        ">
+          <span id="attachmentLabel"></span>
+          <button id="attachmentEditBtn"
+            style="border:none;background:transparent;color:#e5e7eb;
+            cursor:pointer;font-size:12px;">✏️</button>
+          <button id="attachmentClearBtn"
+            style="border:none;background:transparent;color:#f97373;
+            cursor:pointer;font-size:12px;">✕</button>
+        </div>
+
+        <div class="input-shell">
+          <button id="voiceBtn" class="send-btn" style="background:#0f172a;color:#e5e7eb;font-size:14px;">🎙</button>
+          <textarea
+            id="messageInput"
+            rows="1"
+            placeholder="Talk to MihAI... (try /short, /story, /code, /stats)"
+          ></textarea>
+          <button id="stopBtn" class="send-btn" style="background:#ef4444; display:none;">✕</button>
+          <button id="sendBtn" class="send-btn">➤</button>
+        </div>
+
+        <div id="promptChips" class="prompt-chips">
+          <button data-chip="/explain">Explain this step by step</button>
+          <button data-chip="/code">Fix this code</button>
+          <button data-chip="/short">Summarize</button>
+          <button data-chip="/story">Turn into a story</button>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; padding:0 4px; gap:10px; flex-wrap:wrap;">
+          <div style="display:flex; gap:10px;">
+            <label id="attachFileLabel" style="font-size:11px; color:#9ca3af; cursor:pointer;">
+              📎 Attach file
+              <input
+                id="fileInput"
+                type="file"
+                accept=".txt,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,image/*"
+                style="display:none;"
+              />
+            </label>
+            <label id="attachImageLabel" style="font-size:11px; color:#9ca3af; cursor:pointer;">
+              🖼 Attach photo
+              <input id="imageInput" type="file" accept="image/*" style="display:none;" />
+            </label>
+          </div>
+          <div class="hint">
+            MihAI is an expressive, slightly chaotic but kind AI friend. Keep it chill and it will, too.
+          </div>
+        </div>
+      </section>
+
+      <div id="commandPalette" class="cmd-palette" style="display:none;">
+        <div class="cmd-palette-inner">
+          <input id="cmdInput" type="text" placeholder="Type a command… (e.g. /stats, switch coder, depth deep)" />
+          <ul id="cmdList">
+            <li data-action="new-chat">New chat</li>
+            <li data-action="focus-input">Focus input</li>
+            <li data-action="mode-chat">Switch to Chat mode</li>
+            <li data-action="mode-coder">Switch to Coder mode</li>
+            <li data-action="mode-study">Switch to Study mode</li>
+            <li data-action="depth-shallow">Depth: Shallow</li>
+            <li data-action="depth-normal">Depth: Normal</li>
+            <li data-action="depth-deep">Depth: Deep</li>
+            <li data-action="stats">Show stats</li>
+          </ul>
+        </div>
+      </div>
+
+      <div id="notebookModal" class="modal-backdrop" style="display:none;">
+        <div class="modal notebook-modal">
+          <div style="font-size:14px; margin-bottom:6px;">Chat notebook</div>
+          <textarea id="notebookTextarea" rows="8" style="width:100%; resize:vertical; font-size:12px;"></textarea>
+          <div class="modal-buttons" style="margin-top:8px;">
+            <button class="modal-btn" id="notebookCancel">Close</button>
+            <button class="modal-btn" id="notebookSave">Save</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="memoryModal" class="modal-backdrop" style="display:none;">
+        <div class="modal memory-modal">
+          <div style="font-size:14px; margin-bottom:6px;">MihAI memory</div>
+          <div style="font-size:11px; color:#9ca3af; margin-bottom:6px;">
+            These are things MihAI remembers about you and this chat. You can delete them if they’re wrong.
+          </div>
+          <div id="memoryList" style="max-height:260px; overflow:auto; font-size:12px;"></div>
+          <div class="modal-buttons" style="margin-top:8px;">
+            <button class="modal-btn" id="memoryClose">Close</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Roadmap modal, same file, after memoryModal -->
+      <div id="roadmapModal" class="modal-backdrop" style="display:none;">
+        <div class="modal roadmap-modal">
+          <div style="font-size:14px; margin-bottom:6px;">MihAI roadmap</div>
+          <div style="font-size:11px; color:#9ca3af; margin-bottom:6px;">
+            Coming soon: ideas for future upgrades Mihai is exploring for MihAI.
+            This is not active functionality yet.
+          </div>
+          <div style="font-size:12px; color:#e5e7eb;">
+            Right now this is just a placeholder. Features like multimodal,
+            personalization, gamification, learning tools, wellness modes,
+            and community features may appear here once implemented.
+          </div>
+          <div class="modal-buttons" style="margin-top:8px;">
+            <button class="modal-btn" id="roadmapClose">Close</button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+<script>
+  // Supabase client (front-end safe key only)
+  const SUPABASE_URL = "https://rhmnbnzyahasydfshhkc.supabase.co";
+  const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_zxfOSKAYtecmcxpFfQ9NRQ_Q3MPxL4I";
+  const supa = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+  function getUserId() {
+    const ghId = localStorage.getItem("mihai_github_id");
+    if (ghId) return "github-" + ghId;
+    const stored = localStorage.getItem("mihai_user_id");
+    if (stored) return stored;
+    const anon = "anon-" + crypto.randomUUID();
+    localStorage.setItem("mihai_user_id", anon);
+    return anon;
+  }
+
+  let userId = getUserId();
+  // TODO: later, sync this with Supabase auth user id
+  let chats = JSON.parse(localStorage.getItem("mihai_chats") || "{}");
+  let currentChatId = null;
+
+  const sourcesBar = document.getElementById("sourcesBar");
+  const sourcesInner = document.getElementById("sourcesInner");
+  const toggleSourcesBtn = document.getElementById("toggleSourcesBtn");
+  const chatContainer = document.getElementById("chatContainer");
+  const messageInput = document.getElementById("messageInput");
+
+  // A1 – onboarding hint cards
+  const onboardingHints = document.getElementById("onboardingHints");
+
+  if (onboardingHints && messageInput) {
+    onboardingHints.addEventListener("click", (e) => {
+      const card = e.target.closest(".hint-card");
+      if (!card) return;
+      const hint = card.getAttribute("data-hint") || "";
+      messageInput.value = hint;
+      messageInput.focus();
+      messageInput.selectionStart = messageInput.value.length;
+      messageInput.selectionEnd = messageInput.value.length;
+    });
+  }
+
+  const sendBtn = document.getElementById("sendBtn");
+  const stopBtn = document.getElementById("stopBtn");
+  const newChatBtn = document.getElementById("newChatBtn");
+  const deleteChatBtn = document.getElementById("deleteChatBtn");
+  const chatList = document.getElementById("chatList");
+  const loginBtn = document.getElementById("login-github-btn");
+  const userLabel = document.getElementById("user-label");
+  const statusLabel = document.getElementById("status-label");
+  const moodBadge = document.getElementById("mood-badge");
+  const modeButtonsWrap = document.getElementById("modeButtons");
+  const voiceBtn = document.getElementById("voiceBtn");
+  const fileInput = document.getElementById("fileInput");
+  const imageInput = document.getElementById("imageInput");
+  const gamesBtn = document.getElementById("gamesBtn");
+  const gamesMenu = document.getElementById("gamesMenu");
+  const settingsBtn = document.getElementById("settingsBtn");
+  const settingsMenu = document.getElementById("settingsMenu");
+  const attachFileLabel = document.getElementById("attachFileLabel");
+  const attachImageLabel = document.getElementById("attachImageLabel");
+  const promptChips = document.getElementById("promptChips");
+
+  const chaosSlider = document.getElementById("chaosSlider");
+  const seriousSlider = document.getElementById("seriousSlider");
+  const helpfulSlider = document.getElementById("helpfulSlider");
+  const chaosValue = document.getElementById("chaosValue");
+  const seriousValue = document.getElementById("seriousValue");
+  const helpfulValue = document.getElementById("helpfulValue");
+
+  const attachmentBar = document.getElementById("attachmentBar");
+  const attachmentLabel = document.getElementById("attachmentLabel");
+  const attachmentEditBtn = document.getElementById("attachmentEditBtn");
+  const attachmentClearBtn = document.getElementById("attachmentClearBtn");
+
+  const depthSelect = document.getElementById("depthSelect");
+  const statChats = document.getElementById("statChats");
+  const statMessages = document.getElementById("statMessages");
+  const statTopMode = document.getElementById("statTopMode");
+  const statWebChats = document.getElementById("statWebChats");
+  const statDepth = document.getElementById("statDepth");
+
+  const researchToggle = document.getElementById("researchToggle");
+  const researchCheckbox = document.getElementById("researchCheckbox");
+
+  const commandPalette = document.getElementById("commandPalette");
+  const cmdInput = document.getElementById("cmdInput");
+  const cmdList = document.getElementById("cmdList");
+
+  const notebookBtn = document.getElementById("notebookBtn");
+  const notebookModal = document.getElementById("notebookModal");
+  const notebookTextarea = document.getElementById("notebookTextarea");
+  const notebookCancel = document.getElementById("notebookCancel");
+  const notebookSave = document.getElementById("notebookSave");
+
+  const memoryBtn = document.getElementById("memoryBtn");
+  const memoryModal = document.getElementById("memoryModal");
+  const memoryList = document.getElementById("memoryList");
+  const memoryClose = document.getElementById("memoryClose");
+
+  // Roadmap DOM refs in same script
+  const roadmapBtn = document.getElementById("roadmapBtn");
+  const roadmapModal = document.getElementById("roadmapModal");
+  const roadmapClose = document.getElementById("roadmapClose");
+
+  const roleGrid = document.getElementById("roleGrid");
+
+  const lengthSelect = document.getElementById("lengthSelect");
+  const voiceSelect = document.getElementById("voiceSelect");
+  const testVoiceBtn = document.getElementById("testVoiceBtn");
+
+  const typingIndicator = document.getElementById("typingIndicator");
+
+  let currentAttachmentPreview = null;
+  let queuedAttachments = [];
+
+  let recognition = null;
+  let currentUtterance = null;
+  let currentTypingInterval = null;
+
+  let currentMode = localStorage.getItem("mihai_chat_mode") || "chat";
+  let currentDepth = parseInt(localStorage.getItem("mihai_depth") || "1", 10);
+  let researchMode = localStorage.getItem("mihai_research") === "true";
+
+  /* high-level role: coder, study, friend */
+  let currentRole = localStorage.getItem("mihai_role") || "friend";
+
+  // Answer length: "short" | "normal" | "detailed"
+  let currentLengthMode =
+    localStorage.getItem("mihai_length_mode") || "normal";
+
+  // Speech synthesis voices
+  let availableVoices = [];
+  let currentVoiceIndex = parseInt(
+    localStorage.getItem("mihai_voice_index") || "0",
+    10
+  );
+
+  const ghLogin = localStorage.getItem("mihai_github_login");
+  if (userLabel) {
+    if (ghLogin) {
+      userLabel.textContent = `Logged in as @${ghLogin}`;
+    } else if (userId.startsWith("anon-")) {
+      userLabel.textContent = "Guest session";
+    } else {
+      userLabel.textContent = `User: ${userId}`;
+    }
+  }
+
+  if (loginBtn) {
+    if (ghLogin) {
+      loginBtn.textContent = "Logged in with GitHub";
+      loginBtn.disabled = true;
+    } else {
+      loginBtn.textContent = "Login with GitHub";
+      loginBtn.disabled = false;
+      loginBtn.addEventListener("click", () => {
+        window.location.href = "/api/login-github";
+      });
+    }
+  }
+
+  function depthLabel(d) {
+    if (d === 0) return "Shallow";
+    if (d === 2) return "Deep";
+    return "Normal";
+  }
+
+  if (depthSelect) {
+    depthSelect.value = String(currentDepth);
+    depthSelect.addEventListener("change", () => {
+      currentDepth = parseInt(depthSelect.value, 10);
+      localStorage.setItem("mihai_depth", String(currentDepth));
+      updateSessionStatsUI();
+    });
+  }
+
+  function updateResearchUI() {
+    if (!researchCheckbox || !researchToggle) return;
+    researchCheckbox.checked = researchMode;
+    researchToggle.style.opacity = researchMode ? "1" : "0.6";
+  }
+
+  if (researchCheckbox) {
+    researchCheckbox.addEventListener("change", () => {
+      researchMode = researchCheckbox.checked;
+      localStorage.setItem("mihai_research", researchMode ? "true" : "false");
+      updateResearchUI();
+    });
+  }
+  updateResearchUI();
+
+  (function initLastPickerHighlight() {
+    const last = localStorage.getItem("mihai_last_attach_kind");
+    if (last === "image" && attachImageLabel) {
+      attachImageLabel.style.textDecoration = "underline";
+    } else if (attachFileLabel) {
+      attachFileLabel.style.textDecoration = "underline";
+    }
+  })();
+
+  function markLastPicker(kind) {
+    localStorage.setItem("mihai_last_attach_kind", kind);
+    if (attachFileLabel) attachFileLabel.style.textDecoration = "";
+    if (attachImageLabel) attachImageLabel.style.textDecoration = "";
+    if (kind === "image" && attachImageLabel) {
+      attachImageLabel.style.textDecoration = "underline";
+    }
+    if (kind === "file" && attachFileLabel) {
+      attachFileLabel.style.textDecoration = "underline";
+    }
+  }
+
+  function initSlider(slider, label, key) {
+    if (!slider || !label) return;
+    const stored = localStorage.getItem(key);
+    const value = stored !== null ? stored : "2";
+    slider.value = value;
+    label.textContent = value;
+    slider.addEventListener("input", () => {
+      localStorage.setItem(key, slider.value);
+      label.textContent = slider.value;
+      updateMoodBadge();
+    });
+  }
+
+  initSlider(chaosSlider, chaosValue, "mihai_personality_chaos");
+  initSlider(seriousSlider, seriousValue, "mihai_personality_serious");
+  initSlider(helpfulSlider, helpfulValue, "mihai_personality_helpful");
+
+  function updateMoodBadge() {
+    if (!moodBadge) return;
+    const c = parseInt(localStorage.getItem("mihai_personality_chaos") || "2", 10);
+    const s = parseInt(localStorage.getItem("mihai_personality_serious") || "2", 10);
+    const h = parseInt(localStorage.getItem("mihai_personality_helpful") || "2", 10);
+
+    let mood = "Balanced";
+    if (c >= 3 && s <= 2) mood = "Hyper";
+    else if (c <= 1 && s >= 3) mood = "Serious";
+    else if (h >= 3 && s >= 2) mood = "Tutor";
+    else if (c >= 3 && h >= 3) mood = "Gremlin";
+
+    moodBadge.textContent = "Mood: " + mood;
+  }
+  updateMoodBadge();
+
+  function updateRoleTilesUI() {
+    if (!roleGrid) return;
+    const tiles = roleGrid.querySelectorAll(".role-tile");
+    tiles.forEach((tile) => {
+      const role = tile.getAttribute("data-role");
+      if (role === currentRole) tile.classList.add("active");
+      else tile.classList.remove("active");
+    });
+  }
+
+  if (roleGrid) {
+    roleGrid.addEventListener("click", (e) => {
+      const tile = e.target.closest(".role-tile");
+      if (!tile) return;
+      const role = tile.getAttribute("data-role");
+      if (!role) return;
+      currentRole = role;
+      localStorage.setItem("mihai_role", currentRole);
+      updateRoleTilesUI();
+    });
+    updateRoleTilesUI();
+  }
+
+  if (gamesBtn && gamesMenu) {
+    gamesBtn.addEventListener("click", () => {
+      gamesMenu.classList.toggle("open");
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!gamesMenu.contains(e.target) && e.target !== gamesBtn) {
+        gamesMenu.classList.remove("open");
+      }
+    });
+
+    gamesMenu.addEventListener("click", (e) => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      const game = btn.getAttribute("data-game");
+      gamesMenu.classList.remove("open");
+      if (game === "wyr") {
+        startGameWouldYouRather();
+      } else if (game === "quiz") {
+        startGameQuiz();
+      } else if (game === "math") {
+        startGameQuickMath();
+      }
+    });
+  }
+
+  if (settingsBtn && settingsMenu) {
+    settingsBtn.addEventListener("click", () => {
+      settingsMenu.classList.toggle("open");
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!settingsMenu.contains(e.target) && e.target !== settingsBtn) {
+        settingsMenu.classList.remove("open");
+      }
+    });
+
+    settingsMenu.addEventListener("click", (e) => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      const setting = btn.getAttribute("data-setting");
+
+      if (setting === "theme-dark") {
+        document.body.classList.remove("light");
+        localStorage.setItem("mihai_theme", "dark");
+      } else if (setting === "theme-light") {
+        document.body.classList.add("light");
+        localStorage.setItem("mihai_theme", "light");
+      } else if (setting === "memory-open") {
+        openMemoryModal();
+      }
+    });
+  }
+
+  function updateModeButtonsUI() {
+    if (!modeButtonsWrap) return;
+    const btns = modeButtonsWrap.querySelectorAll(".mode-btn");
+    btns.forEach((b) => {
+      const m = b.getAttribute("data-mode");
+      if (m === currentMode) b.classList.add("mode-active");
+      else b.classList.remove("mode-active");
+    });
+  }
+
+  if (modeButtonsWrap) {
+    modeButtonsWrap.addEventListener("click", (e) => {
+      const btn = e.target.closest(".mode-btn");
+      if (!btn) return;
+      const m = btn.getAttribute("data-mode");
+      if (!m) return;
+      currentMode = m;
+      localStorage.setItem("mihai_chat_mode", currentMode);
+      updateModeButtonsUI();
+      updateSessionStatsUI();
+    });
+  }
+  updateModeButtonsUI();
+
+  function setStatus(text, isThinking) {
+    if (!statusLabel) return;
+    statusLabel.textContent = "";
+    const dot = document.createElement("span");
+    dot.className = "status-dot";
+    dot.style.background = isThinking ? "#facc15" : "#22c55e";
+    statusLabel.appendChild(dot);
+    statusLabel.appendChild(
+      document.createTextNode(isThinking ? "thinking…" : text)
+    );
+  }
+
+  function saveChats() {
+    localStorage.setItem("mihai_chats", JSON.stringify(chats));
+    updateSessionStatsUI();
+  }
+
+  function createNewChat() {
+    const id = "chat-" + crypto.randomUUID();
+    const ghLogin = localStorage.getItem("mihai_github_login");
+    const displayName = ghLogin
+      ? `@${ghLogin}`
+      : userId.startsWith("anon-")
+      ? "a guest user"
+      : userId;
+
+    chats[id] = {
+      title: "New chat",
+      messages: [
+        {
+          role: "system",
+          content:
+            `This is a returning conversation with ${displayName}. ` +
+            `Remember things they've mentioned in previous chats when helpful.`,
+        },
+      ],
+      attachments: [],
+      meta: {
+        webHits: 0,
+        createdAt: Date.now(),
+      },
+    };
+    currentChatId = id;
+    saveChats();
+    renderChats();
+    renderMessages();
+  }
+
+  function renderChats() {
+    chatList.innerHTML = "";
+    Object.entries(chats).forEach(([id, chat]) => {
+      const div = document.createElement("div");
+      div.className = "chat-item" + (id === currentChatId ? " active" : "");
+      div.setAttribute("data-chat-id", id);
+      const titleSpan = document.createElement("span");
+      titleSpan.className = "chat-title";
+      titleSpan.textContent = chat.title;
+      div.appendChild(titleSpan);
+      div.onclick = () => {
+        currentChatId = id;
+        renderChats();
+        renderMessages();
+        updateSessionStatsUI();
+      };
+      chatList.appendChild(div);
+    });
+  }
+
+  function renderMessages() {
+    chatContainer.innerHTML = "";
+    if (!currentChatId) return;
+    const chat = chats[currentChatId];
+
+    const msgs = chat.messages || [];
+    const start = Math.max(0, msgs.length - 120);
+    const slice = msgs.slice(start);
+
+    slice.forEach((msg) => {
+      addMessageToUI(msg.role, msg.content, msg.attachments || [], false, msg);
+    });
+    scrollBottom();
+  }
+
+  function addAttachmentChips(container, attachments) {
+    if (!attachments || attachments.length === 0) return;
+    const row = document.createElement("div");
+    row.className = "attachments-row";
+    attachments.forEach((att) => {
+      const chip = document.createElement("div");
+      chip.className = "attachment-chip";
+      const icon = document.createElement("span");
+      icon.textContent =
+        att.type && att.type.startsWith("image/") ? "🖼" : "📎";
+      chip.appendChild(icon);
+
+      if (att.type && att.type.startsWith("image/") && att.url) {
+        const img = document.createElement("img");
+        img.src = att.url;
+        img.alt = att.name;
+        img.className = "attachment-thumb";
+        chip.appendChild(img);
+      }
+
+      const textSpan = document.createElement("span");
+      if (att.url) {
+        const link = document.createElement("a");
+        link.href = att.url;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = att.name || "attachment";
+        textSpan.appendChild(link);
+      } else {
+        textSpan.textContent = att.name || "attachment";
+      }
+      chip.appendChild(textSpan);
+      row.appendChild(chip);
+    });
+    container.appendChild(row);
+  }
+
+  // A2 – inline rename for chat titles
+  function enableInlineTitleRename() {
+    const chatList = document.getElementById("chatList");
+    if (!chatList) return;
+
+    chatList.addEventListener("click", (e) => {
+      const titleEl = e.target.closest(".chat-title");
+      if (!titleEl) return;
+
+      const chatItem = titleEl.closest("[data-chat-id]");
+      if (!chatItem) return;
+
+      const chatId = chatItem.getAttribute("data-chat-id");
+      if (!chatId) return;
+
+      const originalTitle = titleEl.textContent.trim();
+      const input = document.createElement("input");
+      input.type = "text";
+      input.value = originalTitle;
+      input.className = "chat-title-input";
+      input.style.width = "100%";
+      input.style.background = "transparent";
+      input.style.border = "1px solid #4b5563";
+      input.style.borderRadius = "6px";
+      input.style.padding = "2px 6px";
+      input.style.fontSize = "13px";
+      input.style.color = "#e5e7eb";
+
+      titleEl.replaceWith(input);
+      input.focus();
+      input.selectionStart = 0;
+      input.selectionEnd = input.value.length;
+
+      const finish = async (commit) => {
+        const newTitle = commit ? input.value.trim() : originalTitle;
+        const span = document.createElement("span");
+        span.className = "chat-title";
+        span.textContent = newTitle || "Untitled";
+
+        input.replaceWith(span);
+
+        if (commit && newTitle && newTitle !== originalTitle) {
+          try {
+            await fetch(`/api/chats/${encodeURIComponent(chatId)}/rename`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ title: newTitle })
+            });
+          } catch (err) {
+            console.error("Failed to rename chat", err);
+            span.textContent = originalTitle;
+          }
+        }
+      };
+
+      input.addEventListener("keydown", (ev) => {
+        if (ev.key === "Enter") {
+          ev.preventDefault();
+          finish(true);
+        } else if (ev.key === "Escape") {
+          ev.preventDefault();
+          finish(false);
+        }
+      });
+
+      input.addEventListener("blur", () => finish(true));
+    });
+  }
+
+  // A3 – emoji reactions for messages
+  const REACTION_TYPES = ["⭐", "👍", "👎"];
+
+  function renderReactionsForMessage(messageId, existingReactions = {}) {
+    const msgEl = document.querySelector(`[data-message-id="${messageId}"]`);
+    if (!msgEl) return;
+
+    let bar = msgEl.querySelector(".message-reactions");
+    if (!bar) {
+      bar = document.createElement("div");
+      bar.className = "message-reactions";
+      msgEl.appendChild(bar);
+    }
+
+    bar.innerHTML = "";
+
+    REACTION_TYPES.forEach((emoji) => {
+      const count = existingReactions[emoji] || 0;
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "message-reaction-btn";
+      btn.dataset.emoji = emoji;
+      btn.textContent = count > 0 ? `${emoji} ${count}` : emoji;
+      bar.appendChild(btn);
+    });
+  }
+
+  async function toggleReaction(messageId, emoji) {
+    try {
+      const res = await fetch(`/api/messages/${encodeURIComponent(messageId)}/react`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emoji })
+      });
+      if (!res.ok) throw new Error("Failed reaction");
+      const data = await res.json();
+      renderReactionsForMessage(messageId, data.reactions || {});
+    } catch (err) {
+      console.error("Reaction error", err);
+    }
+  }
+
+  function enableMessageReactions() {
+    const chatContainer = document.getElementById("chatContainer");
+    if (!chatContainer) return;
+
+    chatContainer.addEventListener("click", (e) => {
+      const btn = e.target.closest(".message-reaction-btn");
+      if (!btn) return;
+      const emoji = btn.dataset.emoji;
+      if (!emoji) return;
+
+      const msgEl = btn.closest("[data-message-id]");
+      if (!msgEl) return;
+      const messageId = msgEl.getAttribute("data-message-id");
+      if (!messageId) return;
+
+      toggleReaction(messageId, emoji);
+    });
+  }
+
+  function copyToClipboard(text) {
+    try {
+      navigator.clipboard.writeText(text);
+    } catch (_) {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
+  }
+
+  // Helper: get last assistant message text from current chat
+  function getLastAssistantMessageFromChat() {
+    if (!currentChatId) return null;
+    const chat = chats[currentChatId];
+    if (!chat || !Array.isArray(chat.messages)) return null;
+    for (let i = chat.messages.length - 1; i >= 0; i--) {
+      if (chat.messages[i].role === "assistant") {
+        return { index: i, content: chat.messages[i].content };
+      }
+    }
+    return null;
+  }
+
+  // Regenerate: rewrite last assistant answer
+  async function handleRegenerate() {
+    const last = getLastAssistantMessageFromChat();
+    if (!last) return;
+
+    const lastAssistantText =
+      typeof last.content === "string" ? last.content : "";
+
+    const rewritePrompt =
+      "Rewrite the following answer in a different way (wording and tone), " +
+      "but keep the same meaning and level of detail. " +
+      "Do NOT ask the user to repeat their question. Just reply with the new version:\n\n" +
+      lastAssistantText;
+
+    try {
+      setStatus("thinking…", true);
+
+      const personalityMsg = buildPersonalityMessage();
+      const baseMessages = chats[currentChatId].messages || [];
+      const messagesToSend = [
+        personalityMsg,
+        ...baseMessages,
+        { role: "user", content: rewritePrompt },
+      ];
+
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          chatId: currentChatId,
+          mode: currentMode,
+          depth: currentDepth,
+          research: false,
+          messages: messagesToSend,
+          attachments: chats[currentChatId].attachments || [],
+        }),
+      });
+
+      const data = await response.json();
+      const reply =
+        typeof data.reply === "string"
+          ? data.reply
+          : "MihAI had trouble regenerating that answer.";
+
+      const chat = chats[currentChatId];
+      if (chat && Array.isArray(chat.messages)) {
+        chat.messages.push({ role: "assistant", content: reply });
+        saveChats();
+        renderChats();
+        renderMessages();
+      }
+      renderSourcesBar(data.sources || []);
+      setStatus("ready", false);
+    } catch (e) {
+      console.error("Regenerate failed", e);
+      setStatus("ready", false);
+    }
+  }
+
+  function renderMarkdown(text) {
+    const div = document.createElement("div");
+    if (!text) {
+      return div;
+    }
+
+    let html = text;
+
+    // 1) Fenced code blocks ```...```
+    html = html.replace(/```([\s\S]*?)```/g, (match, code) => {
+      const safe = code
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+      return `<pre class="code-block"><code>${safe}</code></pre>`;
+    });
+
+    // 2) Inline code `...`
+    html = html.replace(/`([^`]+)`/g, (match, code) => {
+      const safe = code
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+      return `<code>${safe}</code>`;
+    });
+
+    // 3) Bold **...**
+    html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+
+    // 4) Double newline -> spacing
+    html = html.replace(/\n\n/g, "<br/><br/>");
+
+    div.innerHTML = html;
+    return div;
+  }
+
+  function updateMessageFromUI(div, msgObj) {
+    div.__mihaiMsgRef = msgObj;
+  }
+
+  function addMessageActionBar(div, role, content, msgObj) {
+    const bar = document.createElement("div");
+    bar.className = "message-actions";
+
+    const copyBtn = document.createElement("button");
+    copyBtn.className = "button button1";
+    copyBtn.textContent = "Copy text";
+    copyBtn.title = "Copy this message to your clipboard";
+    copyBtn.onclick = () => copyToClipboard(content);
+    bar.appendChild(copyBtn);
+
+    if (role === "assistant") {
+      const regenBtn = document.createElement("button");
+      regenBtn.className = "button button2";
+      regenBtn.textContent = "Regenerate";
+      regenBtn.title = "Ask MihAI to rewrite this answer differently";
+      regenBtn.onclick = () => {
+        handleRegenerate();
+      };
+      bar.appendChild(regenBtn);
+    }
+
+    const followBtn = document.createElement("button");
+    followBtn.className = "button button3";
+    followBtn.textContent = "Follow-up";
+    followBtn.title = "Start a follow-up question based on this message";
+    followBtn.onclick = () => {
+      messageInput.value = `Can you go deeper on: "${content.slice(0, 80)}" ?`;
+      messageInput.focus();
+    };
+    bar.appendChild(followBtn);
+
+    const delBtn = document.createElement("button");
+    delBtn.className = "button button4";
+    delBtn.textContent = "Delete";
+    delBtn.title = "Delete this message from the chat";
+    delBtn.onclick = () => {
+      const ok = window.confirm("Are you sure you want to delete this text?");
+      if (!ok) return;
+
+      if (!currentChatId) return;
+      const chat = chats[currentChatId];
+      const idx = chat.messages.indexOf(msgObj);
+      if (idx !== -1) {
+        chat.messages.splice(idx, 1);
+        saveChats();
+        renderMessages();
+      }
+    };
+    bar.appendChild(delBtn);
+
+    div.appendChild(bar);
+  }
+
+  function normalizeContent(raw) {
+    if (typeof raw !== "string") return raw;
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed.reply === "string") {
+        return parsed.reply;
+      }
+    } catch (e) {}
+    return raw;
+  }
+
+  function addMessageToUI(
+    role,
+    content,
+    attachmentsForMessage = [],
+    isError = false,
+    msgObj = null
+  ) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "message-wrap";
+
+    const div = document.createElement("div");
+    div.className = "message " + role;
+    if (isError && role === "assistant") {
+      div.classList.add("error");
+    }
+
+    const body = document.createElement("div");
+    body.className = "message-body";
+
+    const displayContent = normalizeContent(content);
+
+    if (role === "assistant") {
+      const rendered = renderMarkdown(displayContent);
+      body.appendChild(rendered);
+    } else {
+      const textSpan = document.createElement("span");
+      textSpan.textContent = displayContent;
+      body.appendChild(textSpan);
+    }
+
+    div.appendChild(body);
+
+    if (role === "assistant") {
+      const toolbar = document.createElement("div");
+      toolbar.className = "message-toolbar";
+
+      const speakBtn = document.createElement("button");
+      speakBtn.textContent = "🔊 Read";
+      speakBtn.title = "Read this answer out loud";
+      speakBtn.onclick = () => speak(displayContent);
+      toolbar.appendChild(speakBtn);
+
+      const copyBtn = document.createElement("button");
+      copyBtn.textContent = "📋 Copy";
+      copyBtn.title = "Copy this answer to clipboard";
+      copyBtn.onclick = () => copyToClipboard(displayContent);
+      toolbar.appendChild(copyBtn);
+
+      const clarifyBtn = document.createElement("button");
+      clarifyBtn.textContent = "Clarify";
+      clarifyBtn.title = "Rewrite this answer to be clearer";
+      clarifyBtn.onclick = () => askFollowup("clarify", displayContent);
+      toolbar.appendChild(clarifyBtn);
+
+      const moreBtn = document.createElement("button");
+      moreBtn.textContent = "More detail";
+      moreBtn.title = "Expand this answer with more detail";
+      moreBtn.onclick = () => askFollowup("more", displayContent);
+      toolbar.appendChild(moreBtn);
+
+      const shorterBtn = document.createElement("button");
+      shorterBtn.textContent = "Shorter";
+      shorterBtn.title = "Summarize this answer briefly";
+      shorterBtn.onclick = () => askFollowup("shorter", displayContent);
+      toolbar.appendChild(shorterBtn);
+
+      toolbar.style.marginTop = "4px";
+      div.appendChild(toolbar);
+    }
+
+    if (role === "user" && attachmentsForMessage && attachmentsForMessage.length > 0) {
+      addAttachmentChips(div, attachmentsForMessage);
+    }
+
+    wrapper.appendChild(div);
+
+    if (msgObj) {
+      addMessageActionBar(wrapper, role, displayContent, msgObj);
+      updateMessageFromUI(wrapper, msgObj);
+    }
+
+    chatContainer.appendChild(wrapper);
+  }
+
+  function scrollBottom() {
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+  }
+
+  function buildPersonalityMessage() {
+    const chaos = parseInt(
+      localStorage.getItem("mihai_personality_chaos") || "2",
+      10
+    );
+    const seriousness = parseInt(
+      localStorage.getItem("mihai_personality_serious") || "2",
+      10
+    );
+    const helpful = parseInt(
+      localStorage.getItem("mihai_personality_helpful") || "2",
+      10
+    );
+
+    function describeChaos(v) {
+      if (v <= 0) return "be very calm, literal, and avoid jokes or randomness";
+      if (v === 1) return "keep responses mostly calm with only occasional light humor";
+      if (v === 2) return "allow a natural amount of humor and personality";
+      if (v === 3) return "be playful and a bit chaotic with jokes and casual language";
+      return "be very playful, high-energy, and chaotic, using memes or slang sometimes";
+    }
+
+    function describeSerious(v) {
+      if (v <= 0) return "be extremely casual and not formal at all";
+      if (v === 1) return "lean casual while still staying understandable";
+      if (v === 2) return "balance casual and serious tone";
+      if (v === 3) return "lean more serious and focused, with fewer jokes";
+      return "be very serious, concise, and focused on clear information";
+    }
+
+    function describeHelpful(v) {
+      if (v <= 0) return "give only short answers, do not over-explain";
+      if (v === 1) return "keep answers brief with only essential details";
+      if (v === 2) return "give reasonably detailed answers when needed";
+      if (v === 3) return "be very proactive and detailed in helping the user";
+      return "go above and beyond to help, anticipate follow-up questions, and explain clearly";
+    }
+
+    const styleLines = [
+      describeChaos(chaos),
+      describeSerious(seriousness),
+      describeHelpful(helpful),
+    ];
+
+    let depthNote = "";
+    if (currentDepth === 0)
+      depthNote =
+        "Use a shallow context window; focus mainly on the last few messages.";
+    if (currentDepth === 2)
+      depthNote =
+        "Use a deep context window; consider more of the previous conversation and memory facts.";
+
+    let roleNote = "";
+    if (currentRole === "coder") {
+      roleNote =
+        "For this conversation, primarily act as a coding assistant: focus on code help, debugging, and examples.";
+    } else if (currentRole === "study") {
+      roleNote =
+        "For this conversation, primarily act as a study buddy: explain concepts, quiz the user, and help with learning.";
+    } else {
+      roleNote =
+        "For this conversation, primarily act as a friendly companion: casual chat, ideas, and light help.";
+    }
+
+    return {
+      role: "system",
+      content:
+        "You are MihAI, a friendly AI chat companion. " +
+        "Adjust your behavior using these personality instructions: " +
+        styleLines.join(". ") +
+        ". Always stay kind and respectful, and adapt to the user's vibe. " +
+        depthNote +
+        " " +
+        roleNote,
+    };
+  }
+
+  function showAttachmentPreview(info) {
+    currentAttachmentPreview = info;
+    queuedAttachments.push(info);
+    if (!attachmentBar || !attachmentLabel) return;
+    const count = queuedAttachments.length;
+    const labelText =
+      count === 1
+        ? (info.kind === "image" ? "📷 " : "📄 ") +
+          `${info.name} (${info.type}, ${info.size} bytes)`
+        : `${count} attachments ready`;
+    attachmentLabel.textContent = labelText;
+    attachmentBar.style.display = "flex";
+  }
+
+  function hideAttachmentPreview() {
+    currentAttachmentPreview = null;
+    queuedAttachments = [];
+    if (!attachmentBar) return;
+    attachmentBar.style.display = "none";
+  }
+
+  if (attachmentEditBtn) {
+    attachmentEditBtn.addEventListener("click", () => {
+      if (currentAttachmentPreview?.kind === "image") {
+        if (imageInput) imageInput.click();
+      } else {
+        if (fileInput) fileInput.click();
+      }
+    });
+  }
+
+  if (attachmentClearBtn) {
+    attachmentClearBtn.addEventListener("click", () => {
+      if (!currentChatId) {
+        hideAttachmentPreview();
+        if (fileInput) fileInput.value = "";
+        if (imageInput) imageInput.value = "";
+        return;
+      }
+
+      const chat = chats[currentChatId];
+      if (!chat.attachments || chat.attachments.length === 0) {
+        hideAttachmentPreview();
+        if (fileInput) fileInput.value = "";
+        if (imageInput) imageInput.value = "";
+        return;
+      }
+
+      const removed = chat.attachments.pop();
+
+      chat.messages = chat.messages.filter((m) => {
+        if (m.role !== "system") return true;
+        if (typeof m.content !== "string") return true;
+        return !m.content.includes(removed.name);
+      });
+
+      saveChats();
+      hideAttachmentPreview();
+      if (fileInput) fileInput.value = "";
+      if (imageInput) imageInput.value = "";
+    });
+  }
+
+  if (fileInput) {
+    fileInput.addEventListener("change", async () => {
+      const file = fileInput.files[0];
+      if (!file || !currentChatId) return;
+
+      markLastPicker("file");
+
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await res.json();
+        if (!data.ok) {
+          throw new Error(data.error || "Upload failed");
+        }
+
+        const f = data.file || {
+          name: file.name,
+          type: file.type,
+          size: file.size,
+        };
+
+        if (!chats[currentChatId].attachments) {
+          chats[currentChatId].attachments = [];
+        }
+
+        const attachmentObj = {
+          name: f.name,
+          type: f.type,
+          size: f.size,
+          url: f.url || null,
+          kind: "file",
+        };
+
+        chats[currentChatId].attachments.push(attachmentObj);
+
+        chats[currentChatId].messages.push({
+          role: "system",
+          content:
+            `User uploaded a file named "${f.name}" (type: ${f.type}, size: ${f.size} bytes). ` +
+            `Ask them what they want to do with it and guide them. You cannot directly open it, ` +
+            `so ask them to describe or paste relevant parts if needed.`,
+        });
+        saveChats();
+
+        showAttachmentPreview(attachmentObj);
+
+        alert("File uploaded and attached to this chat.");
+      } catch (e) {
+        console.error("Upload error", e);
+        alert("Could not upload that file.");
+      } finally {
+        fileInput.value = "";
+      }
+    });
+  }
+
+  if (imageInput) {
+    imageInput.addEventListener("change", async () => {
+      const file = imageInput.files[0];
+      if (!file || !currentChatId) return;
+
+      markLastPicker("image");
+
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch("/api/vision", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await res.json();
+        if (!data.ok) {
+          throw new Error(data.error || "Vision failed");
+        }
+
+        const f = data.file || {
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          url: null,
+        };
+
+        if (!chats[currentChatId].attachments) {
+          chats[currentChatId].attachments = [];
+        }
+
+        const attachmentObj = {
+          name: f.name,
+          type: f.type,
+          size: f.size,
+          url: f.url || null,
+          kind: "image",
+        };
+
+        chats[currentChatId].attachments.push(attachmentObj);
+
+        let visionSystemContent =
+          `User uploaded an image file named "${f.name}" (type: ${f.type}, size: ${f.size} bytes).`;
+        if (data.description || data.text) {
+          const guess = data.text || data.description;
+          visionSystemContent +=
+            ` The vision tool thinks the text in the image might be: "${guess}". ` +
+            `You are not 100% sure this is correct. Always show this guess to the user and ask: ` +
+            `"Is this text correct? If not, please type the correct text or upload a clearer photo."`;
+        } else {
+          visionSystemContent +=
+            ` The vision tool could not confidently read the text. Ask the user to ` +
+            `either type the text manually or upload a clearer photo.`;
+        }
+
+        chats[currentChatId].messages.push({
+          role: "system",
+          content: visionSystemContent,
+        });
+
+        saveChats();
+
+        showAttachmentPreview(attachmentObj);
+
+        alert("Photo analyzed and attached to this chat.");
+      } catch (e) {
+        console.error("Image upload / vision error", e);
+        alert("Could not process that image.");
+      } finally {
+        imageInput.value = "";
+      }
+    });
+  }
+
+  if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SR();
+    recognition.lang = "en-US";
+
+    recognition.onresult = (e) => {
+      const transcript = e.results[0][0].transcript;
+      messageInput.value = transcript;
+      sendMessage();
+    };
+  }
+
+  if (voiceBtn) {
+    voiceBtn.addEventListener("click", () => {
+      if (!recognition) {
+        alert("Voice recognition not supported in this browser.");
+        return;
+      }
+      recognition.start();
+    });
+  }
+
+  // Answer length helpers
+  function setLengthMode(mode) {
+    if (!["short", "normal", "detailed"].includes(mode)) return;
+    currentLengthMode = mode;
+    localStorage.setItem("mihai_length_mode", currentLengthMode);
+    if (lengthSelect) lengthSelect.value = currentLengthMode;
+  }
+
+  function lengthModeSystemMessage() {
+    if (currentLengthMode === "short") {
+      return {
+        role: "system",
+        content:
+          "For this next reply, answer in at most 2 short sentences. Focus only on the key points.",
+      };
+    }
+    if (currentLengthMode === "detailed") {
+      return {
+        role: "system",
+        content:
+          "For this next reply, answer in a detailed, step-by-step way with clear explanations.",
+      };
+    }
+    return null;
+  }
+
+  if (lengthSelect) {
+    const storedLen = localStorage.getItem("mihai_length_mode");
+    if (storedLen && ["short", "normal", "detailed"].includes(storedLen)) {
+      currentLengthMode = storedLen;
+      lengthSelect.value = storedLen;
+    }
+    lengthSelect.addEventListener("change", () => {
+      setLengthMode(lengthSelect.value);
+    });
+  }
+
+  // Speech synthesis voice helpers
+  function populateVoiceSelect() {
+    if (!voiceSelect) return;
+    voiceSelect.innerHTML = "";
+    if (!availableVoices.length) {
+      const opt = document.createElement("option");
+      opt.value = "0";
+      opt.textContent = "Default browser voice";
+      voiceSelect.appendChild(opt);
+      return;
+    }
+    availableVoices.forEach((v, i) => {
+      const opt = document.createElement("option");
+      opt.value = String(i);
+      opt.textContent = `${v.name} (${v.lang})${v.default ? " *" : ""}`;
+      voiceSelect.appendChild(opt);
+    });
+    if (currentVoiceIndex < 0 || currentVoiceIndex >= availableVoices.length) {
+      currentVoiceIndex = 0;
+    }
+    voiceSelect.value = String(currentVoiceIndex);
+  }
+
+  if ("speechSynthesis" in window) {
+    window.speechSynthesis.onvoiceschanged = () => {
+      availableVoices = window.speechSynthesis.getVoices();
+      populateVoiceSelect();
+    };
+  }
+
+  function setCurrentVoiceIndex(idx) {
+    if (!availableVoices.length) return;
+    if (idx < 0 || idx >= availableVoices.length) return;
+    currentVoiceIndex = idx;
+    localStorage.setItem("mihai_voice_index", String(currentVoiceIndex));
+    if (voiceSelect) voiceSelect.value = String(currentVoiceIndex);
+  }
+
+  if (voiceSelect) {
+    const storedIdx = parseInt(
+      localStorage.getItem("mihai_voice_index") || "0",
+      10
+    );
+    currentVoiceIndex = Number.isFinite(storedIdx) ? storedIdx : 0;
+    voiceSelect.addEventListener("change", () => {
+      const idx = parseInt(voiceSelect.value || "0", 10);
+      setCurrentVoiceIndex(idx);
+    });
+  }
+
+  if (testVoiceBtn) {
+    testVoiceBtn.addEventListener("click", () => {
+      speak(
+        "Hi, I am MihAI reading this with your selected voice. If this sounds good, keep this voice."
+      );
+    });
+  }
+
+  // Follow-up helper
+  async function askFollowup(kind, baseText) {
+    if (!currentChatId) return;
+
+    let instruction = "";
+    if (kind === "clarify") {
+      instruction =
+        "Clarify the following answer. Rewrite it more clearly, fix any confusing parts, and keep the same level of detail.";
+    } else if (kind === "more") {
+      instruction =
+        "Expand the following answer with more detail, examples, and step-by-step explanation.";
+    } else if (kind === "shorter") {
+      instruction =
+        "Shorten the following answer into a concise summary with only the key points.";
+    } else {
+      return;
+    }
+
+    const prompt =
+      instruction + "\n\nHere is the answer to transform:\n\n" + baseText;
+
+    const userMsgObj = { role: "user", content: prompt, attachments: [] };
+    chats[currentChatId].messages.push(userMsgObj);
+    saveChats();
+    addMessageToUI("user", prompt, [], false, userMsgObj);
+
+    hideTypingIndicator();
+    showTypingIndicator();
+    setStatus("thinking…", true);
+    showStopButton();
+
+    const personalityMsg = buildPersonalityMessage();
+    const fullMessages = chats[currentChatId].messages;
+    const contextSlice = fullMessages.slice(
+      Math.max(0, fullMessages.length - 30)
+    );
+
+    const messagesToSend = [personalityMsg, ...contextSlice];
+
+    currentController = new AbortController();
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          chatId: currentChatId,
+          mode: currentMode,
+          depth: currentDepth,
+          research: researchMode,
+          messages: messagesToSend,
+          attachments: chats[currentChatId].attachments || [],
+        }),
+        signal: currentController.signal,
+      });
+
+      if (!response.ok) throw new Error("HTTP " + response.status);
+
+      const data = await response.json();
+      const fullText =
+        typeof data.reply === "string"
+          ? data.reply
+          : "MihAI had trouble generating a follow-up.";
+
+      renderSourcesBar(data.sources || []);
+      hideTypingIndicator();
+
+      const aiMsgObj = { role: "assistant", content: fullText };
+      chats[currentChatId].messages.push(aiMsgObj);
+      saveChats();
+      renderChats();
+      addAssistantMessageTyped(fullText, aiMsgObj);
+      scrollBottom();
+      setStatus("ready", false);
+    } catch (err) {
+      console.error(err);
+      hideTypingIndicator();
+      const assistantDiv = document.createElement("div");
+      assistantDiv.className = "message assistant error";
+      assistantDiv.textContent = "Error generating follow-up.";
+      chatContainer.appendChild(assistantDiv);
+      setStatus("ready", false);
+    } finally {
+      hideStopButton();
+      currentController = null;
+    }
+  }
+
+  function speak(text) {
+    try {
+      if (!window.speechSynthesis) return;
+
+      if (currentUtterance && speechSynthesis.speaking) {
+        speechSynthesis.cancel();
+        currentUtterance = null;
+        return;
+      }
+
+      const utter = new SpeechSynthesisUtterance(text);
+
+      let voices =
+        availableVoices.length > 0
+          ? availableVoices
+          : window.speechSynthesis.getVoices();
+
+      if (voices && voices.length) {
+        let idx = currentVoiceIndex;
+        if (idx < 0 || idx >= voices.length) idx = 0;
+        utter.voice = voices[idx];
+        utter.lang = voices[idx].lang;
+      }
+
+      utter.rate = 1;
+      utter.pitch = 1;
+      utter.onend = () => {
+        currentUtterance = null;
+      };
+      currentUtterance = utter;
+      speechSynthesis.speak(utter);
+    } catch (_) {}
+  }
+
+  let isSending = false;
+  let currentController = null;
+
+  function showStopButton() {
+    if (stopBtn) stopBtn.style.display = "inline-block";
+  }
+  function hideStopButton() {
+    if (stopBtn) stopBtn.style.display = "none";
+  }
+
+  if (stopBtn) {
+    stopBtn.addEventListener("click", () => {
+      if (currentController) {
+        currentController.abort();
+        currentController = null;
+      }
+      if (currentTypingInterval) {
+        clearInterval(currentTypingInterval);
+        currentTypingInterval = null;
+      }
+      if (window.speechSynthesis && speechSynthesis.speaking) {
+        speechSynthesis.cancel();
+        currentUtterance = null;
+      }
+      isSending = false;
+      hideStopButton();
+      setStatus("ready", false);
+      hideTypingIndicator();
+    });
+  }
+
+  function showTypingIndicator() {
+    if (!typingIndicator) return;
+    typingIndicator.style.display = "flex";
+    typingIndicator.scrollIntoView({ behavior: "smooth", block: "end" });
+  }
+
+  function hideTypingIndicator() {
+    if (!typingIndicator) return;
+    typingIndicator.style.display = "none";
+  }
+
+  function extractSlashCommand(text) {
+    const trimmed = text.trim();
+    if (!trimmed.startsWith("/")) return { cleaned: text, command: null };
+
+    const [cmd, ...rest] = trimmed.split(" ");
+    const lower = cmd.toLowerCase();
+    const payload = rest.join(" ").trim();
+
+    const known = [
+      "/short",
+      "/long",
+      "/explain",
+      "/code",
+      "/story",
+      "/translate",
+      "/stats",
+    ];
+    if (!known.includes(lower)) return { cleaned: text, command: null };
+
+    const cleaned = payload || "";
+    return { cleaned, command: lower };
+  }
+
+  function slashCommandSystemMessage(cmd) {
+    if (!cmd) return null;
+    switch (cmd) {
+      case "/short":
+        return {
+          role: "system",
+          content: "For this next reply, answer in at most 2 short sentences.",
+        };
+      case "/long":
+        return {
+          role: "system",
+          content:
+            "For this next reply, answer in a detailed, step-by-step way.",
+        };
+      case "/explain":
+        return {
+          role: "system",
+          content:
+            "Explain the user message like you're teaching a friend, with simple language.",
+        };
+      case "/code":
+        return {
+          role: "system",
+          content: "Focus on code examples in the reply. Use clear, commented code.",
+        };
+      case "/story":
+        return {
+          role: "system",
+          content:
+            "Answer in the form of a short, fun story that still solves the user's request.",
+        };
+      case "/translate":
+        return {
+          role: "system",
+          content: "Translate the user message into clear English and nothing else.",
+        };
+      case "/stats":
+        return null;
+      default:
+        return null;
+    }
+  }
+
+  function renderSourcesBar(sources) {
+    if (!sourcesBar || !sourcesInner) return;
+    sourcesInner.innerHTML = "";
+    if (!sources || sources.length === 0) {
+      sourcesBar.style.display = "none";
+      return;
+    }
+    sourcesBar.style.display = "flex";
+
+    sources.forEach((s) => {
+      const pill = document.createElement("div");
+      pill.className = "source-pill";
+      pill.onclick = () => {
+        if (s.url) window.open(s.url, "_blank", "noopener,noreferrer");
+      };
+
+      const meta = document.createElement("div");
+      meta.className = "source-pill-meta";
+      if (s.favicon) {
+        const img = document.createElement("img");
+        img.src = s.favicon;
+        img.className = "source-favicon";
+        img.alt = "";
+        meta.appendChild(img);
+      }
+      const hostSpan = document.createElement("span");
+      try {
+        hostSpan.textContent = new URL(s.url).hostname.replace(/^www\./, "");
+      } catch {
+        hostSpan.textContent = "source";
+      }
+      meta.appendChild(hostSpan);
+      pill.appendChild(meta);
+
+      const titleDiv = document.createElement("div");
+      titleDiv.className = "source-pill-title";
+      titleDiv.textContent = s.title || s.url || "Source";
+      pill.appendChild(titleDiv);
+
+      if (s.snippet) {
+        const snipDiv = document.createElement("div");
+        snipDiv.className = "source-pill-snippet";
+        snipDiv.textContent = s.snippet.slice(0, 120);
+        pill.appendChild(snipDiv);
+      }
+
+      sourcesInner.appendChild(pill);
+    });
+  }
+
+  if (toggleSourcesBtn) {
+    toggleSourcesBtn.addEventListener("click", () => {
+      if (!sourcesBar) return;
+      if (sourcesBar.style.display === "none") {
+        sourcesBar.style.display = "flex";
+        toggleSourcesBtn.textContent = "Hide";
+      } else {
+        sourcesBar.style.display = "none";
+        toggleSourcesBtn.textContent = "Show";
+      }
+    });
+  }
+
+  function computeStats() {
+    const chatIds = Object.keys(chats);
+    let totalMessages = 0;
+    const modeCounts = { chat: 0, coder: 0, study: 0 };
+    let chatsWithWeb = 0;
+
+    chatIds.forEach((id) => {
+      const c = chats[id];
+      if (!c || !c.messages) return;
+      totalMessages += c.messages.length;
+
+      (c.messages || []).forEach((m) => {
+        if (typeof m.content !== "string") return;
+        if (m.content.includes("MODE: CODER")) modeCounts.coder++;
+        else if (m.content.includes("MODE: STUDY")) modeCounts.study++;
+        else if (m.content.includes("MODE: CHAT")) modeCounts.chat++;
+      });
+
+      if (c.meta && c.meta.webHits && c.meta.webHits > 0) {
+        chatsWithWeb++;
+      }
+    });
+
+    let mostUsedMode = "chat";
+    let max = modeCounts.chat;
+    if (modeCounts.coder > max) {
+      mostUsedMode = "coder";
+      max = modeCounts.coder;
+    }
+    if (modeCounts.study > max) {
+      mostUsedMode = "study";
+      max = modeCounts.study;
+    }
+
+    return {
+      chatCount: chatIds.length,
+      totalMessages,
+      mostUsedMode,
+      modeCounts,
+      chatsWithWeb,
+      depth: currentDepth,
+    };
+  }
+
+  function updateSessionStatsUI() {
+    if (!statChats) return;
+    const stats = computeStats();
+    statChats.textContent = stats.chatCount;
+    statMessages.textContent = stats.totalMessages;
+    statTopMode.textContent = stats.mostUsedMode;
+    statWebChats.textContent = stats.chatsWithWeb;
+    statDepth.textContent = depthLabel(stats.depth);
+  }
+
+  function renderFollowUpSuggestions(fullText) {
+    if (!promptChips) return;
+    if (!fullText || fullText.length < 80) return;
+  }
+
+  function addAssistantMessageTyped(fullText, msgObj) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "message-wrap";
+
+    const div = document.createElement("div");
+    div.className = "message assistant typing-target";
+
+    const body = document.createElement("div");
+    body.className = "message-body";
+
+    const textSpan = document.createElement("span");
+    textSpan.textContent = "";
+    body.appendChild(textSpan);
+
+    const cursor = document.createElement("span");
+    cursor.className = "cursor";
+    body.appendChild(cursor);
+
+    div.appendChild(body);
+
+    const toolbar = document.createElement("div");
+    toolbar.className = "message-toolbar";
+    toolbar.style.marginTop = "4px";
+
+    const speakBtn = document.createElement("button");
+    speakBtn.textContent = "🔊 Read";
+    speakBtn.title = "Read this answer out loud";
+    speakBtn.onclick = () => speak(fullText);
+    toolbar.appendChild(speakBtn);
+
+    const copyBtn = document.createElement("button");
+    copyBtn.textContent = "📋 Copy";
+    copyBtn.title = "Copy this answer to clipboard";
+    copyBtn.onclick = () => copyToClipboard(fullText);
+    toolbar.appendChild(copyBtn);
+
+    const clarifyBtn = document.createElement("button");
+    clarifyBtn.textContent = "Clarify";
+    clarifyBtn.title = "Rewrite this answer to be clearer";
+    clarifyBtn.onclick = () => askFollowup("clarify", fullText);
+    toolbar.appendChild(clarifyBtn);
+
+    const moreBtn = document.createElement("button");
+    moreBtn.textContent = "More detail";
+    moreBtn.title = "Expand this answer with more detail";
+    moreBtn.onclick = () => askFollowup("more", fullText);
+    toolbar.appendChild(moreBtn);
+
+    const shorterBtn = document.createElement("button");
+    shorterBtn.textContent = "Shorter";
+    shorterBtn.title = "Summarize this answer briefly";
+    shorterBtn.onclick = () => askFollowup("shorter", fullText);
+    toolbar.appendChild(shorterBtn);
+
+    div.appendChild(toolbar);
+
+    wrapper.appendChild(div);
+    chatContainer.appendChild(wrapper);
+    scrollBottom();
+
+    if (msgObj) {
+      addMessageActionBar(wrapper, "assistant", fullText, msgObj);
+      updateMessageFromUI(wrapper, msgObj);
+    }
+
+    let i = 0;
+    const speed = 12;
+    const interval = setInterval(() => {
+      if (i >= fullText.length) {
+        clearInterval(interval);
+        cursor.remove();
+        return;
+      }
+      textSpan.textContent += fullText[i];
+      i++;
+      scrollBottom();
+    }, speed);
+  }
+
+  async function sendMessage() {
+    if (isSending) return;
+    isSending = true;
+    try {
+      let text = messageInput.value.trim();
+      if (!text && queuedAttachments.length === 0) return;
+      if (!currentChatId) {
+        createNewChat();
+      }
+
+      const { cleaned, command } = extractSlashCommand(text);
+      text = cleaned || text;
+      const slashSystem = slashCommandSystemMessage(command);
+
+      if (command === "/stats") {
+        messageInput.value = "";
+        messageInput.style.height = "auto";
+        const stats = computeStats();
+        const summary =
+          `Stats for this browser:\n` +
+          `• Chats: ${stats.chatCount}\n` +
+          `• Total messages: ${stats.totalMessages}\n` +
+          `• Most used mode (approx): ${stats.mostUsedMode}\n` +
+          `• Mode usage: chat=${stats.modeCounts.chat}, coder=${stats.modeCounts.coder}, study=${stats.modeCounts.study}\n` +
+          (stats.chatsWithWeb > 0
+            ? `• Chats that used web search (approx): ${stats.chatsWithWeb}\n`
+            : "") +
+          `• Current depth: ${depthLabel(stats.depth)}\n`;
+
+        const userMsgObj = { role: "user", content: "/stats", attachments: [] };
+        addMessageToUI("user", "/stats", [], false, userMsgObj);
+        const aiMsgObj = { role: "assistant", content: summary };
+        addMessageToUI("assistant", summary, [], false, aiMsgObj);
+        scrollBottom();
+        setStatus("ready", false);
+        updateSessionStatsUI();
+        return;
+      }
+
+      messageInput.value = "";
+      messageInput.style.height = "auto";
+
+      const attachmentsForThisMessage = queuedAttachments.slice();
+      queuedAttachments = [];
+      if (attachmentBar) attachmentBar.style.display = "none";
+
+      const userMsgObj = {
+        role: "user",
+        content: text || "(sent attachments)",
+        attachments: attachmentsForThisMessage,
+      };
+      chats[currentChatId].messages.push(userMsgObj);
+      addMessageToUI(
+        "user",
+        text || "(sent attachments)",
+        attachmentsForThisMessage,
+        false,
+        userMsgObj
+      );
+
+      hideTypingIndicator();
+      showTypingIndicator();
+      setStatus("thinking…", true);
+      showStopButton();
+
+      const personalityMsg = buildPersonalityMessage();
+      const messagesToSend = [personalityMsg];
+      if (slashSystem) messagesToSend.push(slashSystem);
+
+      const lengthMsg = lengthModeSystemMessage();
+      if (lengthMsg) messagesToSend.push(lengthMsg);
+
+      const fullMessages = chats[currentChatId].messages;
+      let sliceStart = 0;
+      if (currentDepth === 0) {
+        sliceStart = Math.max(0, fullMessages.length - 10);
+      } else if (currentDepth === 1) {
+        sliceStart = Math.max(0, fullMessages.length - 30);
+      } else {
+        sliceStart = 0;
+      }
+      const contextSlice = fullMessages.slice(sliceStart);
+
+      messagesToSend.push(...contextSlice);
+
+      currentController = new AbortController();
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          chatId: currentChatId,
+          mode: currentMode,
+          depth: currentDepth,
+          research: researchMode,
+          messages: messagesToSend,
+          attachments: chats[currentChatId].attachments || [],
+        }),
+        signal: currentController.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error("HTTP " + response.status);
+      }
+
+      const data = await response.json();
+      const fullText =
+        typeof data.reply === "string"
+          ? data.reply
+          : "MihAI had trouble generating a reply.";
+
+      renderSourcesBar(data.sources || []);
+
+      hideTypingIndicator();
+
+      const aiMsgObj = { role: "assistant", content: fullText };
+      chats[currentChatId].messages.push(aiMsgObj);
+      if (
+        chats[currentChatId].title === "New chat" &&
+        (text || "").trim().length > 0
+      ) {
+        chats[currentChatId].title = (text || "").slice(0, 24);
+      }
+      saveChats();
+      renderChats();
+      addAssistantMessageTyped(fullText, aiMsgObj);
+      scrollBottom();
+      setStatus("ready", false);
+      renderFollowUpSuggestions(fullText);
+      currentController = null;
+    } catch (err) {
+      console.error(err);
+      hideTypingIndicator();
+      const assistantDiv = document.createElement("div");
+      assistantDiv.className = "message assistant error";
+      assistantDiv.textContent = "Error talking to MihAI.";
+      chatContainer.appendChild(assistantDiv);
+      setStatus("ready", false);
+    } finally {
+      hideStopButton();
+      isSending = false;
+    }
+  }
+
+  sendBtn.onclick = sendMessage;
+
+  messageInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  messageInput.addEventListener("input", () => {
+    messageInput.style.height = "auto";
+    messageInput.style.height = messageInput.scrollHeight + "px";
+  });
+
+  if (promptChips) {
+    promptChips.addEventListener("click", (e) => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      const chip = btn.getAttribute("data-chip");
+      if (!chip) return;
+      let prefix = "";
+      if (chip === "/code") {
+        prefix = "/code Please help fix this code:\n";
+      } else if (chip === "/explain") {
+        prefix = "/explain Please explain this step by step:\n";
+      } else if (chip === "/short") {
+        prefix = "/short Summarize this text:\n";
+      } else if (chip === "/story") {
+        prefix = "/story Turn this into a short story:\n";
+      } else {
+        prefix = chip + " ";
+      }
+
+      const existing = messageInput.value.trim();
+      messageInput.value = prefix + (existing || "");
+      messageInput.focus();
+      messageInput.selectionStart = messageInput.value.length;
+      messageInput.selectionEnd = messageInput.value.length;
+    });
+  }
+
+  function showDeleteModal() {
+    if (!currentChatId) return;
+
+    const backdrop = document.createElement("div");
+    backdrop.className = "modal-backdrop";
+
+    const modal = document.createElement("div");
+    modal.className = "modal";
+    modal.innerHTML = `
+        <div>Are you sure you wanna delete this chat?<br />You can't undo it.</div>
+        <div class="modal-buttons">
+          <button class="modal-btn" data-action="no">No</button>
+          <button class="modal-btn modal-btn-danger" data-action="yes">Yes</button>
+        </div>
+      `;
+    backdrop.appendChild(modal);
+    document.body.appendChild(backdrop);
+
+    backdrop.addEventListener("click", (e) => {
+      const action = e.target.getAttribute("data-action");
+      if (!action) {
+        if (e.target === backdrop) document.body.removeChild(backdrop);
+        return;
+      }
+
+      if (action === "no") {
+        document.body.removeChild(backdrop);
+        return;
+      }
+
+      if (action === "yes") {
+        delete chats[currentChatId];
+        const keys = Object.keys(chats);
+        if (keys.length === 0) {
+          createNewChat();
+        } else {
+          currentChatId = keys[0];
+        }
+        saveChats();
+        renderChats();
+        renderMessages();
+        document.body.removeChild(backdrop);
+      }
+    });
+  }
+
+  if (deleteChatBtn) {
+    deleteChatBtn.addEventListener("click", showDeleteModal);
+  }
+
+  if (localStorage.getItem("mihai_theme") === "light") {
+    document.body.classList.add("light");
+  }
+
+  if (Object.keys(chats).length === 0) {
+    createNewChat();
+  } else {
+    for (const id of Object.keys(chats)) {
+      if (!chats[id].attachments) chats[id].attachments = [];
+      if (!chats[id].meta)
+        chats[id].meta = { webHits: 0, createdAt: Date.now() };
+    }
+    currentChatId = Object.keys(chats)[0];
+    renderChats();
+    renderMessages();
+    updateSessionStatsUI();
+  }
+
+  setStatus("ready", false);
+
+  async function startGameWouldYouRather() {
+    if (!currentChatId) {
+      createNewChat();
+    }
+
+    const systemMsg =
+      "Start a 'Would you rather' game with me. Ask one fun question at a time and wait for my answer each time. Keep it light and playful.";
+    const userMsgObj = {
+      role: "user",
+      content: systemMsg,
+    };
+    chats[currentChatId].messages.push(userMsgObj);
+    saveChats();
+
+    addMessageToUI("user", "(Game) " + systemMsg, [], false, userMsgObj);
+
+    const assistantDiv = document.createElement("div");
+    assistantDiv.className = "message assistant";
+    assistantDiv.textContent = "Starting game...";
+    chatContainer.appendChild(assistantDiv);
+    scrollBottom();
+    setStatus("thinking…", true);
+
+    try {
+      const personalityMsg = buildPersonalityMessage();
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          chatId: currentChatId,
+          mode: currentMode,
+          depth: currentDepth,
+          research: researchMode,
+          messages: [personalityMsg, ...chats[currentChatId].messages],
+          attachments: chats[currentChatId].attachments || [],
+        }),
+      });
+
+      const data = await response.json();
+      const fullText =
+        typeof data.reply === "string"
+          ? data.reply
+          : "MihAI had trouble generating a reply.";
+      renderSourcesBar(data.sources || []);
+
+      assistantDiv.textContent = fullText;
+
+      const aiMsgObj = {
+        role: "assistant",
+        content: fullText,
+      };
+      chats[currentChatId].messages.push(aiMsgObj);
+
+      saveChats();
+      renderChats();
+      setStatus("ready", false);
+    } catch (err) {
+      console.error(err);
+      assistantDiv.textContent = "Error starting game.";
+      assistantDiv.classList.add("error");
+      setStatus("ready", false);
+    }
+  }
+
+  async function startGameQuiz() {
+    if (!currentChatId) {
+      createNewChat();
+    }
+
+    const systemMsg =
+      "Start a quiz game with me. Ask one question at a time. Mix topics like gaming, tech, school facts, and general knowledge. After 10 questions, tell me my score. Wait for my answer after each question.";
+    const userMsgObj = {
+      role: "user",
+      content: systemMsg,
+    };
+    chats[currentChatId].messages.push(userMsgObj);
+    saveChats();
+
+    addMessageToUI("user", "(Game) " + systemMsg, [], false, userMsgObj);
+
+    const assistantDiv = document.createElement("div");
+    assistantDiv.className = "message assistant";
+    assistantDiv.textContent = "Starting quiz...";
+    chatContainer.appendChild(assistantDiv);
+    scrollBottom();
+    setStatus("thinking…", true);
+
+    try {
+      const personalityMsg = buildPersonalityMessage();
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          chatId: currentChatId,
+          mode: currentMode,
+          depth: currentDepth,
+          research: researchMode,
+          messages: [personalityMsg, ...chats[currentChatId].messages],
+          attachments: chats[currentChatId].attachments || [],
+        }),
+      });
+
+      const data = await response.json();
+      const fullText =
+        typeof data.reply === "string"
+          ? data.reply
+          : "MihAI had trouble generating a reply.";
+      renderSourcesBar(data.sources || []);
+
+      assistantDiv.textContent = fullText;
+
+      const aiMsgObj = {
+        role: "assistant",
+        content: fullText,
+      };
+      chats[currentChatId].messages.push(aiMsgObj);
+
+      saveChats();
+      renderChats();
+      setStatus("ready", false);
+    } catch (err) {
+      console.error(err);
+      assistantDiv.textContent = "Error starting quiz.";
+      assistantDiv.classList.add("error");
+      setStatus("ready", false);
+    }
+  }
+
+  async function startGameQuickMath() {
+    if (!currentChatId) {
+      createNewChat();
+    }
+
+    const systemMsg =
+      "Start a quick math challenge with me. Ask one math problem at a time (start easy with addition and subtraction, then get harder with multiplication and maybe fractions). After each answer, tell me if I'm right and keep a small score.";
+    const userMsgObj = {
+      role: "user",
+      content: systemMsg,
+    };
+    chats[currentChatId].messages.push(userMsgObj);
+    saveChats();
+
+    addMessageToUI("user", "(Game) " + systemMsg, [], false, userMsgObj);
+
+    const assistantDiv = document.createElement("div");
+    assistantDiv.className = "message assistant";
+    assistantDiv.textContent = "Starting quick math...";
+    chatContainer.appendChild(assistantDiv);
+    scrollBottom();
+    setStatus("thinking…", true);
+
+    try {
+      const personalityMsg = buildPersonalityMessage();
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          chatId: currentChatId,
+          mode: currentMode,
+          depth: currentDepth,
+          research: researchMode,
+          messages: [personalityMsg, ...chats[currentChatId].messages],
+          attachments: chats[currentChatId].attachments || [],
+        }),
+      });
+
+      const data = await response.json();
+      const fullText =
+        typeof data.reply === "string"
+          ? data.reply
+          : "MihAI had trouble generating a reply.";
+      renderSourcesBar(data.sources || []);
+
+      assistantDiv.textContent = fullText;
+
+      const aiMsgObj = {
+        role: "assistant",
+        content: fullText,
+      };
+      chats[currentChatId].messages.push(aiMsgObj);
+
+      saveChats();
+      renderChats();
+      setStatus("ready", false);
+    } catch (err) {
+      console.error(err);
+      assistantDiv.textContent = "Error starting quick math.";
+      assistantDiv.classList.add("error");
+      setStatus("ready", false);
+    }
+  }
+
+  function openCommandPalette() {
+    if (!commandPalette) return;
+    commandPalette.style.display = "block";
+    if (cmdInput) {
+      cmdInput.value = "";
+      cmdInput.focus();
+    }
+  }
+
+  function closeCommandPalette() {
+    if (!commandPalette) return;
+    commandPalette.style.display = "none";
+  }
+
+  function runCommandPaletteAction(action) {
+    switch (action) {
+      case "new-chat":
+        createNewChat();
+        break;
+      case "focus-input":
+        if (messageInput) {
+          messageInput.focus();
+          const len = messageInput.value.length;
+          messageInput.selectionStart = len;
+          messageInput.selectionEnd = len;
+        }
+        break;
+      case "mode-chat":
+        currentMode = "chat";
+        localStorage.setItem("mihai_chat_mode", currentMode);
+        updateModeButtonsUI();
+        break;
+      case "mode-coder":
+        currentMode = "coder";
+        localStorage.setItem("mihai_chat_mode", currentMode);
+        updateModeButtonsUI();
+        break;
+      case "mode-study":
+        currentMode = "study";
+        localStorage.setItem("mihai_chat_mode", currentMode);
+        updateModeButtonsUI();
+        break;
+      case "depth-shallow":
+        currentDepth = 0;
+        localStorage.setItem("mihai_depth", "0");
+        if (depthSelect) depthSelect.value = "0";
+        updateSessionStatsUI();
+        break;
+      case "depth-normal":
+        currentDepth = 1;
+        localStorage.setItem("mihai_depth", "1");
+        if (depthSelect) depthSelect.value = "1";
+        updateSessionStatsUI();
+        break;
+      case "depth-deep":
+        currentDepth = 2;
+        localStorage.setItem("mihai_depth", "2");
+        if (depthSelect) depthSelect.value = "2";
+        updateSessionStatsUI();
+        break;
+      case "stats":
+        const stats = computeStats();
+        const summary =
+          `Stats for this browser:\n` +
+          `• Chats: ${stats.chatCount}\n` +
+          `• Total messages: ${stats.totalMessages}\n` +
+          `• Most used mode: ${stats.mostUsedMode}\n`;
+        alert(summary);
+        break;
+    }
+  }
+
+  document.addEventListener("keydown", (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+      e.preventDefault();
+      if (commandPalette && commandPalette.style.display === "block") {
+        closeCommandPalette();
+      } else {
+        openCommandPalette();
+      }
+    } else if (e.key === "Escape") {
+      closeCommandPalette();
+    }
+  });
+
+  if (cmdList) {
+    cmdList.addEventListener("click", (e) => {
+      const li = e.target.closest("li");
+      if (!li) return;
+      const action = li.getAttribute("data-action");
+      if (!action) return;
+      runCommandPaletteAction(action);
+      closeCommandPalette();
+    });
+  }
+
+  if (cmdInput) {
+    cmdInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const value = cmdInput.value.trim().toLowerCase();
+        if (value === "new" || value === "new chat")
+          runCommandPaletteAction("new-chat");
+        else if (value.includes("focus"))
+          runCommandPaletteAction("focus-input");
+        else if (value.includes("coder"))
+          runCommandPaletteAction("mode-coder");
+        else if (value.includes("study"))
+          runCommandPaletteAction("mode-study");
+        else if (value.includes("chat"))
+          runCommandPaletteAction("mode-chat");
+        else if (value.includes("shallow"))
+          runCommandPaletteAction("depth-shallow");
+        else if (value.includes("normal"))
+          runCommandPaletteAction("depth-normal");
+        else if (value.includes("deep"))
+          runCommandPaletteAction("depth-deep");
+        else if (value.includes("stats"))
+          runCommandPaletteAction("stats");
+        closeCommandPalette();
+      }
+    });
+  }
+
+  function renderMemoryFacts(profile = [], history = []) {
+    if (!memoryList) return;
+    memoryList.innerHTML = "";
+
+    function renderSection(title, items, categoryKey) {
+      const section = document.createElement("div");
+      const header = document.createElement("div");
+      header.textContent = title;
+      header.style.fontWeight = "600";
+      header.style.margin = "6px 0 4px";
+      section.appendChild(header);
+
+      if (!items.length) {
+        const empty = document.createElement("div");
+        empty.textContent = "None.";
+        empty.style.fontSize = "11px";
+        empty.style.color = "#6b7280";
+        section.appendChild(empty);
+      } else {
+        items.forEach((f) => {
+          const row = document.createElement("div");
+          row.style.display = "flex";
+          row.style.justifyContent = "space-between";
+          row.style.alignItems = "center";
+          row.style.gap = "6px";
+          row.style.marginBottom = "4px";
+
+          const text = document.createElement("div");
+          text.textContent = `${f.key}: ${f.value}`;
+          text.style.flex = "1 1 auto";
+          text.style.fontSize = "12px";
+
+          const del = document.createElement("button");
+          del.textContent = "Delete";
+          del.className = "tiny-btn";
+          del.style.fontSize = "11px";
+          del.onclick = () => {
+            const payload = {
+              profile: { upsert: [], delete: [] },
+              history: { upsert: [], delete: [] },
+            };
+            if (categoryKey === "profile") {
+              payload.profile.delete.push({ key: f.key });
+            } else {
+              payload.history.delete.push({ key: f.key });
+            }
+            const url = `/api/memory?userId=${encodeURIComponent(
+              userId
+            )}&chatId=${encodeURIComponent(currentChatId || "")}`;
+            fetch(url, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            })
+              .then((r) => r.json())
+              .then(() => {
+                row.remove();
+              })
+              .catch((e) => console.error("delete memory failed", e));
+          };
+
+          row.appendChild(text);
+          row.appendChild(del);
+          section.appendChild(row);
+        });
+      }
+
+      memoryList.appendChild(section);
+    }
+
+    renderSection("Profile", profile, "profile");
+    renderSection("This chat", history, "history");
+  }
+
+  function openMemoryModal() {
+    if (!memoryModal) return;
+    memoryModal.style.display = "flex";
+
+    const url = `/api/memory?userId=${encodeURIComponent(
+      userId
+    )}&chatId=${encodeURIComponent(currentChatId || "")}`;
+    fetch(url)
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data || !data.ok) return;
+        renderMemoryFacts(data.profile || [], data.history || []);
+      })
+      .catch((e) => console.error("load memory failed", e));
+  }
+
+  function closeMemoryModal() {
+    if (!memoryModal) return;
+    memoryModal.style.display = "none";
+  }
+
+  if (memoryBtn) {
+    memoryBtn.addEventListener("click", () => {
+      openMemoryModal();
+    });
+  }
+  if (memoryClose) {
+    memoryClose.addEventListener("click", closeMemoryModal);
+  }
+  if (memoryModal) {
+    memoryModal.addEventListener("click", (e) => {
+      if (e.target === memoryModal) closeMemoryModal();
+    });
+  }
+
+  function openNotebookModal() {
+    if (!notebookModal) return;
+    notebookModal.style.display = "flex";
+
+    if (!currentChatId) return;
+    const url = `/api/notebook?userId=${encodeURIComponent(
+      userId
+    )}&chatId=${encodeURIComponent(currentChatId)}`;
+    fetch(url)
+      .then((r) => r.json())
+      .then((data) => {
+        if (notebookTextarea && data && data.ok) {
+          notebookTextarea.value = data.content || "";
+        }
+      })
+      .catch((e) => console.error("load notebook failed", e));
+  }
+
+  function closeNotebookModal() {
+    if (!notebookModal) return;
+    notebookModal.style.display = "none";
+  }
+
+  if (notebookBtn) {
+    notebookBtn.addEventListener("click", openNotebookModal);
+  }
+  if (notebookCancel) {
+    notebookCancel.addEventListener("click", closeNotebookModal);
+  }
+  if (notebookModal) {
+    notebookModal.addEventListener("click", (e) => {
+      if (e.target === notebookModal) closeNotebookModal();
+    });
+  }
+  if (notebookSave) {
+    notebookSave.addEventListener("click", () => {
+      if (!currentChatId || !notebookTextarea) {
+        closeNotebookModal();
+        return;
+      }
+      const url = `/api/notebook?userId=${encodeURIComponent(
+        userId
+      )}&chatId=${encodeURIComponent(currentChatId)}`;
+      fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: notebookTextarea.value || "" }),
+      })
+        .then((r) => r.json())
+        .then(() => {
+          closeNotebookModal();
+        })
+        .catch((e) => {
+          console.error("save notebook failed", e);
+          closeNotebookModal();
+        });
+    });
+  }
+
+  // Roadmap modal wiring in same script
+  if (roadmapBtn && roadmapModal && roadmapClose) {
+    roadmapBtn.addEventListener("click", () => {
+      roadmapModal.style.display = "flex";
+    });
+    roadmapClose.addEventListener("click", () => {
+      roadmapModal.style.display = "none";
+    });
+    roadmapModal.addEventListener("click", (e) => {
+      if (e.target === roadmapModal) {
+        roadmapModal.style.display = "none";
+      }
+    });
+  }
+
+  // Call this once after your chat list is rendered:
+  enableInlineTitleRename();
+
+  // Call this once on startup after chatContainer exists:
+  enableMessageReactions();
+</script>
+
+</body>
+</html>
