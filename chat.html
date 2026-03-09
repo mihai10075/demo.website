@@ -1020,7 +1020,6 @@
 
     currentChatId = id;
 
-    // reset per-chat UI state
     queuedAttachments = [];
     hideAttachmentPreview();
     if (currentController) {
@@ -1293,7 +1292,7 @@
         { role: "user", content: rewritePrompt },
       ];
 
-      const response = await fetch("/api/chat", {
+      const response = await fetch("/api/mihai-search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1327,17 +1326,6 @@
       setStatus("ready", false);
     }
   }
-
-const res = await fetch("/api/chat", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify(payload),
-});
-
-const data = await res.json();
-
-addAssistantMessage(data.reply);
-renderSourcesBar(data.sources || []);
 
   function renderMarkdown(text) {
     const div = document.createElement("div");
@@ -1959,7 +1947,7 @@ renderSourcesBar(data.sources || []);
 
     currentController = new AbortController();
     try {
-      const response = await fetch("/api/chat", {
+      const response = await fetch("/api/mihai-search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -2148,78 +2136,76 @@ renderSourcesBar(data.sources || []);
     }
   }
 
- function renderSourcesBar(sources) {
-  if (!sourcesBar || !sourcesInner) return;
-  sourcesInner.innerHTML = "";
+  function renderSourcesBar(sources) {
+    if (!sourcesBar || !sourcesInner) return;
+    sourcesInner.innerHTML = "";
 
-  if (!sources || sources.length === 0) {
-    sourcesBar.style.display = "none";
-    return;
+    if (!sources || sources.length === 0) {
+      sourcesBar.style.display = "none";
+      return;
+    }
+
+    sourcesBar.style.display = "flex";
+
+    const header = document.createElement("div");
+    header.style.display = "flex";
+    header.style.justifyContent = "space-between";
+    header.style.alignItems = "center";
+    header.style.marginBottom = "4px";
+    header.style.fontSize = "11px";
+    header.style.color = "#9ca3af";
+
+    const label = document.createElement("span");
+    label.textContent = researchMode
+      ? `Research mode: MihAI used these ${sources.length} source(s):`
+      : `MihAI used these ${sources.length} source(s):`;
+    header.appendChild(label);
+
+    sourcesInner.appendChild(header);
+
+    sources.forEach((s) => {
+      const card = document.createElement("button");
+      card.type = "button";
+      card.className = "source-pill";
+      card.onclick = () => {
+        if (s.url) window.open(s.url, "_blank", "noopener,noreferrer");
+      };
+
+      const meta = document.createElement("div");
+      meta.className = "source-pill-meta";
+
+      if (s.favicon) {
+        const img = document.createElement("img");
+        img.src = s.favicon;
+        img.className = "source-favicon";
+        img.alt = "";
+        meta.appendChild(img);
+      }
+
+      const hostSpan = document.createElement("span");
+      try {
+        hostSpan.textContent = new URL(s.url).hostname.replace(/^www\./, "");
+      } catch {
+        hostSpan.textContent = "source";
+      }
+      meta.appendChild(hostSpan);
+      card.appendChild(meta);
+
+      const titleDiv = document.createElement("div");
+      titleDiv.className = "source-pill-title";
+      titleDiv.textContent = s.title || s.url || "Source";
+      card.appendChild(titleDiv);
+
+      if (s.snippet) {
+        const snipDiv = document.createElement("div");
+        snipDiv.className = "source-pill-snippet";
+        snipDiv.textContent = s.snippet.slice(0, 140);
+        card.appendChild(snipDiv);
+      }
+
+      sourcesInner.appendChild(card);
+    });
   }
-
-  sourcesBar.style.display = "flex";
-
-  // header label
-  const header = document.createElement("div");
-  header.style.display = "flex";
-  header.style.justifyContent = "space-between";
-  header.style.alignItems = "center";
-  header.style.marginBottom = "4px";
-  header.style.fontSize = "11px";
-  header.style.color = "#9ca3af";
-
-  const label = document.createElement("span");
-  label.textContent = researchMode
-    ? `Research mode: MihAI used these ${sources.length} source(s):`
-    : `MihAI used these ${sources.length} source(s):`;
-  header.appendChild(label);
-
-  sourcesInner.appendChild(header);
-
-  // source cards
-  sources.forEach((s) => {
-    const card = document.createElement("button");
-    card.type = "button";
-    card.className = "source-pill";
-    card.onclick = () => {
-      if (s.url) window.open(s.url, "_blank", "noopener,noreferrer");
-    };
-
-    const meta = document.createElement("div");
-    meta.className = "source-pill-meta";
-
-    if (s.favicon) {
-      const img = document.createElement("img");
-      img.src = s.favicon;
-      img.className = "source-favicon";
-      img.alt = "";
-      meta.appendChild(img);
-    }
-
-    const hostSpan = document.createElement("span");
-    try {
-      hostSpan.textContent = new URL(s.url).hostname.replace(/^www\./, "");
-    } catch {
-      hostSpan.textContent = "source";
-    }
-    meta.appendChild(hostSpan);
-    card.appendChild(meta);
-
-    const titleDiv = document.createElement("div");
-    titleDiv.className = "source-pill-title";
-    titleDiv.textContent = s.title || s.url || "Source";
-    card.appendChild(titleDiv);
-
-    if (s.snippet) {
-      const snipDiv = document.createElement("div");
-      snipDiv.className = "source-pill-snippet";
-      snipDiv.textContent = s.snippet.slice(0, 140);
-      card.appendChild(snipDiv);
-    }
-
-    sourcesInner.appendChild(card);
-  });
-}
 
   if (toggleSourcesBtn) {
     toggleSourcesBtn.addEventListener("click", () => {
@@ -2458,7 +2444,7 @@ renderSourcesBar(data.sources || []);
       messagesToSend.push(...contextSlice);
 
       currentController = new AbortController();
-      const response = await fetch("/api/chat", {
+      const response = await fetch("/api/mihai-search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -2652,7 +2638,7 @@ renderSourcesBar(data.sources || []);
 
     try {
       const personalityMsg = buildPersonalityMessage();
-      const response = await fetch("/api/chat", {
+      const response = await fetch("/api/mihai-search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -2717,7 +2703,7 @@ renderSourcesBar(data.sources || []);
 
     try {
       const personalityMsg = buildPersonalityMessage();
-      const response = await fetch("/api/chat", {
+      const response = await fetch("/api/mihai-search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -2782,7 +2768,7 @@ renderSourcesBar(data.sources || []);
 
     try {
       const personalityMsg = buildPersonalityMessage();
-      const response = await fetch("/api/chat", {
+      const response = await fetch("/api/mihai-search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -3135,6 +3121,7 @@ renderSourcesBar(data.sources || []);
   enableInlineTitleRename();
   enableMessageReactions();
 </script>
+
 
 </body>
 </html>
