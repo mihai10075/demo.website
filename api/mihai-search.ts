@@ -2,7 +2,7 @@
 // Vercel Node function: chat-style payload -> MihAI search -> { reply, sources }
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { runMihAiSearch } from "../lib/mihai-search";
+import runMihAiSearch from "../lib/mihai-search";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const start = Date.now();
@@ -23,13 +23,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       attachments,
     } = (req.body as any) ?? {};
 
-    // Frontend always sends messages[], so validate that
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       res.status(400).json({ ok: false, error: "Missing messages array" });
       return;
     }
 
-    // Find the last user message text
     const lastUserMessage =
       [...messages]
         .reverse()
@@ -52,7 +50,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const combinedMessage = `${lastUserMessage}${extraContext}`;
 
-    // Call your existing MihAI engine from lib
     const result = await runMihAiSearch(combinedMessage, userId);
 
     const tookMs = Date.now() - start;
