@@ -300,7 +300,6 @@
       color: #6b7280;
       margin-top: 2px;
     }
-
   </style>
   <script src="https://unpkg.com/@supabase/supabase-js@2.48.0/dist/umd/supabase.js"></script>
 </head>
@@ -642,14 +641,10 @@
           </div>
         </div>
       </div>
-
     </main>
   </div>
 
   <script>
-    // ===== existing JS you pasted (unchanged logic), with one small enhancement at the end
-    // I’m inlining it exactly as you provided, so you can just overwrite the <script> in your file.
-
     const SUPABASE_URL = "https://rhmnbnzyahasydfshhkc.supabase.co";
     const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_zxfOSKAYtecmcxpFfQ9NRQ_Q3MPxL4I";
     const supa = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
@@ -1354,7 +1349,8 @@
       div.__mihaiMsgRef = msgObj;
     }
 
-    function addMessageActionBar(div, role, content, msgObj) {
+    // UPDATED: bar attaches to the wrapper so it sits under each bubble
+    function addMessageActionBar(wrapper, role, content, msgObj) {
       const bar = document.createElement("div");
       bar.className = "message-actions";
 
@@ -1405,7 +1401,7 @@
       };
       bar.appendChild(delBtn);
 
-      div.appendChild(bar);
+      wrapper.appendChild(bar);
     }
 
     function normalizeContent(raw) {
@@ -2216,7 +2212,7 @@
     function renderFollowUpSuggestions(fullText) {
       if (!promptChips) return;
       if (!fullText || fullText.length < 80) return;
-      // You can add dynamic suggestion chips here later if you want.
+      // hook for dynamic suggestions later
     }
 
     function addAssistantMessageTyped(fullText, msgObj) {
@@ -3076,6 +3072,11 @@
       });
     }
 
+    if (newChatBtn) {
+      newChatBtn.addEventListener("click", () => {
+        createNewChat();
+      });
+    }
   </script>
 </body>
 </html>
