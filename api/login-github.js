@@ -1,9 +1,11 @@
-// api/login-github.js
+// api/login-github.js in *demo-website-one-ashy* project
 export default async function handler(req, res) {
   const clientId = process.env.GITHUB_CLIENT_ID;
 
-  const redirectUri = "https://demo-website-one-ashy.vercel.app/api/github-callback";
-  const state = "mihai-state"; // TODO: for real security, generate random per session
+  const baseUrl = "https://demo-website-zf3z.vercel.app"; // NEW domain
+
+  const redirectUri = `${baseUrl}/api/github-callback`;
+  const state = "mihai-state";
 
   const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${encodeURIComponent(
     clientId

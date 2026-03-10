@@ -11,7 +11,6 @@ export default async function handler(req, res) {
     const clientId = process.env.GITHUB_CLIENT_ID;
     const clientSecret = process.env.GITHUB_CLIENT_SECRET;
 
-    // 1) Exchange code for access token
     const tokenRes = await fetch("https://github.com/login/oauth/access_token", {
       method: "POST",
       headers: {
@@ -34,7 +33,6 @@ export default async function handler(req, res) {
       return;
     }
 
-    // 2) Fetch user data
     const userRes = await fetch("https://api.github.com/user", {
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -55,7 +53,8 @@ export default async function handler(req, res) {
 
     const safeUserId = `gh_${githubId}`;
 
-    const redirectUrl = "https://demo-website-one-ashy.vercel.app/chat.html";
+    const baseUrl = "https://demo-website-zf3z.vercel.app"; // same base as above
+    const redirectUrl = `${baseUrl}/chat.html`;
 
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.end(`
