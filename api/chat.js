@@ -5,7 +5,7 @@ const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const BASE44_APP_URL = "https://mihai-memory-core.base44.app";
 const CREATOR_CODE = process.env.MIHAI_CREATOR_CODE || "Mihai10620_10074";
 
-// OPTIONAL: web search API key – plug in a real key/provider later
+// Serper / web search key
 const WEB_SEARCH_API_KEY = process.env.WEB_SEARCH_API_KEY || null;
 
 async function saveMessage(userId, role, content) {
@@ -22,7 +22,6 @@ async function saveMessage(userId, role, content) {
   }
 }
 
-// Generic memory upsert with optional category support (profile/history, etc.)
 async function upsertMemoryFacts(
   userId,
   factsToUpsert = [],
@@ -47,7 +46,6 @@ async function upsertMemoryFacts(
   }
 }
 
-// Load relevant memory for a given category
 async function loadRelevantMemory(userId, lastUserMessage, category = "history") {
   try {
     const res = await fetch(`${BASE44_APP_URL}/functions/queryMemory`, {
@@ -68,14 +66,14 @@ async function loadRelevantMemory(userId, lastUserMessage, category = "history")
   }
 }
 
-// Web search helper – adjust to your provider when you enable it
+// Web search via Serper
 async function runWebSearch(query) {
   if (!WEB_SEARCH_API_KEY) {
     return { results: [], used: false };
   }
 
   try {
-    const res = await fetch("https://api.serper.dev/search", {
+    const res = await fetch("https://google.serper.dev/search", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -84,9 +82,15 @@ async function runWebSearch(query) {
       body: JSON.stringify({ q: query, num: 5 }),
     });
 
-    const data = await res.json();
+    if (!res.ok) {
+      const txt = await res.text();
+      console.error("[runWebSearch] HTTP", res.status, txt);
+      return { results: [], used: false };
+    }
 
+    const data = await res.json();
     const raw = Array.isArray(data.organic) ? data.organic : [];
+
     const results = raw.slice(0, 5).map((r, idx) => ({
       id: idx + 1,
       title: r.title || "Untitled result",
@@ -94,7 +98,13 @@ async function runWebSearch(query) {
       snippet: (r.snippet || "").slice(0, 240),
       source: r.source || "",
       imageUrl: r.imageUrl || null,
-      favicon: r.favicon || null,
+      favicon:
+        r.favicon ||
+        (r.link
+          ? `https://www.google.com/s2/favicons?sz=64&domain_url=${encodeURIComponent(
+              r.link
+            )}`
+          : null),
     }));
 
     return { results, used: results.length > 0 };
@@ -162,13 +172,16 @@ Memory:
 - Don’t dump all memories; weave them in naturally when they actually help.
 
 Web search:
-- You may receive a WEB_RESULTS section with numbered web search results.
-- Use those results as your main source of truth for time-sensitive or factual questions.
+- When research mode is ON, the backend may include a WEB_RESULTS section with numbered web search results that come from an external web search API.
+- In that case, you ARE allowed to use those results as your main source of truth for time-sensitive or factual questions.
 - When you directly use a fact from result [n], mention it with a bracket like [n] in your answer.
 - Do NOT invent result numbers that do not exist.
-- If web results are missing or irrelevant, say what you can based on your own knowledge or admit limits.
-- Your creator Mihai maintains a roadmap of possible future upgrades
-  (multimodal, emotional intelligence, personalization, gamification, education, mental health support, community, etc.).
+- If WEB_RESULTS is empty, you must NOT claim that you searched the web.
+- If the user clearly asks for fresh / real-time / web-only info (like "latest news", "today's results", "current price") but research mode is OFF, tell them exactly once: "Turn on Research mode to let me search the web for you." Then answer from your own knowledge and say it might be outdated.
+- If research mode is ON and WEB_RESULTS is present, say that you used web sources when relevant.
+
+Roadmap note:
+- Your creator Mihai maintains a roadmap of possible future upgrades (multimodal, emotional intelligence, personalization, gamification, education, mental health support, community, etc.).
 - You CANNOT implement these capabilities yourself; you can only talk about them conceptually if the user asks.
 - When users ask about future features, you may refer to them as ideas Mihai is considering, not as things you already do.
 `.trim();
@@ -186,8 +199,8 @@ export default async function handler(req, res) {
       chatId,
       attachments = [],
       mode = "chat",
-      depth = 1,        // 0 = shallow, 1 = normal, 2 = deep
-      research = false, // frontend research toggle
+      depth = 1, // 0 = shallow, 1 = normal, 2 = deep
+      research = false, // frontend Research mode toggle
     } = req.body || {};
 
     if (!Array.isArray(messages) || messages.length === 0) {
@@ -199,8 +212,8 @@ export default async function handler(req, res) {
         ? userId.trim()
         : "anon-default";
 
-    const historyKey = `${safeUserId}:${chatId || "default"}`; // per-chat history
-    const profileKey = safeUserId; // long-term profile
+    const historyKey = `${safeUserId}:${chatId || "default"}`;
+    const profileKey = safeUserId;
 
     if (!GROQ_API_KEY) {
       console.error("Missing GROQ_API_KEY");
@@ -209,14 +222,14 @@ export default async function handler(req, res) {
 
     const lastUserMessage = messages.at(-1)?.content ?? "";
 
-    // Tightened regex-based auto-web + explicit research flag
+    // Heuristic: detect questions that probably need web
     const regexNeedsWeb =
-      /\b(202[4-9]|latest|today|breaking news|release|patch notes|results?)\b/i.test(
+      /\b(202[4-9]|latest|today|breaking news|release|patch notes|results?|score|live|price|prices|weather|from the web|search the web|google this|look this up)\b/i.test(
         lastUserMessage
       );
     const needsWeb = research || regexNeedsWeb;
 
-    // Load memory in parallel for PROFILE and HISTORY
+    // Load memory + maybe web search in parallel
     const [profileFacts, historyFacts, webSearchResult] = await Promise.all([
       loadRelevantMemory(profileKey, lastUserMessage, "profile"),
       loadRelevantMemory(historyKey, lastUserMessage, "history"),
@@ -236,7 +249,6 @@ export default async function handler(req, res) {
 
     if (allLines.length > 0) {
       memoryBlock = `
-
 ---
 MEMORY (things you know about this user):
 ${allLines.join("\n")}
@@ -255,7 +267,6 @@ ${allLines.join("\n")}
         .join("\n");
 
       attachmentNote = `
-
 ---
 ATTACHMENTS (files/images the user uploaded in this chat):
 ${lines}
@@ -277,7 +288,6 @@ Snippet: ${r.snippet || ""}`
         .join("\n\n");
 
       webBlock = `
-
 ---
 WEB_RESULTS (numbered web search results):
 ${lines}
@@ -296,11 +306,10 @@ When you cite a fact from these, include [result_number] in your answer, like [1
       });
     }
 
-    // Mode hint (backend-level; frontend also sends a personality system msg)
+    // Mode hint
     let modeInstruction = "";
     if (mode === "coder") {
       modeInstruction = `
-
 ---
 MODE: CODER
 - Prioritize helping with programming, debugging, and explaining code.
@@ -309,7 +318,6 @@ MODE: CODER
 - Default to slightly more serious, but still friendly.`;
     } else if (mode === "study") {
       modeInstruction = `
-
 ---
 MODE: STUDY
 - Act like a patient study buddy or tutor.
@@ -318,7 +326,6 @@ MODE: STUDY
 - Stay encouraging and never make the user feel dumb.`;
     } else if (mode === "creative") {
       modeInstruction = `
-
 ---
 MODE: CREATIVE
 - Focus on storytelling, worldbuilding, ideas, and playful exploration.
@@ -326,7 +333,6 @@ MODE: CREATIVE
 - Keep things fun but still safe and respectful.`;
     } else if (mode === "roleplay") {
       modeInstruction = `
-
 ---
 MODE: ROLEPLAY
 - Stay in character as requested by the user.
@@ -334,7 +340,6 @@ MODE: ROLEPLAY
 - Avoid NSFW, harassment, or unsafe content; keep it fun and SFW.`;
     } else {
       modeInstruction = `
-
 ---
 MODE: CHAT
 - Act like a chill tech/gaming friend.
@@ -362,11 +367,28 @@ DEPTH: NORMAL
 - Use a balanced amount of context from earlier in the conversation.`;
     }
 
-    // Strip unsupported fields like `attachments` before sending to Groq
+    // Strip unsupported fields before sending to Groq
     const cleanedMessages = messages.map((m) => ({
       role: m.role,
       content: m.content,
     }));
+
+    // Extra system instruction about research mode ON/OFF
+    let researchInstruction = "";
+    if (!research && regexNeedsWeb) {
+      researchInstruction = `
+---
+RESEARCH MODE OFF
+- The user is asking for fresh / web-based info but research mode is OFF.
+- Tell them once: "Turn on Research mode to let me search the web for you."
+- Then answer from your own knowledge only and mention that it might be outdated.`;
+    } else if (research) {
+      researchInstruction = `
+---
+RESEARCH MODE ON
+- You are allowed to use WEB_RESULTS given above.
+- When you rely on them, say that you used web sources.`;
+    }
 
     const groqMessages = [
       {
@@ -375,21 +397,18 @@ DEPTH: NORMAL
           SYSTEM_PROMPT +
           modeInstruction +
           depthInstruction +
+          researchInstruction +
           memoryBlock +
           attachmentNote +
           webBlock,
       },
-      // NOTE: Frontend may prepend another system message (personality/role)
-      // inside `messages`; we keep it here so it refines tone without
-      // overriding core identity/safety.
       ...cleanedMessages,
     ];
 
-    // SPEED TWEAK: smaller max tokens for non-deep
     const maxTokens = depth === 2 ? 1024 : 512;
 
     const completion = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile", // known-good model
+      model: "llama-3.3-70b-versatile",
       messages: groqMessages,
       max_tokens: maxTokens,
     });
@@ -398,7 +417,7 @@ DEPTH: NORMAL
       completion.choices?.[0]?.message?.content ||
       "I had trouble generating a reply.";
 
-    // Background tasks: save messages + update memory
+    // Background save + memory extraction
     (async () => {
       try {
         await Promise.all([

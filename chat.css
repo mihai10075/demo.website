@@ -380,7 +380,6 @@ body.light {
 /* ---- Chat messages area ---- */
 
 .chat-layout {
-  /* structure handled in HTML inline style, here just padding */
   padding: 6px 10px 8px;
   display: flex;
   flex-direction: column;
@@ -395,8 +394,9 @@ body.light {
   margin-bottom: 4px;
 }
 
+/* WIDER bubbles */
 .message {
-  max-width: 780px;
+  max-width: 1000px; /* was 780px */
   border-radius: 12px;
   padding: 6px 8px;
   font-size: 13px;
@@ -411,7 +411,9 @@ body.light {
   background: radial-gradient(circle at top left, #1d283a, #020617);
 }
 
+/* Center assistant bubbles more */
 .message.assistant {
+  margin-left: auto;
   margin-right: auto;
 }
 
@@ -672,4 +674,44 @@ body.light {
   .topbar {
     position: static;
   }
+}
+
+/* ---- NEW: inline source pills under messages ---- */
+
+.sources-inline-row {
+  margin-top: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.source-pill-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  background: #020617;
+  color: var(--text-subtle);
+  font-size: 11px;
+  text-decoration: none;
+}
+
+.source-pill-inline:hover {
+  border-color: var(--accent);
+  color: var(--text-main);
+}
+
+.source-pill-inline-icon {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+}
+
+.source-pill-inline-domain {
+  max-width: 110px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }

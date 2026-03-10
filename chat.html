@@ -2325,48 +2325,120 @@
       }, speed);
     }
 
-    async function sendMessage() {
-      if (isSending) return;
-      isSending = true;
-      try {
-        let text = messageInput.value.trim();
-        if (!text && queuedAttachments.length === 0) return;
-        if (!currentChatId) {
-          createNewChat();
-        }
+async function sendMessage() {
+  if (isSending) return;
+  isSending = true;
+  try {
+    let text = messageInput.value.trim();
+    if (!text && queuedAttachments.length === 0) return;
+    if (!currentChatId) {
+      createNewChat();
+    }
 
-        const { cleaned, command } = extractSlashCommand(text);
-        text = cleaned || text;
-        const slashSystem = slashCommandSystemMessage(command);
+    const { cleaned, command } = extractSlashCommand(text);
+    text = cleaned || text;
+    const slashSystem = slashCommandSystemMessage(command);
 
-        if (command === "/stats") {
-          messageInput.value = "";
-          messageInput.style.height = "auto";
-          const stats = computeStats();
-          const summary =
-            `Stats for this browser:\n` +
-            `• Chats: ${stats.chatCount}\n` +
-            `• Total messages: ${stats.totalMessages}\n` +
-            `• Most used mode (approx): ${stats.mostUsedMode}\n` +
-            `• Mode usage: chat=${stats.modeCounts.chat}, coder=${stats.modeCounts.coder}, study=${stats.modeCounts.study}\n` +
-            (stats.chatsWithWeb > 0
-              ? `• Chats that used web search (approx): ${stats.chatsWithWeb}\n`
-              : "") +
-            `• Current depth: ${depthLabel(stats.depth)}\n`;
+    // /stats command stays the same
+    if (command === "/stats") {
+      messageInput.value = "";
+      messageInput.style.height = "auto";
+      const stats = computeStats();
+      const summary =
+        `Stats for this browser:\n` +
+        `• Chats: ${stats.chatCount}\n` +
+        `• Total messages: ${stats.totalMessages}\n` +
+        `• Most used mode (approx): ${stats.mostUsedMode}\n` +
+        `• Mode usage: chat=${stats.modeCounts.chat}, coder=${stats.modeCounts.coder}, study=${stats.modeCounts.study}\n` +
+        (stats.chatsWithWeb > 0
+          ? `• Chats that used web search (approx): ${stats.chatsWithWeb}\n`
+          : "") +
+        `• Current depth: ${depthLabel(stats.depth)}\n`;
 
-          const userMsgObj = { role: "user", content: "/stats", attachments: [] };
-          addMessageToUI("user", "/stats", [], false, userMsgObj);
-          const aiMsgObj = { role: "assistant", content: summary };
-          addMessageToUI("assistant", summary, [], false, aiMsgObj);
-          scrollBottom();
-          setStatus("ready", false);
-          updateSessionStatsUI();
-          return;
-        }
+      const userMsgObj = { role: "user", content: "/stats", attachments: [] };
+      addMessageToUI("user", "/stats", [], false, userMsgObj);
+      const aiMsgObj = { role: "assistant", content: summary };
+      addMessageToUI("assistant", summary, [], false, aiMsgObj);
+      scrollBottom();
+      setStatus("ready", false);
+      updateSessionStatsUI();
+      return;
+    }
 
-        messageInput.value = "";
-        messageInput.style.height = "auto";
+    messageInput.value = "";
+    messageInput.style.height = "auto";
 
+    const attachmentsForThisMessage = queuedAttachments.slice();
+    queuedAttachments = [];
+    if (attachmentBar) attachmentBar.style.display = "none";
+
+    const userMsgObj = {
+      role: "user",
+      content: text || "(sent attachments)",
+      attachments: attachmentsForThisMessage,
+    };
+    chats[currentChatId].messages.push(userMsgObj);
+    addMessageToUI("user", userMsgObj.content, attachmentsForThisMessage, false, userMsgObj);
+    scrollBottom();
+
+    setStatus("thinking…", true);
+
+    // Build messages array including any extra system from slash command
+    const messagesToSend = [...chats[currentChatId].messages];
+    if (slashSystem) {
+      messagesToSend.unshift({
+        role: "system",
+        content: slashSystem,
+      });
+    }
+
+    const resp = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: currentUserId,
+        chatId: currentChatId,
+        messages: messagesToSend,
+        attachments: attachmentsForThisMessage,
+        mode: currentMode,
+        depth: currentDepth,
+        research: researchMode,
+      }),
+    });
+
+    const data = await resp.json();
+    if (!resp.ok || data.error) {
+      const errText = data.error || "Something went wrong.";
+      const aiErrObj = { role: "assistant", content: errText };
+      chats[currentChatId].messages.push(aiErrObj);
+      addMessageToUI("assistant", errText, [], true, aiErrObj);
+      scrollBottom();
+      setStatus("ready", false);
+      return;
+    }
+
+    const aiMsgObj = { role: "assistant", content: data.reply };
+    chats[currentChatId].messages.push(aiMsgObj);
+    saveChats();
+
+    const sources = Array.isArray(data.sources) ? data.sources : [];
+    addMessageToUI("assistant", data.reply, [], false, aiMsgObj, sources);
+    renderSourcesBar(sources); // keep your top bar updated
+    scrollBottom();
+  } catch (e) {
+    console.error(e);
+    const aiErrObj = {
+      role: "assistant",
+      content: "Network error, try again in a bit.",
+    };
+    chats[currentChatId].messages.push(aiErrObj);
+    addMessageToUI("assistant", aiErrObj.content, [], true, aiErrObj);
+    scrollBottom();
+  } finally {
+    setStatus("ready", false);
+    isSending = false;
+  }
+}
         const attachmentsForThisMessage = queuedAttachments.slice();
         queuedAttachments = [];
         if (attachmentBar) attachmentBar.style.display = "none";
