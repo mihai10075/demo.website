@@ -1179,7 +1179,7 @@
                 saveChats();
               }
             } catch (err) {
-              console.error("Failed to rename chat", err);
+              // Failed to rename chat
               span.textContent = originalTitle;
             }
           }
@@ -1236,7 +1236,7 @@
         const data = await res.json();
         renderReactionsForMessage(messageId, data.reactions || {});
       } catch (err) {
-        console.error("Reaction error", err);
+        // Reaction error
       }
     }
 
@@ -1338,7 +1338,7 @@
         renderSourcesBar(data.sources || []);
         setStatus("ready", false);
       } catch (e) {
-        console.error("Regenerate failed", e);
+        // Regenerate failed
         setStatus("ready", false);
       }
     }
@@ -1693,10 +1693,10 @@
 
           showAttachmentPreview(attachmentObj);
 
-          alert("File uploaded and attached to this chat.");
+          // File uploaded and attached to this chat.
         } catch (e) {
-          console.error("Upload error", e);
-          alert("Could not upload that file.");
+        // Upload error
+          // Could not upload that file.
         } finally {
           fileInput.value = "";
         }
@@ -1767,10 +1767,10 @@
 
           showAttachmentPreview(attachmentObj);
 
-          alert("Photo analyzed and attached to this chat.");
+          // Photo analyzed and attached to this chat.
         } catch (e) {
-          console.error("Image upload / vision error", e);
-          alert("Could not process that image.");
+        // Image upload / vision error
+          // Could not process that image.
         } finally {
           imageInput.value = "";
         }
@@ -2328,9 +2328,17 @@
 async function sendMessage() {
   if (isSending) return;
   isSending = true;
+  
   try {
     let text = messageInput.value.trim();
-    if (!text && queuedAttachments.length === 0) return;
+
+    // If messageInput.value is empty and queuedAttachments.length === 0, do not send anything
+    if (!text && queuedAttachments.length === 0) {
+      isSending = false;
+      return;
+    }
+
+    // If currentChatId is null, call createNewChat() first
     if (!currentChatId) {
       createNewChat();
     }
@@ -2339,10 +2347,11 @@ async function sendMessage() {
     text = cleaned || text;
     const slashSystem = slashCommandSystemMessage(command);
 
-    // /stats command stays the same
+    // Handle /stats exactly like this: Don't call the API, just compute stats
     if (command === "/stats") {
       messageInput.value = "";
       messageInput.style.height = "auto";
+      
       const stats = computeStats();
       const summary =
         `Stats for this browser:\n` +
@@ -2368,63 +2377,68 @@ async function sendMessage() {
     messageInput.value = "";
     messageInput.style.height = "auto";
 
+    // Move any queued attachments into a local attachmentsForThisMessage array, clear queuedAttachments, hide attachmentBar
     const attachmentsForThisMessage = queuedAttachments.slice();
     queuedAttachments = [];
     if (attachmentBar) attachmentBar.style.display = "none";
 
+    // Push a user message object into chats[currentChatId].messages
     const userMsgObj = {
       role: "user",
       content: text || "(sent attachments)",
-      attachments: attachmentsForThisMessage,
+      attachments: attachmentsForThisMessage
     };
     chats[currentChatId].messages.push(userMsgObj);
+
+    // Call addMessageToUI and scrollBottom
     addMessageToUI("user", userMsgObj.content, attachmentsForThisMessage, false, userMsgObj);
     scrollBottom();
 
+    // Set status to "thinking…" via setStatus
     setStatus("thinking…", true);
 
-    // Build messages array including any extra system from slash command
+    // Build the messages array
     const messagesToSend = [...chats[currentChatId].messages];
     if (slashSystem) {
-      messagesToSend.unshift({
-        role: "system",
-        content: slashSystem,
-      });
+      messagesToSend.unshift({ role: "system", content: slashSystem.content });
     }
 
+    // Call fetch("/api/chat", ...)
     const resp = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        userId: currentUserId,
+        userId, // Use userId, not currentUserId
         chatId: currentChatId,
         messages: messagesToSend,
         attachments: attachmentsForThisMessage,
         mode: currentMode,
         depth: currentDepth,
-        research: researchMode,
-      }),
+        research: researchMode
+      })
     });
 
     const data = await resp.json();
+    
+    // On success: Handle errors
     if (!resp.ok || data.error) {
       const errText = data.error || "Something went wrong.";
       const aiErrObj = { role: "assistant", content: errText };
       chats[currentChatId].messages.push(aiErrObj);
       addMessageToUI("assistant", errText, [], true, aiErrObj);
       scrollBottom();
-      setStatus("ready", false);
       return;
     }
 
+    // On success: Handle successful response
     const aiMsgObj = { role: "assistant", content: data.reply };
     chats[currentChatId].messages.push(aiMsgObj);
     saveChats();
-
-    const sources = Array.isArray(data.sources) ? data.sources : [];
-    addMessageToUI("assistant", data.reply, [], false, aiMsgObj, sources);
-    renderSourcesBar(sources); // keep your top bar updated
+    
+    addMessageToUI("assistant", data.reply, [], false, aiMsgObj);
+    renderSourcesBar(Array.isArray(data.sources) ? data.sources : []);
     scrollBottom();
+    
   } catch (e) {
     console.error(e);
     const aiErrObj = {
@@ -2435,111 +2449,11 @@ async function sendMessage() {
     addMessageToUI("assistant", aiErrObj.content, [], true, aiErrObj);
     scrollBottom();
   } finally {
+    // In all cases, in a finally block, call setStatus and set isSending
     setStatus("ready", false);
     isSending = false;
   }
 }
-        const attachmentsForThisMessage = queuedAttachments.slice();
-        queuedAttachments = [];
-        if (attachmentBar) attachmentBar.style.display = "none";
-
-        const userMsgObj = {
-          role: "user",
-          content: text || "(sent attachments)",
-          attachments: attachmentsForThisMessage,
-        };
-        chats[currentChatId].messages.push(userMsgObj);
-        addMessageToUI(
-          "user",
-          text || "(sent attachments)",
-          attachmentsForThisMessage,
-          false,
-          userMsgObj
-        );
-
-        hideTypingIndicator();
-        showTypingIndicator();
-        setStatus("thinking…", true);
-        showStopButton();
-
-        const personalityMsg = buildPersonalityMessage();
-        const messagesToSend = [personalityMsg];
-        if (slashSystem) messagesToSend.push(slashSystem);
-
-        const lengthMsg = lengthModeSystemMessage();
-        if (lengthMsg) messagesToSend.push(lengthMsg);
-
-        const fullMessages = chats[currentChatId].messages;
-        let sliceStart = 0;
-        if (currentDepth === 0) {
-          sliceStart = Math.max(0, fullMessages.length - 10);
-        } else if (currentDepth === 1) {
-          sliceStart = Math.max(0, fullMessages.length - 30);
-        } else {
-          sliceStart = 0;
-        }
-        const contextSlice = fullMessages.slice(sliceStart);
-
-        messagesToSend.push(...contextSlice);
-
-        currentController = new AbortController();
-        const response = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId,
-            chatId: currentChatId,
-            mode: currentMode,
-            depth: currentDepth,
-            research: researchMode,
-            messages: messagesToSend,
-            attachments: chats[currentChatId].attachments || [],
-          }),
-          signal: currentController.signal,
-        });
-
-        if (!response.ok) {
-          throw new Error("HTTP " + response.status);
-        }
-
-        const data = await response.json();
-        const fullText =
-          typeof data.reply === "string"
-            ? data.reply
-            : "MihAI had trouble generating a reply.";
-
-        renderSourcesBar(data.sources || []);
-
-        hideTypingIndicator();
-
-        const aiMsgObj = { role: "assistant", content: fullText };
-        chats[currentChatId].messages.push(aiMsgObj);
-        if (
-          chats[currentChatId].title === "New chat" &&
-          (text || "").trim().length > 0
-        ) {
-          chats[currentChatId].title = (text || "").slice(0, 24);
-        }
-        saveChats();
-        renderChats();
-        addAssistantMessageTyped(fullText, aiMsgObj);
-        scrollBottom();
-        setStatus("ready", false);
-        renderFollowUpSuggestions(fullText);
-        currentController = null;
-      } catch (err) {
-        console.error(err);
-        hideTypingIndicator();
-        const assistantDiv = document.createElement("div");
-        assistantDiv.className = "message assistant error";
-        assistantDiv.textContent = "Error talking to MihAI.";
-        chatContainer.appendChild(assistantDiv);
-        setStatus("ready", false);
-      } finally {
-        hideStopButton();
-        isSending = false;
-      }
-    }
 
     sendBtn.onclick = sendMessage;
 
@@ -2709,72 +2623,7 @@ async function sendMessage() {
         saveChats();
         renderChats();
         setStatus("ready", false);
-      } catch (err) {
-        console.error(err);
-        assistantDiv.textContent = "Error starting game.";
-        assistantDiv.classList.add("error");
-        setStatus("ready", false);
-      }
-    }
-
-    async function startGameQuiz() {
-      if (!currentChatId) {
-        createNewChat();
-      }
-
-      const systemMsg =
-        "Start a quiz game with me. Ask one question at a time. Mix topics like gaming, tech, school facts, and general knowledge. After 10 questions, tell me my score. Wait for my answer after each question.";
-      const userMsgObj = {
-        role: "user",
-        content: systemMsg,
-      };
-      chats[currentChatId].messages.push(userMsgObj);
-      saveChats();
-
-      addMessageToUI("user", "(Game) " + systemMsg, [], false, userMsgObj);
-
-      const assistantDiv = document.createElement("div");
-      assistantDiv.className = "message assistant";
-      assistantDiv.textContent = "Starting quiz...";
-      chatContainer.appendChild(assistantDiv);
-      scrollBottom();
-      setStatus("thinking…", true);
-
-      try {
-        const personalityMsg = buildPersonalityMessage();
-        const response = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId,
-            chatId: currentChatId,
-            mode: currentMode,
-            depth: currentDepth,
-            research: researchMode,
-            messages: [personalityMsg, ...chats[currentChatId].messages],
-            attachments: chats[currentChatId].attachments || [],
-          }),
-        });
-
-        const data = await response.json();
-        const fullText =
-          typeof data.reply === "string"
-            ? data.reply
-            : "MihAI had trouble generating a reply.";
-        renderSourcesBar(data.sources || []);
-
-        assistantDiv.textContent = fullText;
-
-        const aiMsgObj = {
-          role: "assistant",
-          content: fullText,
-        };
-        chats[currentChatId].messages.push(aiMsgObj);
-
-        saveChats();
-        renderChats();
-        setStatus("ready", false);
-      } catch (err) {
+        } catch (err) {
         console.error(err);
         assistantDiv.textContent = "Error starting quiz.";
         assistantDiv.classList.add("error");
