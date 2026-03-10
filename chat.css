@@ -31,7 +31,7 @@ body {
   padding: 0;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
     "Segoe UI", sans-serif;
-  background: radial-gradient(circle at top left, #020617 0, #020617 40%, #000000 100%);
+  background: #020617; /* solid dark */
   color: var(--text-main);
 }
 
@@ -40,8 +40,9 @@ body {
   display: grid;
   grid-template-columns: 230px minmax(0, 1fr); /* sidebar smaller, chat wider */
   height: 100vh;
-  max-width: 1400px;
-  margin: 0 auto;
+  width: 100vw;
+  max-width: 100%;
+  margin: 0;
   background: radial-gradient(circle at top left, #020617, #000000);
   color: var(--text-main);
 }
@@ -182,7 +183,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 12px;
+  padding: 10px 14px;
   border-bottom: 1px solid var(--border-subtle);
   background: radial-gradient(circle at top left, #020617, #020617);
   position: sticky;
@@ -193,7 +194,7 @@ body {
 .top-left {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
 }
 
 .logo-dot {
@@ -212,8 +213,9 @@ body {
 .top-right {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: 11px;
+  flex-wrap: wrap;
 }
 
 #user-label {
@@ -386,11 +388,11 @@ body {
 /* ===== Chat container & halo ===== */
 .chat-container {
   flex: 1 1 auto;
-  padding: 8px 20px;          /* more horizontal padding */
+  padding: 10px 20px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   position: relative;
 }
 
@@ -398,7 +400,7 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  margin: 20px 40px;          /* tighter halo so it doesn’t shrink area */
+  margin: 20px 40px;
   background: radial-gradient(circle at top, #4f46e51f, transparent 60%);
   pointer-events: none;
   z-index: -1;
@@ -406,7 +408,8 @@ body {
 
 /* ===== Messages: left/right bubbles ===== */
 .message-wrap {
-  max-width: 1100px;          /* wider message column */
+  max-width: 1100px;
+  width: 100%;
   display: flex;
   flex-direction: column;
 }
@@ -619,9 +622,45 @@ code {
   color: var(--text-dim);
 }
 
-/* prompt chips row base */
+/* prompt chips row (bigger, nicer) */
 .prompt-chips {
-  margin-top: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 0 2px;
+}
+
+.prompt-chips button {
+  border-radius: 999px;
+  border: 1px solid #1f2937;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  background: #020617;
+  color: #e5e7eb;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, transform 0.05s ease,
+    box-shadow 0.12s ease;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.8);
+}
+
+.prompt-chips button:hover {
+  background: #111827;
+  border-color: #4f46e5;
+  transform: translateY(-1px);
+}
+
+.prompt-chips button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.7);
+}
+
+/* optional highlight for “Turn this into a story” */
+.prompt-chips button.story-chip {
+  background: radial-gradient(circle at top left, #4f46e5, #22c55e);
+  border-color: transparent;
+  color: #f9fafb;
 }
 
 /* command palette */
@@ -747,7 +786,7 @@ code {
 /* Tablets and down */
 @media (max-width: 900px) {
   .layout {
-    grid-template-columns: 1fr;              /* no fixed sidebar column */
+    grid-template-columns: 1fr;
   }
 
   .sidebar {
@@ -774,7 +813,7 @@ code {
   }
 
   .message-wrap {
-    max-width: 100%;                        /* let bubbles use full width */
+    max-width: 100%;
   }
 
   .topbar {
