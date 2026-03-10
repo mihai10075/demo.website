@@ -300,6 +300,30 @@
       color: #6b7280;
       margin-top: 2px;
     }
+
+    /* NEW: layout for scrollable chat */
+    .main {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      min-height: 0;
+    }
+    .chat-layout {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .chat-messages {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .input-wrap {
+      flex-shrink: 0;
+    }
   </style>
   <script src="https://unpkg.com/@supabase/supabase-js@2.48.0/dist/umd/supabase.js"></script>
 </head>
@@ -510,77 +534,82 @@
         </div>
       </section>
 
-      <section id="chatContainer" class="chat-container">
-        <div id="typingIndicator" class="typing-indicator">
-          <div class="typing-indicator-avatar"></div>
-          <div class="typing-indicator-dots">
-            <div class="typing-indicator-dot"></div>
-            <div class="typing-indicator-dot"></div>
-            <div class="typing-indicator-dot"></div>
+      <!-- NEW: chat-layout wraps messages + input -->
+      <section class="chat-layout">
+        <!-- scrollable messages area -->
+        <div id="chatContainer" class="chat-messages">
+          <div id="typingIndicator" class="typing-indicator">
+            <div class="typing-indicator-avatar"></div>
+            <div class="typing-indicator-dots">
+              <div class="typing-indicator-dot"></div>
+              <div class="typing-indicator-dot"></div>
+              <div class="typing-indicator-dot"></div>
+            </div>
           </div>
         </div>
-      </section>
 
-      <section class="input-wrap">
-        <div id="attachmentBar" style="
-          display:none;
-          margin-bottom:6px;
-          padding:6px 8px;
-          border-radius:10px;
-          border:1px solid #1f2937;
-          background:#020617;
-          font-size:11px;
-          display:flex;
-          align-items:center;
-          gap:8px;
-        ">
-          <span id="attachmentLabel"></span>
-          <button id="attachmentEditBtn"
-            style="border:none;background:transparent;color:#e5e7eb;
-            cursor:pointer;font-size:12px;">✏️</button>
-          <button id="attachmentClearBtn"
-            style="border:none;background:transparent;color:#f97373;
-            cursor:pointer;font-size:12px;">✕</button>
-        </div>
-
-        <div class="input-shell">
-          <button id="voiceBtn" class="send-btn" style="background:#0f172a;color:#e5e7eb;font-size:14px;">🎙</button>
-          <textarea
-            id="messageInput"
-            rows="1"
-            placeholder="Talk to MihAI... (try /short, /story, /code, /stats)"
-          ></textarea>
-          <button id="stopBtn" class="send-btn" style="background:#ef4444; display:none;">✕</button>
-          <button id="sendBtn" class="send-btn">➤</button>
-        </div>
-
-        <div id="promptChips" class="prompt-chips">
-          <button data-chip="/explain">Explain this step by step</button>
-          <button data-chip="/code">Fix this code</button>
-          <button data-chip="/short">Summarize</button>
-          <button data-chip="/story">Turn into a story</button>
-        </div>
-
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; padding:0 4px; gap:10px; flex-wrap:wrap;">
-          <div style="display:flex; gap:10px;">
-            <label id="attachFileLabel" style="font-size:11px; color:#9ca3af; cursor:pointer;">
-              📎 Attach file
-              <input
-                id="fileInput"
-                type="file"
-                accept=".txt,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,image/*"
-                style="display:none;"
-              />
-            </label>
-            <label id="attachImageLabel" style="font-size:11px; color:#9ca3af; cursor:pointer;">
-              🖼 Attach photo
-              <input id="imageInput" type="file" accept="image/*" style="display:none;" />
-            </label>
+        <!-- input pinned under messages -->
+        <section class="input-wrap">
+          <div id="attachmentBar" style="
+            display:none;
+            margin-bottom:6px;
+            padding:6px 8px;
+            border-radius:10px;
+            border:1px solid #1f2937;
+            background:#020617;
+            font-size:11px;
+            display:flex;
+            align-items:center;
+            gap:8px;
+          ">
+            <span id="attachmentLabel"></span>
+            <button id="attachmentEditBtn"
+              style="border:none;background:transparent;color:#e5e7eb;
+              cursor:pointer;font-size:12px;">✏️</button>
+            <button id="attachmentClearBtn"
+              style="border:none;background:transparent;color:#f97373;
+              cursor:pointer;font-size:12px;">✕</button>
           </div>
-          <div class="hint">
-            MihAI is an expressive, slightly chaotic but kind AI friend. Keep it chill and it will, too.
+
+          <div class="input-shell">
+            <button id="voiceBtn" class="send-btn" style="background:#0f172a;color:#e5e7eb;font-size:14px;">🎙</button>
+            <textarea
+              id="messageInput"
+              rows="1"
+              placeholder="Talk to MihAI... (try /short, /story, /code, /stats)"
+            ></textarea>
+            <button id="stopBtn" class="send-btn" style="background:#ef4444; display:none;">✕</button>
+            <button id="sendBtn" class="send-btn">➤</button>
           </div>
-        </div>
+
+          <div id="promptChips" class="prompt-chips">
+            <button data-chip="/explain">Explain this step by step</button>
+            <button data-chip="/code">Fix this code</button>
+            <button data-chip="/short">Summarize</button>
+            <button data-chip="/story">Turn into a story</button>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; padding:0 4px; gap:10px; flex-wrap:wrap;">
+            <div style="display:flex; gap:10px;">
+              <label id="attachFileLabel" style="font-size:11px; color:#9ca3af; cursor:pointer;">
+                📎 Attach file
+                <input
+                  id="fileInput"
+                  type="file"
+                  accept=".txt,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,image/*"
+                  style="display:none;"
+                />
+              </label>
+              <label id="attachImageLabel" style="font-size:11px; color:#9ca3af; cursor:pointer;">
+                🖼 Attach photo
+                <input id="imageInput" type="file" accept="image/*" style="display:none;" />
+              </label>
+            </div>
+            <div class="hint">
+              MihAI is an expressive, slightly chaotic but kind AI friend. Keep it chill and it will, too.
+            </div>
+          </div>
+        </section>
       </section>
 
       <div id="commandPalette" class="cmd-palette" style="display:none;">
@@ -1212,10 +1241,10 @@
     }
 
     function enableMessageReactions() {
-      const chatContainer = document.getElementById("chatContainer");
-      if (!chatContainer) return;
+      const container = chatContainer;
+      if (!container) return;
 
-      chatContainer.addEventListener("click", (e) => {
+      container.addEventListener("click", (e) => {
         const btn = e.target.closest(".message-reaction-btn");
         if (!btn) return;
         const emoji = btn.dataset.emoji;
@@ -3055,7 +3084,7 @@
     enableInlineTitleRename();
     enableMessageReactions();
 
-    // NEW: per-code-block copy buttons inside messages
+    // per-code-block copy buttons inside messages
     function enhanceCodeBlocks(root) {
       const blocks = root.querySelectorAll("pre.code-block");
       blocks.forEach((pre) => {
