@@ -33,20 +33,10 @@ body {
     "Segoe UI", sans-serif;
 }
 
-/* Light mode toggle */
-body.light {
-  --bg-main: #f9fafb;
-  --bg-elevated: #ffffff;
-  --bg-soft: #f3f4f6;
-  --border-subtle: #e5e7eb;
-  --border-strong: #9ca3af;
-  --accent: #4f46e5;
-  --accent-soft: #4f46e533;
-  --accent-green: #16a34a;
-  --accent-red: #dc2626;
-  --text-main: #111827;
-  --text-subtle: #4b5563;
-  --text-faint: #6b7280;
+/* center app and let it be wide on desktop */
+body {
+  display: flex;
+  justify-content: center;
 }
 
 /* ---- App shell ---- */
@@ -56,6 +46,8 @@ body.light {
   height: 100vh;
   max-height: 100vh;
   overflow: hidden;
+  width: 100%;
+  max-width: 1600px; /* expanded for laptop screens */
 }
 
 /* ---- Sidebar ---- */
@@ -396,7 +388,7 @@ body.light {
 
 /* WIDER bubbles */
 .message {
-  max-width: 1200px; /* was 1000px */
+  max-width: 1200px;
   border-radius: 12px;
   padding: 6px 8px;
   font-size: 13px;
