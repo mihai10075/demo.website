@@ -380,7 +380,7 @@ body.light {
 /* ---- Chat messages area ---- */
 
 .chat-layout {
-  padding: 6px 10px 8px;
+  padding: 6px 6px 8px; /* slightly reduced horizontal padding */
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -396,7 +396,7 @@ body.light {
 
 /* WIDER bubbles */
 .message {
-  max-width: 1000px; /* was 780px */
+  max-width: 1200px; /* was 1000px */
   border-radius: 12px;
   padding: 6px 8px;
   font-size: 13px;
@@ -411,9 +411,9 @@ body.light {
   background: radial-gradient(circle at top left, #1d283a, #020617);
 }
 
-/* Center assistant bubbles more */
+/* Assistant on the left */
 .message.assistant {
-  margin-left: auto;
+  margin-left: 0;
   margin-right: auto;
 }
 
