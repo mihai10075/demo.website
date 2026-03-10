@@ -1,9 +1,7 @@
 // pages/api/vision.js
 
 export const config = {
-  api: {
-    bodyParser: false, // we manually read multipart/form-data
-  },
+  api: { bodyParser: false },
 };
 
 export default async function handler(req, res) {
@@ -17,36 +15,53 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Expected multipart/form-data" });
     }
 
-    // Read raw body into a buffer (same pattern as upload.js)
+    // Read raw multipart body from client
     const chunks = [];
-    for await (const chunk of req) {
-      chunks.push(chunk);
-    }
+    for await (const chunk of req) chunks.push(chunk);
     const buffer = Buffer.concat(chunks);
 
-    // Very basic header parsing to get filename and mime type (optional)
-    const text = buffer.toString("latin1");
-    const match = text.match(
+    // Forward same multipart body to OCR.space
+    const apiKey = process.env.OCR_SPACE_API_KEY || "helloworld"; // replace with your key
+    const ocrRes = await fetch("https://api.ocr.space/Parse/Image", {
+      method: "POST",
+      headers: {
+        apikey: apiKey,
+        "Content-Type": contentType, // keep original boundary
+      },
+      body: buffer,
+    });
+
+    console.log("OCR status", ocrRes.status);
+
+    if (!ocrRes.ok) {
+      const txt = await ocrRes.text();
+      console.error("OCR error body:", txt);
+      return res.status(500).json({ error: "OCR failed" });
+    }
+
+    const ocrJson = await ocrRes.json();
+    console.log("OCR JSON", JSON.stringify(ocrJson, null, 2));
+
+    const parsedText =
+      ocrJson?.ParsedResults?.[0]?.ParsedText?.trim() || "";
+
+    // Extract filename + mime type from multipart body (same style as your old code)
+    const latin = buffer.toString("latin1");
+    const nameMatch = latin.match(
       /Content-Disposition:.*name="file"; filename="([^"]*)"/i
     );
-    const filename = match ? match[1] : "unknown";
-
-    const typeMatch = text.match(/Content-Type: ([^\r\n]*)/i);
+    const typeMatch = latin.match(/Content-Type: ([^\r\n]*)/i);
+    const filename = nameMatch ? nameMatch[1] : "unknown";
     const mimeType = typeMatch ? typeMatch[1] : "application/octet-stream";
 
-    // NOTE: Here is where you'd call a real vision API later:
-    // - Extract just the binary portion from `buffer`
-    // - Send it to OpenAI/Claude/another service
-    // - Get back a textual description and put it into `description`
-
-    const description =
-      `Vision not configured yet, but this is where the analysis of ` +
-      `image "${filename}" (type: ${mimeType}) would go. ` +
-      `Once a real vision API is wired, this will describe what the photo contains.`;
+    const description = parsedText
+      ? `The OCR tool thinks the text in the image is:\n\n${parsedText}`
+      : `OCR could not confidently read the image "${filename}" (type: ${mimeType}). Ask the user to type the text or upload a clearer photo.`;
 
     return res.status(200).json({
       ok: true,
       description,
+      text: parsedText,
       file: {
         name: filename,
         type: mimeType,
@@ -54,7 +69,7 @@ export default async function handler(req, res) {
       },
     });
   } catch (err) {
-    console.error("Vision error:", err);
+    console.error("Vision/OCR error:", err);
     return res.status(500).json({ error: "Vision processing failed" });
   }
 }
