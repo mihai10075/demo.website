@@ -47,7 +47,7 @@ body {
   max-height: 100vh;
   overflow: hidden;
   width: 100%;
-  max-width: 1920px; /* expanded for large screens */
+  max-width: 100%;
 }
 
 /* ---- Sidebar ---- */

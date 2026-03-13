@@ -2596,7 +2596,7 @@ async function sendMessage() {
     saveChats();
     
     const hasWebSources = Array.isArray(data.sources) && data.sources.length > 0;
-    addMessageToUI("assistant", data.reply, [], false, aiMsgObj, hasWebSources);
+    addAssistantMessageTyped(data.reply, aiMsgObj);
     renderSourcesBar(Array.isArray(data.sources) ? data.sources : []);
     scrollBottom();
     
