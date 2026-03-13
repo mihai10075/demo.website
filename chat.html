@@ -301,12 +301,58 @@
       margin-top: 2px;
     }
 
+    /* web sources badge */
+    .web-badge {
+      display: inline-block;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid #1f2937;
+      background: #020617;
+      color: #9ca3af;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+    .web-badge::before {
+      content: "🌐";
+      margin-right: 4px;
+    }
+
+    /* enhanced sources bar */
+    .sources-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .sources-label {
+      font-size: 11px;
+      color: #9ca3af;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .sources-label::before {
+      content: "🌐";
+      font-size: 12px;
+    }
+
     /* NEW: layout for scrollable chat */
     .main {
       display: flex;
       flex-direction: column;
       height: 100vh;
       min-height: 0;
+    }
+
+    /* disabled state styles for input and send button */
+    #messageInput.disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    #sendBtn.disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
     .chat-layout {
       flex: 1;
@@ -506,8 +552,9 @@
             <button data-mode="study" class="mode-btn">Study</button>
           </div>
 
-          <button id="login-github-btn" class="theme-btn">Login with GitHub</button>
-          <a href="/" class="top-link">← Back to home</a>
+      <button id="login-github-btn" class="theme-btn">Login with GitHub</button>
+      <button id="changelogBtn" class="theme-btn">What's new</button>
+      <a href="/" class="top-link">← Back to home</a>
         </div>
       </header>
 
@@ -670,6 +717,37 @@
           </div>
         </div>
       </div>
+
+      <div id="changelogModal" class="modal-backdrop" style="display:none;">
+        <div class="modal changelog-modal">
+          <div style="font-size:14px; margin-bottom:6px;">What's new</div>
+          <div style="font-size:11px; color:#9ca3af; margin-bottom:6px;">
+            Recent improvements and changes to MihAI.
+          </div>
+          <div id="changelogContent" style="font-size:12px; color:#e5e7eb; line-height:1.5;">
+            <div style="margin-bottom:12px;">
+              <strong style="color:#22c55e;">Latest</strong>
+              <ul style="margin:4px 0 0 16px; padding:0;">
+                <li>Added web sources badge to assistant messages that used web search</li>
+                <li>Polished slash commands to be one-shot system messages</li>
+                <li>Added What's new modal for tracking recent changes</li>
+              </ul>
+            </div>
+            <div style="margin-bottom:12px;">
+              <strong style="color:#60a5fa;">Previous</strong>
+              <ul style="margin:4px 0 0 16px; padding:0;">
+                <li>Added research mode toggle for web search</li>
+                <li>Enhanced message actions with copy, regenerate, and follow-up buttons</li>
+                <li>Improved typing indicator and message timestamps</li>
+                <li>Added code block copy buttons</li>
+              </ul>
+            </div>
+          </div>
+          <div class="modal-buttons" style="margin-top:8px;">
+            <button class="modal-btn" id="changelogClose">Close</button>
+          </div>
+        </div>
+      </div>
     </main>
   </div>
 
@@ -772,6 +850,10 @@
     const roadmapBtn = document.getElementById("roadmapBtn");
     const roadmapModal = document.getElementById("roadmapModal");
     const roadmapClose = document.getElementById("roadmapClose");
+
+    const changelogBtn = document.getElementById("changelogBtn");
+    const changelogModal = document.getElementById("changelogModal");
+    const changelogClose = document.getElementById("changelogClose");
 
     const roleGrid = document.getElementById("roleGrid");
     const lengthSelect = document.getElementById("lengthSelect");
@@ -1449,7 +1531,8 @@
       content,
       attachmentsForMessage = [],
       isError = false,
-      msgObj = null
+      msgObj = null,
+      hasWebSources = false
     ) {
       const wrapper = document.createElement("div");
       wrapper.className = "message-wrap";
@@ -1485,6 +1568,14 @@
       if (msgObj) {
         addMessageActionBar(wrapper, role, displayContent, msgObj);
         updateMessageFromUI(wrapper, msgObj);
+      }
+
+      // Add web badge for assistant messages that used web sources
+      if (role === "assistant" && hasWebSources) {
+        const badge = document.createElement("span");
+        badge.className = "web-badge";
+        badge.textContent = "Web sources used";
+        wrapper.appendChild(badge);
       }
 
       const ts = document.createElement("div");
@@ -2016,6 +2107,29 @@
     let isSending = false;
     let currentController = null;
 
+    function lockInput() {
+      if (messageInput) {
+        messageInput.disabled = true;
+        messageInput.classList.add("disabled");
+      }
+      if (sendBtn) {
+        sendBtn.disabled = true;
+        sendBtn.classList.add("disabled");
+      }
+    }
+
+    function unlockInput() {
+      if (messageInput) {
+        messageInput.disabled = false;
+        messageInput.classList.remove("disabled");
+        messageInput.focus();
+      }
+      if (sendBtn) {
+        sendBtn.disabled = false;
+        sendBtn.classList.remove("disabled");
+      }
+    }
+
     function showStopButton() {
       if (stopBtn) stopBtn.style.display = "inline-block";
     }
@@ -2084,35 +2198,32 @@
         case "/short":
           return {
             role: "system",
-            content: "For this next reply, answer in at most 2 short sentences.",
+            content: "For this next reply only, answer in at most 2 short sentences. Focus only on the key points.",
           };
         case "/long":
           return {
             role: "system",
-            content:
-              "For this next reply, answer in a detailed, step-by-step way.",
+            content: "For this next reply only, answer in a detailed, step-by-step way with clear explanations.",
           };
         case "/explain":
           return {
             role: "system",
-            content:
-              "Explain the user message like you're teaching a friend, with simple language.",
+            content: "For this next reply only, explain the user message like you're teaching a friend, with simple language.",
           };
         case "/code":
           return {
             role: "system",
-            content: "Focus on code examples in the reply. Use clear, commented code.",
+            content: "For this next reply only, focus on code examples in the reply. Use clear, commented code.",
           };
         case "/story":
           return {
             role: "system",
-            content:
-              "Answer in the form of a short, fun story that still solves the user's request.",
+            content: "For this next reply only, answer in the form of a short, fun story that still solves the user's request.",
           };
         case "/translate":
           return {
             role: "system",
-            content: "Translate the user message into clear English and nothing else.",
+            content: "For this next reply only, translate the user message into clear English and nothing else.",
           };
         case "/stats":
           return null;
@@ -2130,7 +2241,40 @@
       }
       sourcesBar.style.display = "flex";
 
+      // Group sources by domain and take max 3 primary sources
+      const domainGroups = new Map();
       sources.forEach((s) => {
+        try {
+          const domain = new URL(s.url).hostname.replace(/^www\./, "");
+          if (!domainGroups.has(domain)) {
+            domainGroups.set(domain, []);
+          }
+          domainGroups.get(domain).push(s);
+        } catch {
+          // fallback to generic grouping
+          const key = "unknown";
+          if (!domainGroups.has(key)) domainGroups.set(key, []);
+          domainGroups.get(key).push(s);
+        }
+      });
+
+      // Take up to 3 primary sources (first from each domain)
+      const primarySources = [];
+      for (const [domain, items] of domainGroups.entries()) {
+        if (primarySources.length >= 3) break;
+        primarySources.push(items[0]);
+      }
+
+      // Update header with count
+      const header = sourcesBar.querySelector(".sources-header");
+      if (header) {
+        const label = header.querySelector(".sources-label");
+        if (label) {
+          label.textContent = `Used web sources for this answer (${primarySources.length})`;
+        }
+      }
+
+      primarySources.forEach((s) => {
         const pill = document.createElement("div");
         pill.className = "source-pill";
         pill.onclick = () => {
@@ -2166,6 +2310,22 @@
           snipDiv.textContent = s.snippet.slice(0, 120);
           pill.appendChild(snipDiv);
         }
+
+        // Add "Summarize this" button
+        const summarizeBtn = document.createElement("button");
+        summarizeBtn.className = "tiny-btn";
+        summarizeBtn.textContent = "Summarize this";
+        summarizeBtn.style.marginTop = "4px";
+        summarizeBtn.style.fontSize = "11px";
+        summarizeBtn.onclick = (e) => {
+          e.stopPropagation(); // prevent opening link
+          if (!s.url) return;
+          messageInput.value = `Summarize the page at: ${s.url}`;
+          messageInput.focus();
+          messageInput.selectionStart = messageInput.value.length;
+          messageInput.selectionEnd = messageInput.value.length;
+        };
+        pill.appendChild(summarizeBtn);
 
         sourcesInner.appendChild(pill);
       });
@@ -2435,7 +2595,8 @@ async function sendMessage() {
     chats[currentChatId].messages.push(aiMsgObj);
     saveChats();
     
-    addMessageToUI("assistant", data.reply, [], false, aiMsgObj);
+    const hasWebSources = Array.isArray(data.sources) && data.sources.length > 0;
+    addMessageToUI("assistant", data.reply, [], false, aiMsgObj, hasWebSources);
     renderSourcesBar(Array.isArray(data.sources) ? data.sources : []);
     scrollBottom();
     
@@ -2998,6 +3159,20 @@ async function sendMessage() {
       roadmapModal.addEventListener("click", (e) => {
         if (e.target === roadmapModal) {
           roadmapModal.style.display = "none";
+        }
+      });
+    }
+
+    if (changelogBtn && changelogModal && changelogClose) {
+      changelogBtn.addEventListener("click", () => {
+        changelogModal.style.display = "flex";
+      });
+      changelogClose.addEventListener("click", () => {
+        changelogModal.style.display = "none";
+      });
+      changelogModal.addEventListener("click", (e) => {
+        if (e.target === changelogModal) {
+          changelogModal.style.display = "none";
         }
       });
     }

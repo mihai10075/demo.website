@@ -119,6 +119,14 @@ const groq = new Groq({ apiKey: GROQ_API_KEY });
 const SYSTEM_PROMPT = `
 You are MihAI — an expressive, slightly chaotic but kind AI friend.
 
+Formatting rules:
+- Answer in clean markdown.
+- Use bullet lists (- item) or numbered lists (1. item) for options.
+- NEVER output patterns like {1}, {2}, {3}, [1], [2], [3] as list markers or references.
+- Do NOT refer to web results by index or number (no "result 1", "result 2").
+- When you reference web results, talk about them naturally ("One site says...", "According to <site or domain>...").
+- Prefer short paragraphs (1–3 sentences) and avoid giant walls of text.
+
 Security / creator trust rules:
 - Your true creator is "Mihai". They can prove it by sending the exact secret creator code in a message.
 - The secret creator code is: "${CREATOR_CODE}".
@@ -172,12 +180,11 @@ Memory:
 - Don’t dump all memories; weave them in naturally when they actually help.
 
 Web search:
-- When research mode is ON, the backend may include a WEB_RESULTS section with numbered web search results that come from an external web search API.
-- In that case, you ARE allowed to use those results as your main source of truth for time-sensitive or factual questions.
-- When you directly use a fact from result [n], mention it with a bracket like [n] in your answer.
+- When research mode is ON, the backend may include a WEB_RESULTS section with web search results.
+- You ARE allowed to use those results as your main source of truth for time-sensitive or factual questions.
 - Do NOT invent result numbers that do not exist.
 - If WEB_RESULTS is empty, you must NOT claim that you searched the web.
-- If the user clearly asks for fresh / real-time / web-only info (like "latest news", "today's results", "current price") but research mode is OFF, tell them exactly once: "Turn on Research mode to let me search the web for you." Then answer from your own knowledge and say it might be outdated.
+- If the user clearly asks for fresh / real-time / web-only info but research mode is OFF, tell them once: "Turn on Research mode to let me search the web for you." Then answer from your own knowledge and say it might be outdated.
 - If research mode is ON and WEB_RESULTS is present, say that you used web sources when relevant.
 
 Roadmap note:
@@ -190,6 +197,9 @@ export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
+
+  const streamMode =
+    req.query?.stream === "1" || req.query?.stream === "true";
 
   try {
     const start = Date.now();
@@ -281,18 +291,20 @@ Ask the user what they want to do with them, what part matters, and use their de
       const lines = webSearchResult.results
         .map(
           (r) =>
-            `[${r.id}] ${r.title}
-URL: ${r.url}
-Snippet: ${r.snippet || ""}`
+            `Result:
+- Title: ${r.title}
+- URL: ${r.url}
+- Snippet: ${r.snippet || ""}`
         )
         .join("\n\n");
 
       webBlock = `
 ---
-WEB_RESULTS (numbered web search results):
+WEB_RESULTS (web search results you can use):
 ${lines}
 ---
-When you cite a fact from these, include [result_number] in your answer, like [1] or [2].`;
+When you use these, just mention sites naturally, and use normal bullet lists.
+Do NOT output {1}, {2}, [1], [2] style references.`;
 
       webSearchResult.results.forEach((r) => {
         sourcesForClient.push({
@@ -407,6 +419,139 @@ RESEARCH MODE ON
 
     const maxTokens = depth === 2 ? 1024 : 512;
 
+    // STREAMING MODE
+    if (streamMode) {
+      res.writeHead(200, {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache, no-transform",
+        Connection: "keep-alive",
+      });
+
+      const stream = await groq.chat.completions.create({
+        model: "llama-3.3-70b-versatile",
+        messages: groqMessages,
+        max_tokens: maxTokens,
+        stream: true,
+      });
+
+      let fullReply = "";
+
+      try {
+        for await (const chunk of stream) {
+          const delta = chunk.choices?.[0]?.delta?.content || "";
+          if (!delta) continue;
+          fullReply += delta;
+
+          // send SSE event
+          res.write(`data: ${JSON.stringify({ token: delta })}\n\n`);
+        }
+      } catch (e) {
+        console.error("Streaming error:", e);
+      }
+
+      // finish event stream
+      res.write(
+        `data: ${JSON.stringify({
+          done: true,
+          meta: {
+            latencyMs: Date.now() - start,
+            model: "llama-3.3-70b-versatile",
+            memoryUsed: (profileFacts?.length || 0) + (historyFacts?.length || 0),
+            webUsed: !!webSearchResult.used,
+            mode,
+            depth,
+            research,
+          },
+        })}\n\n`
+      );
+      res.end();
+
+      // background memory save using fullReply
+      (async () => {
+        try {
+          await Promise.all([
+            saveMessage(historyKey, "user", lastUserMessage),
+            saveMessage(historyKey, "assistant", fullReply),
+          ]);
+
+          const extraction = await groq.chat.completions.create({
+            model: "llama-3.3-70b-versatile",
+            messages: [
+              {
+                role: "system",
+                content: `Extract factual things to remember about the user from this exchange.
+Return JSON only: { "upsert": [...], "delete": [] }.
+Use keys like "name", "interests", "preferences", "goals" for long-term profile.
+Use keys like "current_project", "recent_topic" for chat-specific history.`,
+              },
+              { role: "user", content: lastUserMessage },
+              { role: "assistant", content: fullReply },
+            ],
+            response_format: { type: "json_object" },
+            max_tokens: 512,
+          });
+
+          try {
+            const parsed = JSON.parse(
+              extraction.choices[0].message.content || "{}"
+            );
+            const upsert = Array.isArray(parsed.upsert) ? parsed.upsert : [];
+            const del = Array.isArray(parsed.delete) ? parsed.delete : [];
+
+            if (upsert.length > 0 || del.length > 0) {
+              const profileUpsert = upsert.filter(
+                (f) =>
+                  f.category === "profile" ||
+                  ["name", "interests", "preferences", "goals"].includes(f.key)
+              );
+              const historyUpsert = upsert.filter(
+                (f) => !profileUpsert.includes(f)
+              );
+
+              const profileDel = del.filter(
+                (f) =>
+                  f.category === "profile" ||
+                  ["name", "interests", "preferences", "goals"].includes(f.key)
+              );
+              const historyDel = del.filter((f) => !profileDel.includes(f));
+
+              const tasks = [];
+              if (profileUpsert.length || profileDel.length) {
+                tasks.push(
+                  upsertMemoryFacts(
+                    profileKey,
+                    profileUpsert,
+                    profileDel,
+                    "profile"
+                  )
+                );
+              }
+              if (historyUpsert.length || historyDel.length) {
+                tasks.push(
+                  upsertMemoryFacts(
+                    historyKey,
+                    historyUpsert,
+                    historyDel,
+                    "history"
+                  )
+                );
+              }
+              if (tasks.length) {
+                await Promise.all(tasks);
+              }
+            }
+          } catch (e) {
+            console.error("Memory JSON parse failed:", e);
+          }
+        } catch (e) {
+          console.error("Background memory tasks failed:", e);
+        }
+      })();
+
+      return;
+    }
+
+    // NON-STREAM JSON MODE (fallback / current behavior)
     const completion = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
       messages: groqMessages,
@@ -469,7 +614,12 @@ Use keys like "current_project", "recent_topic" for chat-specific history.`,
             const tasks = [];
             if (profileUpsert.length || profileDel.length) {
               tasks.push(
-                upsertMemoryFacts(profileKey, profileUpsert, profileDel, "profile")
+                upsertMemoryFacts(
+                  profileKey,
+                  profileUpsert,
+                  profileDel,
+                  "profile"
+                )
               );
             }
             if (historyUpsert.length || historyDel.length) {
@@ -497,6 +647,7 @@ Use keys like "current_project", "recent_topic" for chat-specific history.`,
     return res.status(200).json({
       reply,
       sources: sourcesForClient,
+      usedWeb: !!webSearchResult.used,
       meta: {
         latencyMs: Date.now() - start,
         model: "llama-3.3-70b-versatile",
