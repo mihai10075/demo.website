@@ -312,10 +312,104 @@
       color: #9ca3af;
       margin-left: 6px;
       vertical-align: middle;
+      cursor: help;
     }
     .web-badge::before {
       content: "🌐";
       margin-right: 4px;
+    }
+
+    /* memory marker badge */
+    .memory-badge {
+      display: inline-block;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid #1f2937;
+      background: #020617;
+      color: #9ca3af;
+      margin-left: 6px;
+      vertical-align: middle;
+      cursor: help;
+    }
+    .memory-badge::before {
+      content: "🧠";
+      margin-right: 4px;
+    }
+
+    /* source pill tooltip */
+    .source-pill {
+      position: relative;
+    }
+    .source-tooltip {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #020617;
+      border: 1px solid #1f2937;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 11px;
+      color: #e5e7eb;
+      white-space: pre-wrap;
+      max-width: 300px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 50;
+      display: none;
+      margin-bottom: 6px;
+    }
+    .source-pill:hover .source-tooltip {
+      display: block;
+    }
+    .source-tooltip-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #22c55e;
+    }
+    .source-tooltip-url {
+      color: #60a5fa;
+      margin-bottom: 4px;
+      font-size: 10px;
+    }
+    .source-tooltip-snippet {
+      color: #9ca3af;
+      font-size: 11px;
+    }
+
+    /* enhanced code block copy button */
+    .code-block {
+      position: relative;
+      padding-top: 20px;
+      margin: 8px 0;
+    }
+    .code-copy-btn {
+      position: absolute;
+      top: 4px;
+      right: 6px;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid #1f2937;
+      background: #020617;
+      color: #e5e7eb;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .code-copy-btn:hover {
+      background: #111827;
+      border-color: #4f46e5;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 6px rgba(79, 70, 229, 0.3);
+    }
+    .code-copy-btn:active {
+      transform: translateY(0) scale(0.98);
+    }
+    .code-copy-btn.copied {
+      background: #022c22;
+      border-color: #22c55e;
+      color: #bbf7d0;
     }
 
     /* enhanced sources bar */
@@ -1170,6 +1264,27 @@
         addMessageToUI(msg.role, msg.content, msg.attachments || [], false, msg);
       });
       scrollBottom();
+      
+      // Restore draft input for this chat
+      restoreDraftInput();
+    }
+
+    function saveDraftInput() {
+      if (!messageInput || !currentChatId) return;
+      const text = messageInput.value;
+      const key = `mihai_draft_${currentChatId}`;
+      localStorage.setItem(key, text);
+    }
+
+    function restoreDraftInput() {
+      if (!messageInput || !currentChatId) return;
+      const key = `mihai_draft_${currentChatId}`;
+      const draft = localStorage.getItem(key);
+      if (draft !== null) {
+        messageInput.value = draft;
+        messageInput.style.height = "auto";
+        messageInput.style.height = messageInput.scrollHeight + "px";
+      }
     }
 
     function addAttachmentChips(container, attachments) {
@@ -1575,6 +1690,14 @@
         const badge = document.createElement("span");
         badge.className = "web-badge";
         badge.textContent = "Web sources used";
+        wrapper.appendChild(badge);
+      }
+
+      // Add memory badge for assistant messages that used memory
+      if (role === "assistant" && msgObj && msgObj.usedMemory) {
+        const badge = document.createElement("span");
+        badge.className = "memory-badge";
+        badge.textContent = "Memory used";
         wrapper.appendChild(badge);
       }
 
@@ -2628,6 +2751,7 @@ async function sendMessage() {
     messageInput.addEventListener("input", () => {
       messageInput.style.height = "auto";
       messageInput.style.height = messageInput.scrollHeight + "px";
+      saveDraftInput();
     });
 
     if (promptChips) {
@@ -3192,6 +3316,14 @@ async function sendMessage() {
           const codeEl = pre.querySelector("code");
           const text = codeEl ? codeEl.textContent || "" : "";
           copyToClipboard(text);
+          
+          // Add visual feedback
+          btn.textContent = "Copied!";
+          btn.classList.add("copied");
+          setTimeout(() => {
+            btn.textContent = "Copy";
+            btn.classList.remove("copied");
+          }, 1500);
         };
         pre.appendChild(btn);
       });

@@ -1,6 +1,6 @@
 // api/github-callback.js
 export default async function handler(req, res) {
-  const { code, state } = req.query || {};
+  const { code } = req.query || {};
 
   if (!code) {
     res.status(400).send("Missing code");
@@ -53,7 +53,8 @@ export default async function handler(req, res) {
 
     const safeUserId = `gh_${githubId}`;
 
-    const baseUrl = "https://demo-website-zf3z.vercel.app"; // same base as above
+    // IMPORTANT: set this to your stable app URL (no /api, no /deployments)
+    const baseUrl = "https://demo-website.vercel.app";
     const redirectUrl = `${baseUrl}/chat.html`;
 
     res.setHeader("Content-Type", "text/html; charset=utf-8");
