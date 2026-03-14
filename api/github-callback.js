@@ -1,4 +1,4 @@
-// api/github-callback.js
+// api/github-callback.js (same project)
 export default async function handler(req, res) {
   const { code } = req.query || {};
 
@@ -53,8 +53,8 @@ export default async function handler(req, res) {
 
     const safeUserId = `gh_${githubId}`;
 
-    // IMPORTANT: set this to your stable app URL (no /api, no /deployments)
-    const baseUrl = "https://demo-website.vercel.app";
+    // Same base URL here
+    const baseUrl = "https://demo-website-one-ashy.vercel.app";
     const redirectUrl = `${baseUrl}/chat.html`;
 
     res.setHeader("Content-Type", "text/html; charset=utf-8");
@@ -65,7 +65,9 @@ export default async function handler(req, res) {
     <script>
       try {
         localStorage.setItem("mihai_user_id", ${JSON.stringify(safeUserId)});
-        localStorage.setItem("mihai_github_login", ${JSON.stringify(githubLogin)});
+        localStorage.setItem("mihai_github_login", ${JSON.stringify(
+          githubLogin
+        )});
       } catch (e) {}
       window.location.href = ${JSON.stringify(redirectUrl)};
     </script>

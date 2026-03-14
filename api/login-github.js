@@ -1,8 +1,9 @@
-// api/login-github.js in *demo-website-one-ashy* project
+// api/login-github.js in demo-website-one-ashy project
 export default async function handler(req, res) {
   const clientId = process.env.GITHUB_CLIENT_ID;
 
-  const baseUrl = "https://demo-website-zf3z.vercel.app"; // NEW domain
+  // Use the same domain as in GitHub OAuth settings
+  const baseUrl = "https://demo-website-one-ashy.vercel.app";
 
   const redirectUri = `${baseUrl}/api/github-callback`;
   const state = "mihai-state";
